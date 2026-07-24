@@ -6573,39 +6573,39 @@ export async function buyRealCoins(amount: number) {
     const existing = document.getElementById('_payMethodPicker');
     if (existing) existing.remove();
 
-    const isMob = window.innerWidth < 768;
+    const COIN_EUR: Record<number, number> = { 2000: 20, 5500: 50, 12000: 100, 30000: 250, 70000: 500, 150000: 1000 };
+    const eurAmount = COIN_EUR[amount] || 0;
+
     const overlay = document.createElement('div');
     overlay.id = '_payMethodPicker';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,5,18,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);z-index:2147483647;display:flex;align-items:center;justify-content:center;';
 
     const box = document.createElement('div');
-    box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(197,160,89,0.15);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '32px 28px' : '48px 52px'};max-width:${isMob ? '340px' : '440px'};width:90%;display:flex;flex-direction:column;align-items:center;gap:${isMob ? '16px' : '22px'};box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(197,160,89,0.15);`;
+    box.style.cssText = 'max-width:480px;width:90%;text-align:center;';
 
     box.innerHTML = `
-        <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.85rem' : '1rem'};color:#c5a059;letter-spacing:5px;font-weight:700;">PAYMENT METHOD</div>
-        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent);"></div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.7rem' : '0.8rem'};color:rgba(255,255,255,0.3);letter-spacing:3px;font-weight:500;">${amount.toLocaleString()} ROYAL SILVER</div>
-        <div style="width:100%;margin-top:8px;display:flex;flex-direction:column;gap:12px;">
-            <button id="_payCard" style="width:100%;padding:${isMob ? '16px' : '20px 24px'};background:linear-gradient(135deg,#12122a,#161630);border:1px solid rgba(197,160,89,0.2);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
-                <div style="width:42px;height:42px;border-radius:50%;background:rgba(197,160,89,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </div>
-                <div style="text-align:left;">
-                    <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.75rem' : '0.85rem'};color:#f3e5ab;letter-spacing:3px;font-weight:600;">CARD</div>
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">Visa, Mastercard via Stripe</div>
-                </div>
+        <div style="font-family:Orbitron,sans-serif;font-size:2rem;color:#c5a059;margin-bottom:8px;">✦</div>
+        <div style="font-family:Orbitron,sans-serif;font-size:0.55rem;color:rgba(197,160,89,0.5);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px;">BOOST WALLET</div>
+        <div style="background:rgba(197,160,89,0.05);border:1px solid rgba(197,160,89,0.25);border-radius:14px;padding:28px 24px;margin-bottom:28px;">
+            <div style="font-family:Orbitron,sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.45);letter-spacing:3px;margin-bottom:12px;">QUEEN KARIN REQUIRES</div>
+            <div style="font-family:Orbitron,sans-serif;font-size:1.4rem;color:#c5a059;font-weight:700;letter-spacing:2px;">€${eurAmount > 0 ? eurAmount + '.00' : '?'}</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-top:8px;">${amount.toLocaleString()} ROYAL SILVER</div>
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
+            <button id="_payCard" style="width:100%;padding:16px;background:linear-gradient(135deg,#c5a059,#8b6914);border:none;border-radius:10px;color:#000;font-family:Orbitron,sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:3px;cursor:pointer;box-shadow:0 8px 30px rgba(197,160,89,0.3);display:flex;align-items:center;justify-content:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                PAY WITH CARD
             </button>
-            <button id="_payCrypto" style="width:100%;padding:${isMob ? '16px' : '20px 24px'};background:linear-gradient(135deg,#14081e,#0e0618);border:1px solid rgba(160,100,220,0.2);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
-                <div style="width:42px;height:42px;border-radius:50%;background:rgba(160,100,220,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.6)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                </div>
-                <div style="text-align:left;">
-                    <div style="font-family:Cinzel,serif;font-size:${isMob ? '0.75rem' : '0.85rem'};color:#d4b0f0;letter-spacing:3px;font-weight:600;">CRYPTO</div>
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.25);letter-spacing:1px;margin-top:2px;">Bitcoin, Ethereum, USDT, Litecoin</div>
-                </div>
+            <div id="_payCardError" style="font-size:0.6rem;color:rgba(255,80,80,0.7);font-family:Rajdhani,sans-serif;text-align:center;display:none;"></div>
+            <button id="_payCrypto" style="width:100%;padding:16px;background:linear-gradient(135deg,#14081e,#0e0618);border:1px solid rgba(160,100,220,0.3);border-radius:10px;color:#d4b0f0;font-family:Orbitron,sans-serif;font-size:0.6rem;font-weight:700;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                PAY WITH CRYPTO
+            </button>
+            <button id="_payPaypal" style="width:100%;padding:14px;background:none;border:1px solid rgba(197,160,89,0.15);border-radius:10px;color:rgba(197,160,89,0.7);font-family:Orbitron,sans-serif;font-size:0.55rem;font-weight:500;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                REQUEST PAYPAL
             </button>
         </div>
-        <button id="_payCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px;transition:color 0.2s;">CANCEL</button>
+        <button id="_payCancel" style="background:none;border:none;color:rgba(255,255,255,0.2);font-family:Rajdhani,sans-serif;font-size:0.65rem;letter-spacing:3px;padding:16px 20px;cursor:pointer;margin-top:4px;">CANCEL</button>
     `;
 
     overlay.appendChild(box);
@@ -6613,41 +6613,69 @@ export async function buyRealCoins(amount: number) {
 
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     box.querySelector('#_payCancel')!.addEventListener('click', () => overlay.remove());
-    box.querySelector('#_payCard')!.addEventListener('click', () => { overlay.remove(); _processPayment(amount, 'card'); });
-    box.querySelector('#_payCrypto')!.addEventListener('click', () => { overlay.remove(); _processPayment(amount, 'crypto'); });
-}
 
-async function _processPayment(amount: number, method: 'card' | 'crypto') {
-    if (method === 'card') {
+    (box.querySelector('#_payCard') as HTMLButtonElement).addEventListener('click', async () => {
+        const btn = box.querySelector('#_payCard') as HTMLButtonElement;
+        const errEl = box.querySelector('#_payCardError') as HTMLElement;
+        btn.textContent = 'LOADING...';
+        btn.style.opacity = '0.6';
+        btn.disabled = true;
         try {
-            const res = await fetch('/api/stripe/coins', {
+            const memberId = getState().email || '';
+            const res = await fetch('/api/paywall/wix-checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ coins: amount }),
+                body: JSON.stringify({ memberId, amount: eurAmount }),
             });
             const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
             } else {
-                console.error('[EXCHEQUER] Stripe error:', data.error);
-                alert('Could not initiate payment. Please try again.');
+                errEl.textContent = 'Could not start checkout. Try crypto instead.';
+                errEl.style.display = 'block';
+                btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> PAY WITH CARD';
+                btn.style.opacity = '1';
+                btn.disabled = false;
             }
-        } catch (err) {
-            console.error('[EXCHEQUER] Network error:', err);
-            alert('Could not reach payment service. Please try again.');
+        } catch {
+            errEl.textContent = 'Network error. Try crypto instead.';
+            errEl.style.display = 'block';
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> PAY WITH CARD';
+            btn.style.opacity = '1';
+            btn.disabled = false;
         }
-        return;
-    }
+    });
 
-    // Crypto — show coin picker first
-    _showCryptoCoinPicker(amount);
+    box.querySelector('#_payCrypto')!.addEventListener('click', () => { overlay.remove(); _showCryptoCoinPicker(amount); });
+
+    (box.querySelector('#_payPaypal') as HTMLButtonElement).addEventListener('click', async () => {
+        const btn = box.querySelector('#_payPaypal') as HTMLButtonElement;
+        btn.textContent = 'SENDING...';
+        btn.disabled = true;
+        try {
+            const memberId = getState().email || '';
+            await fetch('/api/profile-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    memberId,
+                    type: 'MESSAGE',
+                    payload: { text: `COINS_PAYPAL_REQUEST::${JSON.stringify({ coins: amount, eurAmount })}`, sender: 'slave' },
+                }),
+            });
+            btn.textContent = '✓ REQUEST SENT';
+        } catch {
+            btn.textContent = 'REQUEST PAYPAL';
+            btn.disabled = false;
+        }
+    });
 }
 
 const CRYPTO_OPTIONS = [
-    { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
-    { ticker: 'btc', label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
-    { ticker: 'eth', label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
-    { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
+    { id: 70, label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
+    { id: 10, label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
+    { id: 20, label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
+    { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
 ];
 
 function _showCryptoCoinPicker(amount: number) {
@@ -6663,10 +6691,10 @@ function _showCryptoCoinPicker(amount: number) {
     box.style.cssText = `background:linear-gradient(160deg,#0c0c1a,#08060f);border:1px solid rgba(160,100,220,0.15);border-radius:${isMob ? '14px' : '18px'};padding:${isMob ? '32px 28px' : '48px 52px'};max-width:${isMob ? '360px' : '480px'};width:90%;display:flex;flex-direction:column;align-items:center;gap:${isMob ? '12px' : '18px'};box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(160,100,220,0.15);`;
 
     let buttonsHtml = '';
-    CRYPTO_OPTIONS.forEach((opt, i) => {
+    CRYPTO_OPTIONS.forEach((opt) => {
         const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
         buttonsHtml += `
-            <button class="_coinBtn" data-idx="${i}" style="width:100%;padding:${isMob ? '14px 16px' : '18px 22px'};background:linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02));border:1px solid rgba(${rgb},0.15);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
+            <button class="_coinBtn" data-id="${opt.id}" style="width:100%;padding:${isMob ? '14px 16px' : '18px 22px'};background:linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02));border:1px solid rgba(${rgb},0.15);border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.3s ease;">
                 <div style="width:${isMob ? '36px' : '44px'};height:${isMob ? '36px' : '44px'};border-radius:50%;background:rgba(${rgb},0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <span style="font-size:${isMob ? '1.1rem' : '1.3rem'};color:${opt.color};">${opt.icon}</span>
                 </div>
@@ -6696,15 +6724,15 @@ function _showCryptoCoinPicker(amount: number) {
 
     box.querySelectorAll('._coinBtn').forEach((btn) => {
         btn.addEventListener('click', () => {
-            const idx = parseInt((btn as HTMLElement).dataset.idx || '0', 10);
-            const selected = CRYPTO_OPTIONS[idx];
+            const currencyId = parseInt((btn as HTMLElement).dataset.id || '70', 10);
+            const selected = CRYPTO_OPTIONS.find(o => o.id === currencyId) || CRYPTO_OPTIONS[0];
             overlay.remove();
-            _createCryptoPayment(amount, selected.ticker, selected.label);
+            _createCryptoPayment(amount, currencyId, selected.label);
         });
     });
 }
 
-async function _createCryptoPayment(amount: number, ticker: string, label: string) {
+async function _createCryptoPayment(amount: number, currencyId: number, label: string) {
     // Show loading overlay immediately
     const existing = document.getElementById('_cryptoPayOverlay');
     if (existing) existing.remove();
@@ -6722,10 +6750,10 @@ async function _createCryptoPayment(amount: number, ticker: string, label: strin
     document.body.appendChild(loader);
 
     try {
-        const res = await fetch('/api/crypto/create', {
+        const res = await fetch('/api/coins/passimpay', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ coins: amount, ticker }),
+            body: JSON.stringify({ coins: amount, currencyId }),
         });
         const data = await res.json();
         if (!data.success) {
@@ -6735,7 +6763,7 @@ async function _createCryptoPayment(amount: number, ticker: string, label: strin
             return;
         }
         loader.remove();
-        _showCryptoPaymentOverlay(data, amount);
+        _showCryptoPaymentOverlay({ ...data, currency: label }, amount);
     } catch (err) {
         loader.remove();
         console.error('[EXCHEQUER] Crypto network error:', err);
@@ -6743,7 +6771,7 @@ async function _createCryptoPayment(amount: number, ticker: string, label: strin
     }
 }
 
-function _showCryptoPaymentOverlay(data: { address: string; amount: number; amount_eur: number; currency: string; qr_url: string; order_id: string }, coins: number) {
+function _showCryptoPaymentOverlay(data: { address: string; cryptoAmount: string; amountEur: number; currency: string; orderId: string }, coins: number) {
     const existing = document.getElementById('_cryptoPayOverlay');
     if (existing) existing.remove();
 
@@ -6768,8 +6796,8 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
 
         <div style="text-align:center;margin-top:4px;">
             <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.35);letter-spacing:2px;font-weight:500;margin-bottom:6px;">SEND EXACTLY</div>
-            <div style="font-family:Cinzel,serif;font-size:${isMob ? '1.3rem' : '1.6rem'};color:#f3e5ab;letter-spacing:1px;font-weight:700;">${data.amount} <span style="font-size:${isMob ? '0.6rem' : '0.75rem'};color:rgba(160,100,220,0.7);font-weight:500;letter-spacing:2px;">${data.currency}</span></div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.2);margin-top:2px;">(€${data.amount_eur.toFixed(2)})</div>
+            <div style="font-family:Cinzel,serif;font-size:${isMob ? '1.3rem' : '1.6rem'};color:#f3e5ab;letter-spacing:1px;font-weight:700;">${data.cryptoAmount} <span style="font-size:${isMob ? '0.6rem' : '0.75rem'};color:rgba(160,100,220,0.7);font-weight:500;letter-spacing:2px;">${data.currency}</span></div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:${isMob ? '0.6rem' : '0.7rem'};color:rgba(255,255,255,0.2);margin-top:2px;">(€${Number(data.amountEur).toFixed(2)})</div>
         </div>
 
         <div style="width:100%;margin-top:4px;">
@@ -6815,9 +6843,10 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
     box.querySelector('#_cryptoClose')!.addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
 
-    // Poll order status every 15s
+    // Poll PassimPay order status every 5s
     let pollCount = 0;
-    const maxPolls = 120; // 30 min
+    const maxPolls = 120; // 10 min
+    const memberId = getState().email || '';
     const pollInterval = setInterval(async () => {
         pollCount++;
         if (pollCount > maxPolls || !document.getElementById('_cryptoPayOverlay')) {
@@ -6825,9 +6854,13 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
             return;
         }
         try {
-            const pollRes = await fetch(`/api/crypto/status?order_id=${data.order_id}`);
+            const pollRes = await fetch('/api/coins/passimpay-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: data.orderId, memberId, coins }),
+            });
             const pollData = await pollRes.json();
-            if (pollData.status === 'completed') {
+            if (pollData.paid) {
                 clearInterval(pollInterval);
                 const statusEl = document.getElementById('_cryptoStatus');
                 if (statusEl) {
@@ -6836,7 +6869,7 @@ function _showCryptoPaymentOverlay(data: { address: string; amount: number; amou
                 setTimeout(() => { overlay.remove(); window.location.reload(); }, 2500);
             }
         } catch { /* ignore poll errors */ }
-    }, 15000);
+    }, 5000);
 }
 
 export async function handleSubscribe(tierId: string) {

@@ -35,7 +35,10 @@ export default function TributePage() {
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
     const [showPayPicker, setShowPayPicker] = useState(false);
-    const [showStripeWarning, setShowStripeWarning] = useState(false);
+    const [wixLoading, setWixLoading] = useState(false);
+    const [wixError, setWixError] = useState('');
+    const [paypalRequested, setPaypalRequested] = useState(false);
+    const [paypalRequesting, setPaypalRequesting] = useState(false);
     const [showCryptoPicker, setShowCryptoPicker] = useState(false);
     const [cryptoLoading, setCryptoLoading] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
@@ -275,31 +278,61 @@ export default function TributePage() {
         setShowPayPicker(true);
     };
 
-    const handleStripe = () => {
-        setShowPayPicker(false);
-        setShowStripeWarning(true);
+    const handleWixCardPay = async () => {
+        setWixLoading(true);
+        setWixError('');
+        try {
+            const res = await fetch('/api/paywall/wix-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: userEmail || '', amount: 55 }),
+            });
+            const data = await res.json();
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            } else {
+                setWixError('Could not start checkout. Try crypto instead.');
+                setWixLoading(false);
+            }
+        } catch {
+            setWixError('Network error. Try crypto instead.');
+            setWixLoading(false);
+        }
     };
 
-    const handleCryptoSelect = () => {
-        setShowPayPicker(false);
-        setShowCryptoPicker(true);
+    const handleRequestPaypal = async () => {
+        if (paypalRequested || paypalRequesting) return;
+        setPaypalRequesting(true);
+        try {
+            await fetch('/api/profile-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    memberId: userEmail || '',
+                    type: 'MESSAGE',
+                    payload: { text: `TRIBUTE_PAYPAL_REQUEST::${JSON.stringify({ amount: 55 })}`, sender: 'slave' },
+                }),
+            });
+            setPaypalRequested(true);
+        } catch {}
+        setPaypalRequesting(false);
     };
 
     const CRYPTO_OPTIONS = [
-        { ticker: 'trc20/usdt', label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮' },
-        { ticker: 'btc', label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿' },
-        { ticker: 'eth', label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ' },
-        { ticker: 'ltc', label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł' },
+        { id: 70, label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮', ticker: 'USDT' },
+        { id: 10, label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿', ticker: 'BTC' },
+        { id: 20, label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ', ticker: 'ETH' },
+        { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł', ticker: 'LTC' },
     ];
 
-    const handleCryptoPay = async (ticker: string, label: string) => {
+    const handleCryptoPay = async (currencyId: number, ticker: string) => {
         setShowCryptoPicker(false);
         setCryptoLoading(true);
         try {
-            const res = await fetch('/api/tribute/crypto', {
+            const res = await fetch('/api/tribute/passimpay', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticker }),
+                body: JSON.stringify({ memberId: userEmail || '', currencyId }),
             });
             const data = await res.json();
             if (!data.success) {
@@ -307,29 +340,29 @@ export default function TributePage() {
                 setCryptoLoading(false);
                 return;
             }
-            setCryptoData(data);
+            setCryptoData({ ...data, currency: ticker });
             setCryptoLoading(false);
 
-            // Start polling
+            // Poll PassimPay every 5s
             if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
             let polls = 0;
             cryptoPollRef.current = setInterval(async () => {
                 polls++;
                 if (polls > 120) { if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); return; }
                 try {
-                    const r = await fetch('/api/tribute/crypto-verify', {
+                    const r = await fetch('/api/tribute/passimpay-status', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId: data.order_id }),
+                        body: JSON.stringify({ orderId: data.orderId }),
                     });
                     const d = await r.json();
-                    if (d.status === 'completed') {
+                    if (d.paid) {
                         if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
                         setCryptoConfirmed(true);
                         setTimeout(() => { window.location.href = '/onboarding'; }, 2500);
                     }
-                } catch { }
-            }, 15000);
+                } catch {}
+            }, 5000);
         } catch {
             setStatus('Connection error. Try again.');
             setCryptoLoading(false);
@@ -1241,63 +1274,30 @@ export default function TributePage() {
         />
         {/* ══ PAYMENT METHOD PICKER ══ */}
         {showPayPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onClick={(e) => { if (e.target === e.currentTarget) setShowPayPicker(false); }}>
-                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 18, padding: '48px 52px', maxWidth: 440, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, boxShadow: '0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(197,160,89,0.15)' }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#c5a059', letterSpacing: 5, fontWeight: 700 }}>PAYMENT METHOD</div>
-                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.25),transparent)' }} />
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>€55 ENTRANCE TRIBUTE</div>
-                    <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <button onClick={handleStripe} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#12122a,#161630)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(197,160,89,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                            </div>
-                            <div style={{ textAlign: 'left' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#f3e5ab', letterSpacing: 3, fontWeight: 600 }}>CARD</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Visa, Mastercard</div>
-                            </div>
+                <div style={{ maxWidth: 480, width: '90%', textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
+                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ENTRANCE TRIBUTE</div>
+                    <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>QUEEN KARIN REQUIRES</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€55.00</div>
+                    </div>
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <button onClick={handleWixCardPay} disabled={wixLoading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: wixLoading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: wixLoading ? 0.6 : 1 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            {wixLoading ? 'LOADING...' : 'PAY WITH CARD'}
                         </button>
-                        <button onClick={handleCryptoSelect} style={{ width: '100%', padding: '20px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.2)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'rgba(160,100,220,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                            </div>
-                            <div style={{ textAlign: 'left' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#d4b0f0', letterSpacing: 3, fontWeight: 600 }}>CRYPTO</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Bitcoin, Ethereum, USDT, Litecoin</div>
-                            </div>
+                        {wixError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center' }}>{wixError}</div>}
+                        <button onClick={() => { setShowPayPicker(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                            PAY WITH CRYPTO
+                        </button>
+                        <button onClick={handleRequestPaypal} disabled={paypalRequested || paypalRequesting} style={{ width: '100%', padding: '14px', background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, color: paypalRequested ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.7)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 500, letterSpacing: '3px', cursor: paypalRequested ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                            {paypalRequested ? '✓ REQUEST SENT' : paypalRequesting ? 'SENDING...' : 'REQUEST PAYPAL'}
                         </button>
                     </div>
-                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
-                </div>
-            </div>
-        )}
-
-        {/* ══ STRIPE UNAVAILABLE WARNING ══ */}
-        {showStripeWarning && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={(e) => { if (e.target === e.currentTarget) setShowStripeWarning(false); }}>
-                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(139,0,0,0.3)', borderRadius: 18, padding: '48px 40px', maxWidth: 420, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.7),0 0 1px rgba(139,0,0,0.2)' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(139,0,0,0.1)', border: '1px solid rgba(139,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(180,40,40,0.8)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    </div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(180,40,40,0.9)', letterSpacing: 5, fontWeight: 700, textAlign: 'center' }}>CARD PAYMENT UNAVAILABLE</div>
-                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(139,0,0,0.3),transparent)' }} />
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1, lineHeight: 1.7, textAlign: 'center' }}>
-                        My card payment provider suspended my account without warning.<br />
-                        I'm fighting to get it back. Until then,<br />
-                        crypto is the only way through.<br /><br />
-                        Every payment keeps me going.
-                    </div>
-                    <button onClick={() => { setShowStripeWarning(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '18px 24px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 }}>
-                        <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(160,100,220,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                        </div>
-                        <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.82rem', color: '#d4b0f0', letterSpacing: 3, fontWeight: 600 }}>PAY WITH CRYPTO</div>
-                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>Bitcoin, Ethereum, USDT, Litecoin</div>
-                        </div>
-                    </button>
-                    <button onClick={() => setShowStripeWarning(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer' }}>CANCEL</button>
+                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '16px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
                 </div>
             </div>
         )}
@@ -1314,7 +1314,7 @@ export default function TributePage() {
                         {CRYPTO_OPTIONS.map((opt) => {
                             const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
                             return (
-                            <button key={opt.ticker} onClick={() => handleCryptoPay(opt.ticker, opt.label)}
+                            <button key={opt.id} onClick={() => handleCryptoPay(opt.id, opt.ticker)}
                                 style={{ width: '100%', padding: '18px 22px', background: `linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02))`, border: `1px solid rgba(${rgb},0.15)`, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
                                 <div style={{ width: 44, height: 44, borderRadius: '50%', background: `rgba(${rgb},0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <span style={{ fontSize: '1.3rem', color: opt.color }}>{opt.icon}</span>
@@ -1358,9 +1358,9 @@ export default function TributePage() {
                     <div style={{ textAlign: 'center', marginTop: 4 }}>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2, fontWeight: 500, marginBottom: 6 }}>SEND EXACTLY</div>
                         <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
-                            {cryptoData.amount} <span style={{ fontSize: '0.75rem', color: 'rgba(160,100,220,0.7)', fontWeight: 500, letterSpacing: 2 }}>{cryptoData.currency}</span>
+                            {cryptoData.cryptoAmount} <span style={{ fontSize: '0.75rem', color: 'rgba(160,100,220,0.7)', fontWeight: 500, letterSpacing: 2 }}>{cryptoData.currency}</span>
                         </div>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>(€{cryptoData.amount_eur?.toFixed(2)})</div>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#c5a059', fontWeight: 700, letterSpacing: 2, marginTop: 8 }}>€{Number(cryptoData.amountEur).toFixed(2)}</div>
                     </div>
 
                     <div style={{ width: '100%', marginTop: 4 }}>
