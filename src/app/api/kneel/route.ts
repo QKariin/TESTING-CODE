@@ -87,23 +87,29 @@ export async function POST(req: Request) {
                 // Find active vault session
                 const { data: vs } = await supabaseAdmin
                     .from('vault_sessions')
-                    .select('id')
+                    .select('id, started_at')
                     .eq('member_id', emailCheck)
                     .eq('status', 'active')
                     .order('started_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
                 if (vs) {
-                    // Universal gate: must have submitted chastity check today (pending or approved)
-                    const { data: checkLog } = await supabaseAdmin
-                        .from('vault_check_log')
-                        .select('status')
-                        .eq('session_id', vs.id)
-                        .eq('date', todayCheckStr)
-                        .eq('type', 'chastity_check')
-                        .maybeSingle();
-                    if (!checkLog || checkLog.status === 'rejected') {
-                        return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
+                    // Day 1: lock-in submission already serves as today's proof — skip gate
+                    const sessionStartDate = vs.started_at
+                        ? new Date(vs.started_at).toLocaleDateString('en-CA', { timeZone: tz })
+                        : null;
+                    if (sessionStartDate !== todayCheckStr) {
+                        // Day 2+: must have submitted chastity check today (pending or approved)
+                        const { data: checkLog } = await supabaseAdmin
+                            .from('vault_check_log')
+                            .select('status')
+                            .eq('session_id', vs.id)
+                            .eq('date', todayCheckStr)
+                            .eq('type', 'chastity_check')
+                            .maybeSingle();
+                        if (!checkLog || checkLog.status === 'rejected') {
+                            return NextResponse.json({ error: 'CHASTITY_REQUIRED' }, { status: 403 });
+                        }
                     }
                 }
             }
