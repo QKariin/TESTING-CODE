@@ -241,9 +241,9 @@ export async function GET(req: NextRequest) {
             prog = typeof progRow.program === 'string' ? JSON.parse(progRow.program) : progRow.program;
         }
 
-        // Auto-regenerate if program is missing or uses stale/old task types (no config on any day-1 task)
+        // Auto-regenerate only if program is completely missing — never overwrite based on task content
         const day1 = prog?.['1'];
-        const isStale = !prog || !day1 || day1.length === 0 || !day1.some((t: any) => t.config);
+        const isStale = !prog || !day1 || day1.length === 0;
         if (isStale) {
             console.log(`[vault] Program stale or missing for session ${session.id}, regenerating from template...`);
             const freshProgram = await _generateFullProgram();
