@@ -1211,6 +1211,7 @@ export default function TributePage() {
                 cryptoApiPath="/api/tribute/passimpay"
                 cryptoStatusApiPath="/api/tribute/passimpay-status"
                 cryptoPayBody={{ memberId: userEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
+                cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 onSuccess={() => { window.location.href = '/onboarding'; }}
                 onClose={() => { setShowPayment(false); setShowTierPicker(true); }}

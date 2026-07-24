@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const { orderId } = await req.json();
+        const { orderId, tierId } = await req.json();
         if (!orderId) return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
 
         const supabase = await createClient();
@@ -40,6 +40,9 @@ export async function POST(req: Request) {
             (user.email ? user.email.split('@')[0] : 'Subject');
         const displayName = rawName.split(' ')[0];
 
+        const TIER_COINS: Record<string, number> = { weekly: 5000, monthly: 10000, yearly: 30000 };
+        const startingCoins = TIER_COINS[tierId] ?? 5000;
+
         const { data: existing } = await supabaseAdmin
             .from('profiles').select('ID').eq('ID', user.id).maybeSingle();
 
@@ -50,7 +53,7 @@ export async function POST(req: Request) {
                 name: displayName,
                 hierarchy: 'Hall Boy',
                 score: 0,
-                wallet: 5000,
+                wallet: startingCoins,
                 parameters: { devotion: 100 },
             });
             await supabaseAdmin.from('tasks').insert({
