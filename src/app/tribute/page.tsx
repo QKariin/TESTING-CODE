@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import PaymentModal from '@/components/PaymentModal';
 
 /* ── time ago helper ── */
 function timeAgo(dateStr: string) {
@@ -34,15 +35,7 @@ export default function TributePage() {
     const iframeFullRef = useRef(false);
     const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
-    const [showPayPicker, setShowPayPicker] = useState(false);
-    const [wixLoading, setWixLoading] = useState(false);
-    const [wixError, setWixError] = useState('');
-    const [showCryptoPicker, setShowCryptoPicker] = useState(false);
-    const [cryptoLoading, setCryptoLoading] = useState(false);
-    const [cryptoError, setCryptoError] = useState('');
-    const [cryptoData, setCryptoData] = useState<any>(null);
-    const [cryptoConfirmed, setCryptoConfirmed] = useState(false);
-    const cryptoPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [showPayment, setShowPayment] = useState(false);
 
     useEffect(() => {
         const storedRedirect = localStorage.getItem('post_login_redirect');
@@ -274,88 +267,8 @@ export default function TributePage() {
     }, []);
 
     const handleTribute = () => {
-        setShowPayPicker(true);
+        setShowPayment(true);
     };
-
-    const handleWixCardPay = async () => {
-        setWixLoading(true);
-        setWixError('');
-        try {
-            const res = await fetch('/api/paywall/wix-checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: userEmail || '', amount: 55 }),
-            });
-            const data = await res.json();
-            if (data.checkoutUrl) {
-                window.location.href = data.checkoutUrl;
-            } else {
-                setWixError('Could not start checkout. Try crypto instead.');
-                setWixLoading(false);
-            }
-        } catch {
-            setWixError('Network error. Try crypto instead.');
-            setWixLoading(false);
-        }
-    };
-
-    const CRYPTO_OPTIONS = [
-        { id: 70, label: 'USDT', sub: 'TRC20 · Stablecoin', color: '#26a17b', icon: '₮', ticker: 'USDT' },
-        { id: 10, label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿', ticker: 'BTC' },
-        { id: 20, label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ', ticker: 'ETH' },
-        { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł', ticker: 'LTC' },
-    ];
-
-    const handleCryptoPay = async (currencyId: number, ticker: string) => {
-        setShowCryptoPicker(false);
-        setCryptoLoading(true);
-        setCryptoError('');
-        try {
-            const res = await fetch('/api/tribute/passimpay', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: userEmail || '', currencyId }),
-            });
-            const data = await res.json();
-            if (!data.success) {
-                setCryptoError(data.error || 'Payment setup failed. Try again.');
-                setCryptoLoading(false);
-                setShowCryptoPicker(true);
-                return;
-            }
-            setCryptoData({ ...data, currency: ticker });
-            setCryptoLoading(false);
-
-            // Poll PassimPay every 5s
-            if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
-            let polls = 0;
-            cryptoPollRef.current = setInterval(async () => {
-                polls++;
-                if (polls > 120) { if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); return; }
-                try {
-                    const r = await fetch('/api/tribute/passimpay-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId: data.orderId }),
-                    });
-                    const d = await r.json();
-                    if (d.paid) {
-                        if (cryptoPollRef.current) clearInterval(cryptoPollRef.current);
-                        setCryptoConfirmed(true);
-                        setTimeout(() => { window.location.href = '/onboarding'; }, 2500);
-                    }
-                } catch {}
-            }, 5000);
-        } catch (e: any) {
-            setCryptoError(e.message || 'Network error. Try again.');
-            setCryptoLoading(false);
-            setShowCryptoPicker(true);
-        }
-    };
-
-    useEffect(() => {
-        return () => { if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); };
-    }, []);
 
     const handleLogout = async () => { const s = createClient(); await s.auth.signOut(); window.location.href = '/login'; };
 
@@ -1256,127 +1169,18 @@ export default function TributePage() {
                     : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
             }}
         />
-        {/* ══ PAYMENT METHOD PICKER ══ */}
-        {showPayPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={(e) => { if (e.target === e.currentTarget) setShowPayPicker(false); }}>
-                <div style={{ maxWidth: 480, width: '90%', textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
-                    <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: 24 }}>ENTRANCE TRIBUTE</div>
-                    <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 24px', marginBottom: 28 }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.38rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginBottom: 12 }}>QUEEN KARIN REQUIRES</div>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px' }}>€55.00</div>
-                    </div>
-                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        <button onClick={handleWixCardPay} disabled={wixLoading} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: wixLoading ? 'not-allowed' : 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: wixLoading ? 0.6 : 1 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                            {wixLoading ? 'LOADING...' : 'PAY WITH CARD'}
-                        </button>
-                        {wixError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center' }}>{wixError}</div>}
-                        <button onClick={() => { setShowPayPicker(false); setShowCryptoPicker(true); }} style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg,#14081e,#0e0618)', border: '1px solid rgba(160,100,220,0.3)', borderRadius: 10, color: '#d4b0f0', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(160,100,220,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
-                            PAY WITH CRYPTO
-                        </button>
-                    </div>
-                    <button onClick={() => setShowPayPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '16px 20px', cursor: 'pointer', marginTop: 4 }}>CANCEL</button>
-                </div>
-            </div>
-        )}
-
-        {/* ══ CRYPTO COIN PICKER ══ */}
-        {showCryptoPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                onClick={(e) => { if (e.target === e.currentTarget) setShowCryptoPicker(false); }}>
-                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(160,100,220,0.15)', borderRadius: 18, padding: '48px 52px', maxWidth: 480, width: '90%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 30px 80px rgba(0,0,0,0.6),0 0 1px rgba(160,100,220,0.15)' }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#d4b0f0', letterSpacing: 5, fontWeight: 700 }}>SELECT CURRENCY</div>
-                    <div style={{ width: 40, height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent)' }} />
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>€55 ENTRANCE TRIBUTE</div>
-                    {cryptoError && <div style={{ fontSize: '0.65rem', color: 'rgba(255,80,80,0.8)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center', letterSpacing: 1 }}>{cryptoError}</div>}
-                    <div style={{ width: '100%', marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {CRYPTO_OPTIONS.map((opt) => {
-                            const rgb = opt.color === '#f7931a' ? '247,147,26' : opt.color === '#26a17b' ? '38,161,123' : opt.color === '#627eea' ? '98,126,234' : '191,187,187';
-                            return (
-                            <button key={opt.id} onClick={() => handleCryptoPay(opt.id, opt.ticker)}
-                                style={{ width: '100%', padding: '18px 22px', background: `linear-gradient(135deg,rgba(${rgb},0.05),rgba(${rgb},0.02))`, border: `1px solid rgba(${rgb},0.15)`, borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
-                                <div style={{ width: 44, height: 44, borderRadius: '50%', background: `rgba(${rgb},0.08)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <span style={{ fontSize: '1.3rem', color: opt.color }}>{opt.icon}</span>
-                                </div>
-                                <div style={{ textAlign: 'left', flex: 1 }}>
-                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', color: '#f3e5ab', letterSpacing: 2, fontWeight: 600 }}>{opt.label}</div>
-                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>{opt.sub}</div>
-                                </div>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-                            </button>
-                        );})}
-                    </div>
-                    <button onClick={() => setShowCryptoPicker(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>BACK</button>
-                </div>
-            </div>
-        )}
-
-        {/* ══ CRYPTO LOADING ══ */}
-        {cryptoLoading && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
-                    <div style={{ width: 40, height: 40, border: '2px solid rgba(160,100,220,0.15)', borderTopColor: 'rgba(160,100,220,0.6)', borderRadius: '50%', animation: '_tributeSpin 0.8s linear infinite' }} />
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, fontWeight: 500 }}>PREPARING PAYMENT...</div>
-                </div>
-                <style>{`@keyframes _tributeSpin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-        )}
-
-        {/* ══ CRYPTO PAYMENT OVERLAY ══ */}
-        {cryptoData && !cryptoLoading && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: 20 }}>
-                <div style={{ background: 'linear-gradient(160deg,#0c0c1a,#08060f)', border: '1px solid rgba(160,100,220,0.12)', borderRadius: 20, padding: '44px 48px', maxWidth: 520, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, boxShadow: '0 40px 100px rgba(0,0,0,0.7),0 0 1px rgba(160,100,220,0.15)' }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: '#d4b0f0', letterSpacing: 6, fontWeight: 700 }}>CRYPTO PAYMENT</div>
-                    <div style={{ width: 50, height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.25),transparent)' }} />
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 3, fontWeight: 500 }}>ENTRANCE TRIBUTE</div>
-
-                    <div style={{ background: '#fff', borderRadius: 14, padding: 16, marginTop: 6 }}>
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(cryptoData.address)}`} alt="QR Code" style={{ width: 240, height: 240, borderRadius: 6, display: 'block' }} />
-                    </div>
-
-                    <div style={{ textAlign: 'center', marginTop: 4 }}>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2, fontWeight: 500, marginBottom: 6 }}>SEND EXACTLY</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', color: '#f3e5ab', letterSpacing: 1, fontWeight: 700 }}>
-                            {cryptoData.cryptoAmount} <span style={{ fontSize: '0.75rem', color: 'rgba(160,100,220,0.7)', fontWeight: 500, letterSpacing: 2 }}>{cryptoData.currency}</span>
-                        </div>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.2rem', color: '#c5a059', fontWeight: 700, letterSpacing: 2, marginTop: 8 }}>€{Number(cryptoData.amountEur).toFixed(2)}</div>
-                    </div>
-
-                    <div style={{ width: '100%', marginTop: 4 }}>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, fontWeight: 500, textAlign: 'center', marginBottom: 6 }}>WALLET ADDRESS</div>
-                        <div onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
-                            style={{ fontFamily: "'SF Mono',Menlo,Consolas,monospace", fontSize: '0.75rem', color: '#d4b0f0', background: 'rgba(160,100,220,0.05)', border: '1px solid rgba(160,100,220,0.12)', borderRadius: 8, padding: '14px 18px', wordBreak: 'break-all', textAlign: 'center', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }} title="Click to copy">
-                            {cryptoData.address}
-                        </div>
-                    </div>
-                    <button onClick={() => { navigator.clipboard.writeText(cryptoData.address); }}
-                        style={{ background: 'rgba(160,100,220,0.08)', border: '1px solid rgba(160,100,220,0.2)', color: '#d4b0f0', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', letterSpacing: 3, fontWeight: 600, padding: '10px 28px', cursor: 'pointer', borderRadius: 6 }}>
-                        COPY ADDRESS
-                    </button>
-
-                    <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg,transparent,rgba(160,100,220,0.1),transparent)', margin: '4px 0' }} />
-
-                    {cryptoConfirmed ? (
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: '#4caf50', letterSpacing: 3, fontWeight: 700 }}>✓ PAYMENT CONFIRMED — ENTERING...</div>
-                    ) : (
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 3, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#a064dc', animation: '_tributePulse 1.5s infinite' }} />
-                            WAITING FOR PAYMENT...
-                        </div>
-                    )}
-
-                    <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.18)', textAlign: 'center', lineHeight: 1.7, maxWidth: 400 }}>
-                        Send the exact amount shown above. Your profile will be created automatically once the transaction is confirmed.
-                    </div>
-
-                    <button onClick={() => { setCryptoData(null); if (cryptoPollRef.current) clearInterval(cryptoPollRef.current); }}
-                        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', letterSpacing: 3, padding: '8px 20px', cursor: 'pointer', marginTop: 4 }}>CLOSE</button>
-                </div>
-                <style>{`@keyframes _tributePulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-            </div>
+        {showPayment && (
+            <PaymentModal
+                amountEur={55}
+                label="ENTRANCE TRIBUTE"
+                cardBody={{ memberId: userEmail || '', amount: 55 }}
+                cryptoApiPath="/api/tribute/passimpay"
+                cryptoStatusApiPath="/api/tribute/passimpay-status"
+                cryptoPayBody={{ memberId: userEmail || '' }}
+                confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
+                onSuccess={() => { window.location.href = '/onboarding'; }}
+                onClose={() => setShowPayment(false)}
+            />
         )}
     </>);
 }
