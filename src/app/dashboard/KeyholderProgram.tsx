@@ -1371,7 +1371,7 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                             </div>
                         )}
                     </div>
-                    {sel && program && <TaskPanel dayNum={sel} tasks={program[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any)=>updateTask(sel,i,f,v)} addTask={(t:string)=>addTask(sel,t)} removeTask={(i:number)=>removeTask(sel,i)} moveTask={(a:number,b:number)=>moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
+                    {sel && program && <TaskPanel dayNum={sel} tasks={program[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any)=>updateTask(sel,i,f,v)} addTask={(t:string,l?:string,tgt?:number,cfg?:any)=>addTask(sel,t,l,tgt,cfg)} removeTask={(i:number)=>removeTask(sel,i)} moveTask={(a:number,b:number)=>moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
                 </div>
             )}
         </div>
