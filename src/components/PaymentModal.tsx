@@ -543,7 +543,7 @@ export default function PaymentModal({
                     </div>
 
                     <div style={{ background: 'rgba(255,80,80,0.04)', border: '1px solid rgba(255,80,80,0.12)', borderRadius: 10, padding: '14px 16px', marginBottom: 24, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>⏳</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,120,120,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
                             Your access will <strong style={{ color: '#fff' }}>not open automatically.</strong><br/>Expect it within 24 hours.
                         </div>
