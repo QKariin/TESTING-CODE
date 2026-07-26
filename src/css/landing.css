@@ -5,8 +5,6 @@
 
 /* Override Tailwind/globals white background */
 html, body {
-    height: 100% !important;
-    overflow: hidden !important;
     background-color: #000 !important;
     overscroll-behavior: none;
 }

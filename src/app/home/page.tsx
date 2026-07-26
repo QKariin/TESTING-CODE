@@ -435,6 +435,7 @@ export default function TestLandingPage() {
 
     return (
         <>
+        <style>{`html, body { height: 100% !important; overflow: hidden !important; }`}</style>
         {/* Fixed background — outside landing-page so transforms can't break position:fixed */}
         <div className="landing-bg" />
         <div className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
