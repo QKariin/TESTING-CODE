@@ -367,6 +367,19 @@ export default function PaymentModal({
                 </button>
 
 
+                <button onClick={() => setCardStep('moonpay')}
+                    style={{ width: '100%', padding: '20px 18px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, textAlign: 'left' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(80,180,255,0.1)', border: '1px solid rgba(80,180,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" stroke="rgba(80,180,255,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', fontWeight: 600, marginBottom: 3 }}>MoonPay</div>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 1 }}>Card to crypto directly</div>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: '#fff', fontWeight: 700, letterSpacing: 1 }}>No wallet needed</div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(80,180,255,0.6)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+
                 <button onClick={() => setCardStep('story')}
                     style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
             </div>
