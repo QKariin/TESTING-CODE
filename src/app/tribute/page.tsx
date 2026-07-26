@@ -261,8 +261,8 @@ export default function TributePage() {
     ));
 
     return (<>
-        {/* gradient overlay — fixed, no image needed, image is on html element */}
-        <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.5) 50%, rgba(2,2,2,0.7) 80%, rgba(2,2,2,0.85) 100%)', zIndex: 0, pointerEvents: 'none' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9)' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.5) 60%, rgba(2,2,2,0.75) 100%)', pointerEvents: 'none' }} />
 
         <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', position: 'relative' }}>
             <style>{`
@@ -496,8 +496,7 @@ export default function TributePage() {
                 /* hide scrollbars everywhere */
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
-                html, body { overscroll-behavior: none; overflow-x: clip; }
-                html { background: url('/queen-payment-bg.png') center top / cover no-repeat fixed; background-color: #020202; }
+                html, body { overscroll-behavior: none; background: #020202 !important; background-image: none !important; }
 
                 /* ─── DESKTOP ─── */
                 @media (min-width: 769px) {
