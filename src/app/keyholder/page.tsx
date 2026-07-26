@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import FaqFooter from '@/components/FaqFooter';
 import PaymentModal from '@/components/PaymentModal';
@@ -77,6 +77,7 @@ function getRecommendation(answers: string[]): { tier: string; title: string; te
 }
 
 export default function KeyholderPage() {
+    const containerRef = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const [status, setStatus] = useState<string | null>(null);
@@ -121,9 +122,11 @@ export default function KeyholderPage() {
 
     /* ── Sticky header on scroll ── */
     useEffect(() => {
-        const onScroll = () => setShowStickyHeader(window.scrollY > window.innerHeight * 0.8);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
+        const el = containerRef.current;
+        if (!el) return;
+        const onScroll = () => setShowStickyHeader(el.scrollTop > window.innerHeight * 0.8);
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
     }, []);
 
     useEffect(() => {
@@ -387,7 +390,7 @@ export default function KeyholderPage() {
             </div>
         </div>
 
-        <div style={{ background: 'transparent', color: '#fff', minHeight: '100svh', overflowX: 'hidden', position: 'relative', zIndex: 1, WebkitOverflowScrolling: 'touch' }}>
+        <div ref={containerRef} style={{ position: 'fixed', inset: 0, overflowY: 'scroll', overflowX: 'hidden', zIndex: 1, color: '#fff' }}>
 
             <style>{`
                 html, body { overflow-x: hidden; overflow-y: auto; background: #020202; }
