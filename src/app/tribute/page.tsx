@@ -785,10 +785,10 @@ export default function TributePage() {
                     style={{ marginTop: 160 }}
                 >
                     {/* Section header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '6px' }}>THE EXPERIENCE</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>THE EXPERIENCE</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
                     <div className="trib-two-col" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -896,10 +896,10 @@ export default function TributePage() {
                     style={{ marginTop: 80 }}
                 >
                     {/* Section header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '6px' }}>LEADERBOARD</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>LEADERBOARD</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
                     {/* Period tabs */}
@@ -1004,10 +1004,10 @@ export default function TributePage() {
                     style={{ marginTop: 80 }}
                 >
                     {/* Section header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 32 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.15))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '6px' }}>TESTIMONIALS</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
                     {/* Review cards — keyholder style: 3 visible, clamped, grow animation */}
@@ -1033,7 +1033,7 @@ export default function TributePage() {
                                 <div style={{ borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden' }}>
 
                                     {/* ── PROFILE CARD HEADER ── */}
-                                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.04) 0%, rgba(255,255,255,0.01) 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(255,255,255,0.04) 100%)', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
                                         {/* Top row: avatar left, identity right */}
                                         <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
                                             {/* Avatar — left side, bigger */}
@@ -1046,8 +1046,8 @@ export default function TributePage() {
                                             </div>
                                             {/* Identity — 3 lines centered */}
                                             <div style={{ flex: 1, textAlign: 'center' }}>
-                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1.2, marginBottom: 4 }}>{rName}</div>
-                                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 2.5, color: 'rgba(197,160,89,0.7)', textTransform: 'uppercase', marginBottom: 3 }}>{rHierarchy}</div>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 8, marginBottom: 4 }}>{rName}</div>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(197,160,89,0.45)', textTransform: 'uppercase', marginBottom: 3 }}>{rHierarchy}</div>
                                                 {rServing && (
                                                     <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5, textTransform: 'uppercase' }}>SERVING {rServing.toUpperCase()}</div>
                                                 )}
