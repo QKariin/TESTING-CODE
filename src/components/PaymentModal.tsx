@@ -267,7 +267,7 @@ export default function PaymentModal({
             />
             <div style={{ width: '100%', maxWidth: 400 }}>
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 4, textAlign: 'center', marginBottom: 10 }}>WALLET ADDRESS</div>
-                <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7 }}>{cryptoData.address}</div>
+                <div style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, textTransform: 'none', fontVariant: 'normal' }}>{cryptoData.address}</div>
                 <button onClick={copyAddress} style={{ width: '100%', marginTop: 10, padding: '16px', background: copied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${copied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 10, color: copied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer' }}>
                     {copied ? '✓ COPIED' : 'COPY ADDRESS'}
                 </button>
@@ -424,7 +424,7 @@ export default function PaymentModal({
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
                             </div>
-                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8 }}>{inlineAddress.address}</div>
+                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none', fontVariant: 'normal' }}>{inlineAddress.address}</div>
                             <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                             </button>
@@ -491,7 +491,7 @@ export default function PaymentModal({
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
                             </div>
-                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8 }}>{inlineAddress.address}</div>
+                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none', fontVariant: 'normal' }}>{inlineAddress.address}</div>
                             <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                             </button>
