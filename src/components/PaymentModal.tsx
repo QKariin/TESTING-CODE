@@ -71,7 +71,7 @@ export default function PaymentModal({
             const res = await fetch(cryptoApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...cryptoPayBody, currencyId: 70 }),
+                body: JSON.stringify({ ...cryptoPayBody, currencyId: 20 }),
             });
             const data = await res.json();
             if (data.success) {
@@ -383,7 +383,7 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Anonymous. No one knows. Not even your bank.</div>
                 {[
                     { n: '1', text: 'Open Revolut. At the bottom you will see 5 icons. Tap the coin one.' },
-                    { n: '2', text: 'Search USDT. Select Tether USD. IMPORTANT: select the TRON (TRC20) network.' },
+                    { n: '2', text: 'Search Ethereum (ETH). Select it.' },
                     { n: '3', text: `Tap Buy. Enter €${Number(amountEur).toFixed(2)}. Confirm.` },
                     { n: '4', text: 'Tap Send. Select To crypto address. Copy the address below and paste it in. Send.' },
                 ].map(s => (
@@ -407,7 +407,7 @@ export default function PaymentModal({
                             <div style={{ textAlign: 'center', marginBottom: 12 }}>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#26a17b', letterSpacing: 3, marginTop: 2 }}>USDT <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#627eea', letterSpacing: 3, marginTop: 2 }}>ETH <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
@@ -474,7 +474,7 @@ export default function PaymentModal({
                             <div style={{ textAlign: 'center', marginBottom: 12 }}>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#26a17b', letterSpacing: 3, marginTop: 2 }}>USDT <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#627eea', letterSpacing: 3, marginTop: 2 }}>ETH <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
