@@ -31,18 +31,23 @@ async function buildReviews(): Promise<any[]> {
         .in('member_id', emails);
     const { data: tasks } = await supabaseAdmin
         .from('tasks')
-        .select('member_id, Taskdom_CompletedTasks')
+        .select('member_id, Taskdom_CompletedTasks, kneelCount')
         .in('member_id', emails);
 
     const profileMap = new Map<string, any>();
     (profiles || []).forEach((p: any) => profileMap.set((p.member_id || '').toLowerCase(), p));
-    const taskMap = new Map<string, number>();
-    (tasks || []).forEach((t: any) => taskMap.set((t.member_id || '').toLowerCase(), Number(t.Taskdom_CompletedTasks || 0)));
+    const taskMap = new Map<string, { tasks: number; kneels: number }>();
+    (tasks || []).forEach((t: any) => taskMap.set((t.member_id || '').toLowerCase(), {
+        tasks: Number(t.Taskdom_CompletedTasks || 0),
+        kneels: Number(t.kneelCount || 0),
+    }));
 
     return reviews.map((r: any) => {
         const email = (r.member_id || '').toLowerCase().trim();
         const profile = profileMap.get(email);
-        const taskCount = taskMap.get(email) || 0;
+        const taskData = taskMap.get(email) || { tasks: 0, kneels: 0 };
+        const taskCount = taskData.tasks;
+        const kneelCount = taskData.kneels;
 
         let servingText = '';
         const joinedDate = profile?.joined_date;
@@ -51,7 +56,13 @@ async function buildReviews(): Promise<any[]> {
             if (days < 1) servingText = 'today';
             else if (days < 30) servingText = `${days} days`;
             else if (days < 365) servingText = `${Math.floor(days / 30)} months`;
-            else servingText = `${Math.floor(days / 365)}y ${Math.floor((days % 365) / 30)}m`;
+            else {
+                const yrs = Math.floor(days / 365);
+                const mos = Math.floor((days % 365) / 30);
+                servingText = mos > 0
+                    ? `${yrs} ${yrs === 1 ? 'year' : 'years'} ${mos} ${mos === 1 ? 'month' : 'months'}`
+                    : `${yrs} ${yrs === 1 ? 'year' : 'years'}`;
+            }
         }
 
         return {
@@ -65,6 +76,7 @@ async function buildReviews(): Promise<any[]> {
                 hierarchy: profile?.hierarchy || 'Hall Boy',
                 merit: profile?.score || 0,
                 tasksCompleted: taskCount,
+                kneelCount,
                 servingText,
             },
         };

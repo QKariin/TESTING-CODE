@@ -29,6 +29,7 @@ export default function TributePage() {
     const [lbPeriod, setLbPeriod] = useState<'today' | 'weekly' | 'monthly' | 'alltime'>('weekly');
     const [reviews, setReviews] = useState<any[]>([]);
     const [showAllReviews, setShowAllReviews] = useState(false);
+    const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
     const [toasts, setToasts] = useState<any[]>([]);
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const [iframeFull, setIframeFull] = useState(false);
@@ -211,6 +212,26 @@ export default function TributePage() {
         );
         Object.values(sectionRefs.current).forEach(el => { if (el) observer.observe(el); });
         return () => observer.disconnect();
+    }, [mounted]);
+
+    /* ── Slide-in from sides for feature items ── */
+    useEffect(() => {
+        const items = document.querySelectorAll('.feature-item');
+        items.forEach((el, i) => {
+            el.classList.add(i % 2 === 0 ? 'from-left' : 'from-right');
+        });
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    setTimeout(() => {
+                        (e.target as HTMLElement).classList.add('slide-in');
+                    }, (Array.from(document.querySelectorAll('.feature-item')).indexOf(e.target as HTMLElement) % 3) * 80);
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        items.forEach(el => obs.observe(el));
+        return () => obs.disconnect();
     }, [mounted]);
 
     /* ── Grow-on-scroll for review cards ── */
@@ -496,17 +517,19 @@ export default function TributePage() {
                 }
                 .review-stars { display: flex; gap: 2px; position: absolute; top: 12px; right: 16px; }
                 .review-body { overflow: hidden; }
+                .review-body p { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9rem; line-height: 1.8; color: rgba(255,255,255,0.6); font-weight: 300; }
                 .review-body img, .review-body video { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 
-                .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+                .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
                 .review-read-more { display: block; width: 100%; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-family: Orbitron, sans-serif; letter-spacing: 3px; text-align: left; }
 
                 .feature-item {
-                    transition: transform 0.3s ease;
+                    opacity: 0;
+                    transition: opacity 0.55s ease-out, transform 0.55s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, border-color 0.3s ease;
                 }
-                .feature-item:hover {
-                    transform: translateX(4px);
-                }
+                .feature-item.from-left { transform: translateX(-40px); }
+                .feature-item.from-right { transform: translateX(40px); }
+                .feature-item.slide-in { opacity: 1; transform: translateX(0); }
 
                 @keyframes toastIn {
                     from { opacity: 0; transform: translateX(-50%) translateY(20px); }
@@ -586,8 +609,8 @@ export default function TributePage() {
             `}</style>
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', zIndex: 0, opacity: 0.35, filter: 'saturate(0.2) brightness(0.7)' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.7) 30%, rgba(2,2,2,0.92) 55%, #020202 75%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', zIndex: 0, opacity: 0.55, filter: 'saturate(0.5) brightness(0.8)' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.1) 0%, rgba(2,2,2,0.5) 40%, rgba(2,2,2,0.85) 70%, #020202 90%)', zIndex: 0 }} />
             {/* Gold accent glow top */}
             <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '40vh', background: 'radial-gradient(ellipse at center top, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             {/* Noise texture */}
@@ -694,51 +717,36 @@ export default function TributePage() {
                 );
             })}
 
+            {/* ─── FIXED HEADER ─── */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+                textAlign: 'center', padding: '10px 20px 8px',
+                background: 'rgba(4,4,6,0.65)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(197,160,89,0.08)',
+            }}>
+                <div style={{
+                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 500,
+                    color: 'rgba(197,160,89,0.4)', letterSpacing: '8px', textTransform: 'uppercase',
+                    marginBottom: 2,
+                }}>
+                    PRESENTED BY
+                </div>
+                <h1 style={{
+                    fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 5vw, 1.8rem)',
+                    color: '#fff', letterSpacing: '4px', textTransform: 'uppercase',
+                    margin: 0, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap',
+                }}>
+                    QUEEN KARIN
+                </h1>
+            </div>
+
             {/* ─── CONTENT ─── */}
             <div className="trib-container" style={{ position: 'relative', zIndex: 1, maxWidth: 560, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
-                {/* ════════════════════════════════════════════
-                    SECTION 1: BRAND HEADER — QUEEN KARIN
-                   ════════════════════════════════════════════ */}
-                <div style={{ paddingTop: 'clamp(60px, 12vw, 100px)', textAlign: 'center' }}>
-                    {/* Queen avatar with animated rings + name — brand header */}
-                    <div style={{ animation: mounted ? 'fadeIn 1.2s ease-out both' : 'none' }}>
-                        <div className="trib-brand-avatar" style={{
-                            position: 'relative', width: 110, height: 110, margin: '0 auto 24px',
-                        }}>
-                            <div style={{ position: 'absolute', inset: -8, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'ringExpand 4s ease-in-out infinite' }} />
-                            <div style={{ position: 'absolute', inset: -16, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.08)', animation: 'ringExpand 4s ease-in-out infinite 0.7s' }} />
-                            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.04)', animation: 'ringExpand 4s ease-in-out infinite 1.4s' }} />
-                            <img
-                                src="/queen-karin.png" alt="Queen Karin"
-                                style={{
-                                    width: 110, height: 110, borderRadius: '50%', objectFit: 'cover',
-                                    border: '1.5px solid rgba(197,160,89,0.35)',
-                                    boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.08)',
-                                }}
-                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                        </div>
-                        <div style={{
-                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', fontWeight: 500,
-                            color: 'rgba(197,160,89,0.4)', letterSpacing: '8px', textTransform: 'uppercase',
-                            marginBottom: 12,
-                        }}>
-                            PRESENTED BY
-                        </div>
-                        <h1 style={{
-                            fontFamily: 'Cinzel, serif', fontSize: 'clamp(2rem, 7vw, 3rem)',
-                            color: '#fff', letterSpacing: '4px', textTransform: 'uppercase',
-                            margin: '0 0 4px', fontWeight: 600, lineHeight: 1.05, whiteSpace: 'nowrap',
-                        }}>
-                            QUEEN KARIN
-                        </h1>
-                        <div style={{
-                            width: 50, height: '1.5px', margin: '16px auto 0',
-                            background: 'linear-gradient(90deg, transparent, #c5a059, transparent)',
-                        }} />
-                    </div>
-                </div>
+                {/* spacer for the fixed header height */}
+                <div style={{ paddingTop: 72 }} />
 
                 {/* ════════════════════════════════════════════
                     SECTION 1b: HERO — VIDEO + TEXT
@@ -777,14 +785,6 @@ export default function TributePage() {
                         </div>
                     </div>
 
-                    {/* ── VIDEO (mobile: after text, desktop: left via order:-1) ── */}
-                    <div className="trib-hero-video" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '24px auto 0', background: '#000' }}>
-                        <video
-                            src="/tribute-intro.mov"
-                            autoPlay muted loop playsInline
-                            style={{ width: '100%', display: 'block', opacity: 0.6 }}
-                        />
-                    </div>
                 </div>
 
                 {/* ════════════════════════════════════════════
@@ -803,41 +803,95 @@ export default function TributePage() {
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.15), transparent)' }} />
                     </div>
 
-                    <div className="trib-two-col" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div className="trib-two-col" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {[
-                            { title: 'HIERARCHY SYSTEM', desc: 'Rise from Hall Boy to Champion through devotion, tasks, and merit earned over time', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z"/></svg> },
-                            { title: 'DAILY TASKS & ROUTINES', desc: 'Structured assignments from Queen Karin herself. Discipline that shapes your days', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12L11 14L15 10"/></svg> },
-                            { title: 'CHALLENGES', desc: 'Push your limits with weekly and monthly challenges. Prove yourself and climb the ranks', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> },
-                            { title: 'ROYAL SILVER ECONOMY', desc: 'Earn and spend coins through tributes, games of chance, and loyalty rewards', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7V17M9 9.5C9 8.67 10.34 8 12 8S15 8.67 15 9.5 13.66 11 12 11 9 11.67 9 12.5 10.34 14 12 14S15 14.67 15 15.5"/></svg> },
-                            { title: 'PRIVATE MESSAGES', desc: 'Direct communication with Queen Karin. Guidance, praise, and correction', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
-                            { title: 'COMPETITIONS & EVENTS', desc: 'Weekly challenges, leaderboard battles, and live events with real stakes', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M6 9H4a2 2 0 01-2-2V4h6M18 9h2a2 2 0 002-2V4h-6M12 15V9M8 21h8M12 21v-6"/><rect x="6" y="3" width="12" height="8" rx="1"/></svg> },
-                        ].map((item, i) => (
+                            {
+                                title: 'HIERARCHY SYSTEM',
+                                desc: 'You start at the bottom.',
+                                detail: 'Every subject enters at the bottom. Through consistent devotion, completed tasks, and merit earned, you climb. Each rank unlocks new privileges, closer access, and greater expectations. The hierarchy is not just a title. It is a measure of how seriously you take your place at her feet.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z"/></svg>
+                            },
+                            {
+                                title: 'DAILY TASKS & ROUTINES',
+                                desc: 'Queen Karin assigns your day.',
+                                detail: 'Each day brings new directives: exercises, rituals, written reflections, and acts of service. These are not optional. Completing them builds discipline, earns merit, and keeps you in Queen Karin\'s awareness. Miss them, and you fall behind. Follow them, and you become exactly what you are meant to be.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12L11 14L15 10"/></svg>
+                            },
+                            {
+                                title: 'CHALLENGES',
+                                desc: 'Comfort is not why you are here.',
+                                detail: 'Beyond daily tasks lie the Challenges. Harder, longer, designed to test your real commitment. Weekly missions push your endurance. Monthly events demand everything. Those who complete them earn recognition, rewards, and a place in the memory of the Court.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            },
+                            {
+                                title: 'KEYHOLDER',
+                                desc: 'Queen Karin holds the key.',
+                                detail: 'Keyholder comes with a fully dedicated app. Every day you receive tasks assigned by Queen Karin directly. You check in and out of kneeling sessions. You complete routines and submit proof. Your dashboard shows your daily progress, completed tasks, kneeling count, merit, and full history. Queen Karin can see everything in real time. Nothing goes unnoticed. You report to her, not to yourself.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            },
+                            {
+                                title: 'PRIVATE MESSAGES',
+                                desc: 'Real words. Real responses. No bots.',
+                                detail: 'This is not a chatbot. Queen Karin reads and responds personally. She uses this channel to correct, guide, praise, and instruct. Access is a privilege, not a right. The quality of your engagement determines how much of her attention you receive.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                            },
+                            {
+                                title: 'COMPETITIONS & EVENTS',
+                                desc: 'The leaderboard is public.',
+                                detail: 'The leaderboard is visible to all. Your rank, your merit, your kneeling count: public. Competitions pit subjects against each other for positions of honour and recognition from the Queen herself. Live events create moments you will not forget. This is not a passive experience.',
+                                svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><path d="M6 9H4a2 2 0 01-2-2V4h6M18 9h2a2 2 0 002-2V4h-6M12 15V9M8 21h8M12 21v-6"/><rect x="6" y="3" width="12" height="8" rx="1"/></svg>
+                            },
+                        ].map((item, i) => {
+                            const isOpen = expandedFeature === i;
+                            return (
                             <div key={i} className="feature-item" style={{
-                                display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 14px',
                                 borderRadius: 8,
-                                borderLeft: '1.5px solid rgba(197,160,89,0.2)',
-                                background: 'rgba(197,160,89,0.03)',
-                                transitionDelay: `${i * 0.07}s`,
-                            }}>
-                                <div style={{ width: 28, textAlign: 'center', flexShrink: 0, marginTop: 2, display: 'flex', justifyContent: 'center' }}>
-                                    {item.svg}
-                                </div>
-                                <div>
-                                    <div style={{
-                                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600,
-                                        color: 'rgba(197,160,89,0.8)', letterSpacing: '3px', marginBottom: 4,
-                                    }}>
-                                        {item.title}
+                                borderLeft: `1.5px solid ${isOpen ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}`,
+                                background: isOpen ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.03)',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                            }} onClick={() => setExpandedFeature(isOpen ? null : i)}>
+                                {/* Header row */}
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 14px' }}>
+                                    <div style={{ width: 28, textAlign: 'center', flexShrink: 0, marginTop: 2, display: 'flex', justifyContent: 'center' }}>
+                                        {item.svg}
                                     </div>
-                                    <div style={{
-                                        fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.82rem',
-                                        color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, fontWeight: 300,
-                                    }}>
-                                        {item.desc}
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{
+                                            fontFamily: 'Cinzel, serif', fontSize: '0.82rem', fontWeight: 600,
+                                            color: 'rgba(197,160,89,0.8)', letterSpacing: '2px', marginBottom: 4,
+                                        }}>
+                                            {item.title}
+                                        </div>
+                                        <div style={{ height: 1, background: 'rgba(197,160,89,0.12)', margin: '6px 0' }} />
+                                        <div style={{
+                                            fontFamily: "'Italianno', cursive", fontSize: '1.15rem',
+                                            color: 'rgba(255,255,255,0.55)', lineHeight: 1.4, fontWeight: 400,
+                                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                        }}>
+                                            {item.desc}
+                                        </div>
+                                    </div>
+                                    {/* Chevron */}
+                                    <div style={{ flexShrink: 0, marginTop: 2, transition: 'transform 0.3s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+                                    </div>
+                                </div>
+                                {/* Drawer */}
+                                <div style={{
+                                    maxHeight: isOpen ? 300 : 0,
+                                    overflow: 'hidden',
+                                    transition: 'max-height 0.4s cubic-bezier(0.4,0,0.2,1)',
+                                }}>
+                                    <div style={{ padding: '0 14px 16px 58px', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.8, fontWeight: 300, borderTop: '1px solid rgba(197,160,89,0.08)' }}>
+                                        <div style={{ paddingTop: 12 }}>{item.detail}</div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -1013,8 +1067,14 @@ export default function TributePage() {
                     </div>
                 </div>
 
-
-
+                {/* ── VIDEO ── */}
+                <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '48px auto 0', background: '#000' }}>
+                    <video
+                        src="/tribute-intro.mov"
+                        autoPlay muted loop playsInline
+                        style={{ width: '100%', display: 'block', opacity: 0.6 }}
+                    />
+                </div>
 
                 {/* ════════════════════════════════════════════
                     SECTION 6: REVIEWS
@@ -1038,7 +1098,7 @@ export default function TributePage() {
                             No reviews yet
                         </div>
                     )}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 40, margin: '0 -20px' }}>
                         {(showAllReviews ? reviews : reviews.slice(0, 3)).map((review, i) => {
                             const rev = review.reviewer || {};
                             const rName = rev.name || 'Loyal Subject';
@@ -1046,34 +1106,60 @@ export default function TributePage() {
                             const rHierarchy = rev.hierarchy || 'Hall Boy';
                             const rMerit = rev.merit || 0;
                             const rTasks = rev.tasksCompleted || 0;
+                            const rKneels = rev.kneelCount || 0;
                             const rServing = rev.servingText || '';
                             const rRating = review.rating || 5;
                             const initial = rName.charAt(0).toUpperCase();
-                            const servingHtml = rServing ? ` \u00B7 SERVING ${rServing.toUpperCase()}` : '';
                             return (
                             <div key={review.id || i} className="trib-grow">
-                                <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                                    <div className="review-header" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                        {rAvatar ? (
-                                            <img className="review-avatar" src={rAvatar} style={{ borderColor: 'rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                        ) : (
-                                            <div className="review-avatar-placeholder" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>{initial}</div>
-                                        )}
-                                        <div className="review-meta">
-                                            <div className="review-stars">
-                                                {Array.from({ length: 5 }, (_, s) => (
-                                                    <span key={s} className={s < rRating ? 'star-on' : 'star-off'} style={s < rRating ? { color: '#8b0000' } : {}}>&#9733;</span>
-                                                ))}
+                                <div style={{ borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+
+                                    {/* ── PROFILE CARD HEADER ── */}
+                                    <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.04) 0%, rgba(255,255,255,0.01) 100%)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        {/* Top row: avatar left, identity right */}
+                                        <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                                            {/* Avatar — left side, bigger */}
+                                            <div style={{ flexShrink: 0 }}>
+                                                {rAvatar ? (
+                                                    <img src={rAvatar} style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                ) : (
+                                                    <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(197,160,89,0.05)', border: '1.5px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: 'rgba(197,160,89,0.4)' }}>{initial}</div>
+                                                )}
                                             </div>
-                                            <div className="review-name" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>{rName}</div>
-                                            <div className="review-merit" style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{rMerit.toLocaleString()} MERIT &middot; {rTasks} TASKS</div>
-                                            <div className="review-hierarchy" style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.15)' }}>{rHierarchy.toUpperCase()}{servingHtml}</div>
+                                            {/* Identity — 3 lines centered */}
+                                            <div style={{ flex: 1, textAlign: 'center' }}>
+                                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1.2, marginBottom: 4 }}>{rName}</div>
+                                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 2.5, color: 'rgba(197,160,89,0.7)', textTransform: 'uppercase', marginBottom: 3 }}>{rHierarchy}</div>
+                                                {rServing && (
+                                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5, textTransform: 'uppercase' }}>SERVING {rServing.toUpperCase()}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Stat bar — full width, 3 stats */}
+                                        <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                            {[
+                                                { label: 'MERIT', value: rMerit.toLocaleString() },
+                                                { label: 'TASKS', value: rTasks },
+                                                { label: 'KNEELING', value: rKneels.toLocaleString() },
+                                            ].map((stat, si) => (
+                                                <div key={stat.label} style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderLeft: si > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{stat.value}</div>
+                                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.44rem', color: 'rgba(255,255,255,0.18)', letterSpacing: 2, textTransform: 'uppercase' }}>{stat.label}</div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                    <div className="review-body clamped" id={`trib-review-body-${i}`} style={{ padding: '14px 16px 16px', background: 'rgba(255,255,255,0.01)' }}>
-                                        <p style={{ fontSize: '0.95rem', lineHeight: 1.8, color: 'rgba(255,255,255,0.55)' }}>&ldquo;{review.text}&rdquo;</p>
+
+                                    {/* ── REVIEW BODY ── */}
+                                    <div className="review-body clamped" id={`trib-review-body-${i}`} style={{ padding: '14px 18px 16px' }}>
+                                        <div style={{ display: 'flex', gap: 1, marginBottom: 8 }}>
+                                            {Array.from({ length: 5 }, (_, s) => (
+                                                <span key={s} style={{ fontSize: '0.65rem', color: s < rRating ? '#8b0000' : 'rgba(255,255,255,0.08)' }}>&#9733;</span>
+                                            ))}
+                                        </div>
+                                        <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.8rem', lineHeight: 1.8, color: 'rgba(255,255,255,0.5)', fontWeight: 300, margin: 0 }}>&ldquo;{review.text}&rdquo;</p>
                                     </div>
-                                    <button className="review-read-more" style={{ fontSize: '0.5rem', padding: '6px 16px 10px', color: 'rgba(255,255,255,0.2)' }} onClick={(e) => {
+                                    <button className="review-read-more" style={{ fontSize: '0.6rem', padding: '8px 18px 12px', color: 'rgba(255,255,255,0.4)' }} onClick={(e) => {
                                         const body = document.getElementById(`trib-review-body-${i}`);
                                         if (body) {
                                             const isClamped = body.classList.toggle('clamped');
