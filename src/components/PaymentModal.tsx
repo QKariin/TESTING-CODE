@@ -361,20 +361,21 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>No account. No wallet. Just your card.</div>
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Anonymous. Sends crypto straight to the address.</div>
                 {[
-                    { n: '1', text: 'Open __MOONPAY__ in your browser.' },
-                    { n: '2', text: `__USDT__ In "You pay" type €${Number(amountEur).toFixed(2)}.` },
-                    { n: '3', text: 'Tap Continue. It will ask for a wallet address.' },
-                    { n: '4', text: 'Copy the address shown below and paste it in. Enter your card details and confirm.' },
+                    { n: '1', text: '__MOONPAY__' },
+                    { n: '2', text: '__USDT__' },
+                    { n: '3', text: `In "You pay" type €${Number(amountEur).toFixed(2)}.` },
+                    { n: '4', text: 'Tap Continue. It will ask for a wallet address.' },
+                    { n: '5', text: 'Copy the address shown below and paste it in. Enter your card details and confirm.' },
                 ].map(s => (
                     <div key={s.n} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'flex-start' }}>
                         <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(80,180,255,0.1)', border: '1px solid rgba(80,180,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: 'rgba(80,180,255,0.8)', fontWeight: 700 }}>{s.n}</span>
                         </div>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, paddingTop: 2, textAlign: 'left' }}>
-                            {s.text.includes('__MOONPAY__')
+                            {s.text === '__MOONPAY__'
                                 ? <>Open <a href="https://www.moonpay.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(80,180,255,0.9)', textDecoration: 'underline' }}>Moonpay.com</a> in your browser.</>
-                                : s.text.includes('__USDT__')
-                                ? <>Make sure <strong style={{ color: '#fff' }}>USDT is selected.</strong> {s.text.replace('__USDT__ ', '')}</>
+                                : s.text === '__USDT__'
+                                ? <>Make sure <strong style={{ color: '#fff' }}>USDT is selected.</strong></>
                                 : s.text}
                         </div>
                     </div>
