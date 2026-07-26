@@ -44,6 +44,7 @@ export default function PaymentModal({
     const [cardLoading, setCardLoading] = useState(false);
     const [cardError, setCardError] = useState('');
     const [cryptoError, setCryptoError] = useState('');
+    const [showCardNotice, setShowCardNotice] = useState(false);
     const [cryptoData, setCryptoData] = useState<any>(null);
     const [confirmed, setConfirmed] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -227,17 +228,29 @@ export default function PaymentModal({
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2.8rem', color: '#fff', fontWeight: 700, lineHeight: 1 }}>€{Number(amountEur).toFixed(2)}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* CARD — temporarily unavailable */}
-                    <div style={{ position: 'relative' }}>
-                        <div style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, color: 'rgba(255,255,255,0.18)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxSizing: 'border-box' }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                            PAY WITH CARD
+                    {/* CARD UNAVAILABLE NOTICE */}
+                    {showCardNotice && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(8,4,4,0.92)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 28 }}>
+                            <div style={{ maxWidth: 360, width: '100%', textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(220,60,60,0.7)', letterSpacing: 4, marginBottom: 20 }}>CARD PAYMENTS UNAVAILABLE</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: 32 }}>Card payments are temporarily suspended. Use crypto to complete your payment.</div>
+                                <button onClick={() => { setShowCardNotice(false); setScreen('crypto-picker'); }}
+                                    style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', marginBottom: 10 }}>
+                                    PAY WITH CRYPTO
+                                </button>
+                                <button onClick={() => setShowCardNotice(false)}
+                                    style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>
+                                    DISMISS
+                                </button>
+                            </div>
                         </div>
-                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,6,6,0.82)', borderRadius: 10, backdropFilter: 'blur(2px)' }}>
-                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.48rem', color: 'rgba(200,60,60,0.85)', letterSpacing: 4, fontWeight: 700 }}>TEMPORARILY UNAVAILABLE</div>
-                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.28)', letterSpacing: 1, marginTop: 4 }}>Use crypto below</div>
-                        </div>
-                    </div>
+                    )}
+                    {/* CARD button — visible, tappable */}
+                    <button onClick={() => setShowCardNotice(true)}
+                        style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        PAY WITH CARD
+                    </button>
                     <button onClick={() => setScreen('crypto-picker')}
                         style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>

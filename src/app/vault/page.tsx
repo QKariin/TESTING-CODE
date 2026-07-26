@@ -340,11 +340,7 @@ export default function VaultPage() {
     const [taskUploading, setTaskUploading] = useState(false);
     const [taskSubmitted, setTaskSubmitted] = useState<Record<string, boolean>>({});
     const [vaultSkipOpen, setVaultSkipOpen] = useState(false);
-    const [previewTasks, setPreviewTasks] = useState<any[] | null>(() => {
-        if (typeof window === 'undefined') return null;
-        const p = new URLSearchParams(window.location.search).get('preview');
-        return p ? buildPreviewTask(p) : null;
-    });
+    const [previewTasks, setPreviewTasks] = useState<any[] | null>(null);
     const previewMode = previewTasks !== null;
     const [attnHolding, setAttnHolding] = useState(false);
     const [attnFill, setAttnFill] = useState(0);
@@ -633,8 +629,10 @@ export default function VaultPage() {
         // ── PREVIEW MODE: bypass auth + API entirely ──
         if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('preview')) {
             const p = new URLSearchParams(window.location.search).get('preview') || 'spin_wheel';
+            const previewTask = buildPreviewTask(p);
+            setPreviewTasks(previewTask);
             setProfile({ name: 'Preview', member_id: 'preview@test.com', memberId: 'preview-id', wallet: 1200, hierarchy: 'Slave', skip_passes: 2 });
-            setVaultData({ active: true, daysIn: 7, programTasks: buildPreviewTask(p), today: { perfect: false, orders: [], trial_prompt: 'Write about your devotion to Queen Karin. 200 words minimum.' }, submissions: [], adjustments: [], session: { lock_days: 30, id: 'preview', started_at: new Date(Date.now() - 7 * 86400000).toISOString(), expires_at: new Date(Date.now() + 23 * 86400000).toISOString() }, dailyRecords: [] });
+            setVaultData({ active: true, daysIn: 7, programTasks: previewTask, today: { perfect: false, orders: [], trial_prompt: 'Write about your devotion to Queen Karin. 200 words minimum.' }, submissions: [], adjustments: [], session: { lock_days: 30, id: 'preview', started_at: new Date(Date.now() - 7 * 86400000).toISOString(), expires_at: new Date(Date.now() + 23 * 86400000).toISOString() }, dailyRecords: [] });
             setLoading(false);
             setTab('challenge');
             return;
@@ -2441,6 +2439,7 @@ export default function VaultPage() {
                                                                 const submitTask = async (opts: { text?: string; photoUrl?: string }) => {
                                                                     console.log('[vault] submitTask called:', o.type, 'mid:', mid);
                                                                     setTaskSubmitted(p => ({ ...p, [o.type]: true }));
+                                                                    if (previewMode) { setMechOverlay(null); return; }
                                                                     try {
                                                                         const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                                                                             body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: o.type, text: opts.text || null, photoUrl: opts.photoUrl || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),
@@ -3174,6 +3173,7 @@ export default function VaultPage() {
                 const mid = profile?.member_id || profile?.memberId || '';
                 const submitFollowUp = async (opts: { text?: string; photoUrl?: string }) => {
                     setTaskSubmitted(p => ({ ...p, [followUp.orderType]: true }));
+                    if (previewMode) { setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false); return; }
                     try {
                         const resp = await fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ action: 'submit_task', memberId: mid, orderType: followUp.orderType, text: opts.text || null, photoUrl: opts.photoUrl || null, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }),

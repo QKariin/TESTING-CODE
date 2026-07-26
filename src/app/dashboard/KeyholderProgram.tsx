@@ -443,23 +443,81 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                     const lbl: React.CSSProperties = { fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 4 };
                     const ta: React.CSSProperties = { ...inp, resize: 'vertical' as const };
                     const addBtnS: React.CSSProperties = { width: '100%', padding: '10px', fontFamily: F, fontSize: '.42rem', letterSpacing: 2, color: `rgba(${rgb},.5)`, background: `rgba(${rgb},.04)`, border: `1px dashed rgba(${rgb},.2)`, borderRadius: 8, cursor: 'pointer' };
-                    const fuSelect = (val: string, onChange: (v: string) => void) => (
-                        <select value={val} onChange={e => onChange(e.target.value)} style={{ ...inp, width: 'auto', padding: '4px 8px', fontSize: '.55rem', display: 'inline' }}>
-                            <option value="instant">Instant (no action)</option>
-                            <option value="writing">Writing Prompt</option>
-                            <option value="photo">Photo Proof</option>
-                            <option value="video">Video Recording</option>
-                            <option value="endurance">Endurance Timer</option>
-                        </select>
-                    );
-                    const fuExtra = (item: any, update: (k: string, v: any) => void) => (
-                        <>
-                            {item.followUpType === 'writing' && <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Prompt..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'endurance' && <input type="number" value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} placeholder="Seconds" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'video' && <input type="number" value={item.followUpTarget || 1} onChange={e => update('followUpTarget', +e.target.value)} placeholder="Recordings" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'photo' && <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
-                        </>
-                    );
+                    const fuPicker = (item: any, update: (k: string, v: any) => void) => {
+                        const cur = item.followUpType || 'instant';
+                        const reviewTypes = [
+                            { value: 'photo',   label: 'PHOTO'   },
+                            { value: 'video',   label: 'VIDEO'   },
+                            { value: 'writing', label: 'WRITING' },
+                        ];
+                        const autoTypes = [
+                            { value: 'add_day',      label: '+ DAY'    },
+                            { value: 'remove_day',   label: '− DAY'    },
+                            { value: 'add_coins',    label: '+ COINS'  },
+                            { value: 'remove_coins', label: '− COINS'  },
+                            { value: 'add_skippass', label: '+ SKIP'   },
+                            { value: 'instant',      label: 'NONE'     },
+                        ];
+                        const btn = (value: string, label: string) => {
+                            const active = cur === value;
+                            return (
+                                <button key={value} onClick={() => update('followUpType', value)} style={{
+                                    padding: '5px 11px', borderRadius: 5, cursor: 'pointer',
+                                    fontFamily: F, fontSize: '.35rem', letterSpacing: '1.5px',
+                                    border: `1px solid ${active ? `rgba(${rgb},.5)` : 'rgba(255,255,255,.08)'}`,
+                                    background: active ? `rgba(${rgb},.1)` : 'transparent',
+                                    color: active ? `rgba(${rgb > '1' ? rgb : '197,160,89'},.9)` : 'rgba(255,255,255,.3)',
+                                    transition: 'all .12s',
+                                }}>{label}</button>
+                            );
+                        };
+                        return (
+                            <div style={{ marginTop: 10 }}>
+                                <div style={{ ...lbl, marginBottom: 6 }}>FOLLOW-UP</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                                        <span style={{ fontFamily: F, fontSize: '.28rem', color: 'rgba(255,255,255,.2)', letterSpacing: 2, width: 60 }}>REVIEW</span>
+                                        {reviewTypes.map(t => btn(t.value, t.label))}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                                        <span style={{ fontFamily: F, fontSize: '.28rem', color: 'rgba(255,255,255,.2)', letterSpacing: 2, width: 60 }}>AUTO</span>
+                                        {autoTypes.map(t => btn(t.value, t.label))}
+                                    </div>
+                                </div>
+                                {/* Extra config per type */}
+                                {cur === 'writing' && (
+                                    <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Writing prompt (optional)..." style={{ ...inp, marginTop: 8, padding: '7px 12px', fontSize: '.52rem' }} />
+                                )}
+                                {cur === 'photo' && (
+                                    <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction (optional)..." style={{ ...inp, marginTop: 8, padding: '7px 12px', fontSize: '.52rem' }} />
+                                )}
+                                {cur === 'video' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={5} value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} style={{ ...inp, width: 80, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>sec time limit</span>
+                                    </div>
+                                )}
+                                {(cur === 'add_day' || cur === 'remove_day') && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 1} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 70, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cur === 'add_day' ? 'days added' : 'days removed'}</span>
+                                    </div>
+                                )}
+                                {(cur === 'add_coins' || cur === 'remove_coins') && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 50} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 80, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cur === 'add_coins' ? 'coins awarded' : 'coins deducted'}</span>
+                                    </div>
+                                )}
+                                {cur === 'add_skippass' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 1} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 70, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>skip passes awarded</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    };
                     const ec = addConfig; // edit config state
                     const setEc = (v: any) => setAddConfig(v);
 
@@ -473,15 +531,11 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 {items.map((item: any, i: number) => (
                                     <div key={i} style={{ padding: '10px 12px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, marginBottom: 8 }}>
                                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <span style={{ fontFamily: F, fontSize: '.55rem', color: 'rgba(255,255,255,.25)', width: 18, flexShrink: 0 }}>{i + 1}</span>
                                             <input value={item.text} onChange={e => updateItem(i, 'text', e.target.value)} placeholder={`${itemLabel} text...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.3)', cursor: 'pointer', fontSize: '1rem', padding: '0 4px', lineHeight: 1 }}>×</button>}
                                         </div>
-                                        <div style={{ marginTop: 6 }}>
-                                            <span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>
-                                            {fuSelect(item.followUpType || 'instant', v => updateItem(i, 'followUpType', v))}
-                                        </div>
-                                        {fuExtra(item, (k, v) => updateItem(i, k, v))}
+                                        {fuPicker(item, (k, v) => updateItem(i, k, v))}
                                     </div>
                                 ))}
                                 <button onClick={addItemFn} style={addBtnS}>+ ADD {itemLabel.toUpperCase()}</button>
@@ -524,8 +578,22 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                 )}
                                 {mechId === 'spin_wheel' && (<><div style={lbl}>WHEEL SEGMENTS</div>{listBuilder('segments', 'Segment')}</>)}
                                 {mechId === 'coinflip' && (<>
-                                    <div><div style={lbl}>HEADS</div><input value={ec.headsText || ''} onChange={e => setEc({ ...ec, headsText: e.target.value })} style={inp} /></div>
-                                    <div><div style={lbl}>TAILS</div><input value={ec.tailsText || ''} onChange={e => setEc({ ...ec, tailsText: e.target.value })} style={inp} /></div>
+                                    <div>
+                                        <div style={lbl}>HEADS</div>
+                                        <input value={ec.headsText || ''} onChange={e => setEc({ ...ec, headsText: e.target.value })} style={inp} />
+                                        {fuPicker(
+                                            { followUpType: ec.headsFollowUpType || 'instant', followUpAmount: ec.headsFollowUpAmount },
+                                            (k, v) => setEc({ ...ec, [k === 'followUpType' ? 'headsFollowUpType' : 'headsFollowUpAmount']: v })
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div style={lbl}>TAILS</div>
+                                        <input value={ec.tailsText || ''} onChange={e => setEc({ ...ec, tailsText: e.target.value })} style={inp} />
+                                        {fuPicker(
+                                            { followUpType: ec.tailsFollowUpType || 'instant', followUpAmount: ec.tailsFollowUpAmount },
+                                            (k, v) => setEc({ ...ec, [k === 'followUpType' ? 'tailsFollowUpType' : 'tailsFollowUpAmount']: v })
+                                        )}
+                                    </div>
                                 </>)}
                                 {mechId === 'card_pick' && (<><div style={lbl}>CARDS</div>{listBuilder('cards', 'Card')}</>)}
                                 {mechId === 'dice_roll' && (<><div style={lbl}>DICE FACES / OUTCOMES</div>{listBuilder('outcomes', 'Outcome')}</>)}
@@ -587,14 +655,30 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MAX CEILING</span><input type="number" value={ec.ceiling || 50} onChange={e => setEc({ ...ec, ceiling: +e.target.value })} style={{ ...inp, width: 80 }} /></div>
                                 )}
                                 {mechId === 'truth_dare' && (<>
-                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
-                                        <div style={lbl}>TRUTH</div><input value={ec.truthText || ''} onChange={e => setEc({ ...ec, truthText: e.target.value })} style={{ ...inp, marginBottom: 6 }} />
-                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(ec.truthFollowUp || 'writing', v => setEc({ ...ec, truthFollowUp: v }))}</div>
-                                    </div>
-                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
-                                        <div style={lbl}>DARE</div><input value={ec.dareText || ''} onChange={e => setEc({ ...ec, dareText: e.target.value })} style={{ ...inp, marginBottom: 6 }} />
-                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(ec.dareFollowUp || 'endurance', v => setEc({ ...ec, dareFollowUp: v }))}</div>
-                                    </div>
+                                    {(['truth', 'dare'] as const).map(side => {
+                                        const textKey = side === 'truth' ? 'truthText' : 'dareText';
+                                        const fuKey   = side === 'truth' ? 'truthFollowUp' : 'dareFollowUp';
+                                        const cur     = ec[fuKey] || (side === 'truth' ? 'writing' : 'endurance');
+                                        const allTypes = [
+                                            { value: 'photo', label: 'PHOTO' }, { value: 'video', label: 'VIDEO' },
+                                            { value: 'writing', label: 'WRITING' }, { value: 'add_day', label: '+DAY' },
+                                            { value: 'remove_day', label: '−DAY' }, { value: 'add_coins', label: '+COINS' },
+                                            { value: 'remove_coins', label: '−COINS' }, { value: 'instant', label: 'NONE' },
+                                        ];
+                                        return (
+                                            <div key={side} style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,.06)' }}>
+                                                <div style={lbl}>{side.toUpperCase()}</div>
+                                                <input value={ec[textKey] || ''} onChange={e => setEc({ ...ec, [textKey]: e.target.value })} style={{ ...inp, marginBottom: 10 }} />
+                                                <div style={lbl}>FOLLOW-UP</div>
+                                                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const }}>
+                                                    {allTypes.map(t => {
+                                                        const active = cur === t.value;
+                                                        return <button key={t.value} onClick={() => setEc({ ...ec, [fuKey]: t.value })} style={{ padding: '5px 10px', borderRadius: 5, cursor: 'pointer', fontFamily: F, fontSize: '.35rem', letterSpacing: '1.5px', border: `1px solid ${active ? `rgba(${rgb},.5)` : 'rgba(255,255,255,.08)'}`, background: active ? `rgba(${rgb},.1)` : 'transparent', color: active ? `rgba(${rgb},.9)` : 'rgba(255,255,255,.3)', transition: 'all .12s' }}>{t.label}</button>;
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </>)}
                                 {mechId === 'simon_says' && (<>
                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
@@ -672,23 +756,80 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                     const lbl: React.CSSProperties = { fontFamily: F, fontSize: '.38rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 4 };
                     const ta: React.CSSProperties = { ...inp, resize: 'vertical' as const };
                     const addBtn: React.CSSProperties = { width: '100%', padding: '10px', fontFamily: F, fontSize: '.42rem', letterSpacing: 2, color: `rgba(${rgb},.5)`, background: `rgba(${rgb},.04)`, border: `1px dashed rgba(${rgb},.2)`, borderRadius: 8, cursor: 'pointer' };
-                    const fuSelect = (val: string, onChange: (v: string) => void) => (
-                        <select value={val} onChange={e => onChange(e.target.value)} style={{ ...inp, width: 'auto', padding: '4px 8px', fontSize: '.55rem', display: 'inline' }}>
-                            <option value="instant">Instant (no action)</option>
-                            <option value="writing">Writing Prompt</option>
-                            <option value="photo">Photo Proof</option>
-                            <option value="video">Video Recording</option>
-                            <option value="endurance">Endurance Timer</option>
-                        </select>
-                    );
-                    const fuExtra = (item: any, update: (k: string, v: any) => void) => (
-                        <>
-                            {item.followUpType === 'writing' && <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Prompt..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'endurance' && <input type="number" value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} placeholder="Seconds" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'video' && <input type="number" value={item.followUpTarget || 1} onChange={e => update('followUpTarget', +e.target.value)} placeholder="Recordings" style={{ ...inp, marginTop: 6, width: 80, padding: '8px 12px', fontSize: '.55rem' }} />}
-                            {item.followUpType === 'photo' && <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction..." style={{ ...inp, marginTop: 6, padding: '8px 12px', fontSize: '.55rem' }} />}
-                        </>
-                    );
+                    const fuPicker = (item: any, update: (k: string, v: any) => void) => {
+                        const cur = item.followUpType || 'instant';
+                        const reviewTypes = [
+                            { value: 'photo',   label: 'PHOTO'   },
+                            { value: 'video',   label: 'VIDEO'   },
+                            { value: 'writing', label: 'WRITING' },
+                        ];
+                        const autoTypes = [
+                            { value: 'add_day',      label: '+ DAY'    },
+                            { value: 'remove_day',   label: '− DAY'    },
+                            { value: 'add_coins',    label: '+ COINS'  },
+                            { value: 'remove_coins', label: '− COINS'  },
+                            { value: 'add_skippass', label: '+ SKIP'   },
+                            { value: 'instant',      label: 'NONE'     },
+                        ];
+                        const btn = (value: string, label: string) => {
+                            const active = cur === value;
+                            return (
+                                <button key={value} onClick={() => update('followUpType', value)} style={{
+                                    padding: '5px 11px', borderRadius: 5, cursor: 'pointer',
+                                    fontFamily: F, fontSize: '.35rem', letterSpacing: '1.5px',
+                                    border: `1px solid ${active ? `rgba(${rgb},.5)` : 'rgba(255,255,255,.08)'}`,
+                                    background: active ? `rgba(${rgb},.1)` : 'transparent',
+                                    color: active ? `rgba(${rgb > '1' ? rgb : '197,160,89'},.9)` : 'rgba(255,255,255,.3)',
+                                    transition: 'all .12s',
+                                }}>{label}</button>
+                            );
+                        };
+                        return (
+                            <div style={{ marginTop: 10 }}>
+                                <div style={{ ...lbl, marginBottom: 6 }}>FOLLOW-UP</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                                        <span style={{ fontFamily: F, fontSize: '.28rem', color: 'rgba(255,255,255,.2)', letterSpacing: 2, width: 60 }}>REVIEW</span>
+                                        {reviewTypes.map(t => btn(t.value, t.label))}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+                                        <span style={{ fontFamily: F, fontSize: '.28rem', color: 'rgba(255,255,255,.2)', letterSpacing: 2, width: 60 }}>AUTO</span>
+                                        {autoTypes.map(t => btn(t.value, t.label))}
+                                    </div>
+                                </div>
+                                {cur === 'writing' && (
+                                    <input value={item.followUpPrompt || ''} onChange={e => update('followUpPrompt', e.target.value)} placeholder="Writing prompt (optional)..." style={{ ...inp, marginTop: 8, padding: '7px 12px', fontSize: '.52rem' }} />
+                                )}
+                                {cur === 'photo' && (
+                                    <input value={item.followUpInstruction || ''} onChange={e => update('followUpInstruction', e.target.value)} placeholder="Photo instruction (optional)..." style={{ ...inp, marginTop: 8, padding: '7px 12px', fontSize: '.52rem' }} />
+                                )}
+                                {cur === 'video' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={5} value={item.followUpDuration || 60} onChange={e => update('followUpDuration', +e.target.value)} style={{ ...inp, width: 80, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>sec time limit</span>
+                                    </div>
+                                )}
+                                {(cur === 'add_day' || cur === 'remove_day') && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 1} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 70, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cur === 'add_day' ? 'days added' : 'days removed'}</span>
+                                    </div>
+                                )}
+                                {(cur === 'add_coins' || cur === 'remove_coins') && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 50} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 80, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>{cur === 'add_coins' ? 'coins awarded' : 'coins deducted'}</span>
+                                    </div>
+                                )}
+                                {cur === 'add_skippass' && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                                        <input type="number" min={1} value={item.followUpAmount || 1} onChange={e => update('followUpAmount', +e.target.value)} style={{ ...inp, width: 70, padding: '7px 12px', fontSize: '.52rem' }} />
+                                        <span style={{ fontFamily: F, fontSize: '.38rem', color: TEXT_DIM }}>skip passes awarded</span>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    };
 
                     const confirmAdd = () => {
                         const taskType = mech.id;
@@ -706,17 +847,13 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                         return (
                             <div>
                                 {items.map((item: any, i: number) => (
-                                    <div key={i} style={{ padding: '10px 12px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 8, marginBottom: 8 }}>
+                                    <div key={i} style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, marginBottom: 8 }}>
                                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                            <span style={{ fontFamily: F, fontSize: '.6rem', color: TEXT_DIM, width: 18 }}>{i + 1}</span>
+                                            <span style={{ fontFamily: F, fontSize: '.55rem', color: 'rgba(255,255,255,.25)', width: 18, flexShrink: 0 }}>{i + 1}</span>
                                             <input value={item.text} onChange={e => updateItem(i, 'text', e.target.value)} placeholder={`${itemLabel} text...`} style={{ ...inp, flex: 1, padding: '8px 12px', fontSize: '.6rem' }} />
-                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', cursor: 'pointer', fontSize: '.9rem' }}>{'\u00D7'}</button>}
+                                            {items.length > 1 && <button onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', color: 'rgba(255,60,60,.3)', cursor: 'pointer', fontSize: '1rem', padding: '0 4px', lineHeight: 1 }}>×</button>}
                                         </div>
-                                        <div style={{ marginTop: 6 }}>
-                                            <span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>
-                                            {fuSelect(item.followUpType || 'instant', v => updateItem(i, 'followUpType', v))}
-                                        </div>
-                                        {fuExtra(item, (k, v) => updateItem(i, k, v))}
+                                        {fuPicker(item, (k, v) => updateItem(i, k, v))}
                                     </div>
                                 ))}
                                 <button onClick={addItem} style={addBtn}>+ ADD {itemLabel.toUpperCase()}</button>
@@ -776,8 +913,22 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                                 {/* ── COINFLIP ── */}
                                 {addMech === 'coinflip' && (<>
-                                    <div><div style={lbl}>HEADS</div><input value={addConfig.headsText || ''} onChange={e => setAddConfig({ ...addConfig, headsText: e.target.value })} placeholder="e.g. 50 coins" style={inp} /></div>
-                                    <div><div style={lbl}>TAILS</div><input value={addConfig.tailsText || ''} onChange={e => setAddConfig({ ...addConfig, tailsText: e.target.value })} placeholder="e.g. +1 day locked" style={inp} /></div>
+                                    <div>
+                                        <div style={lbl}>HEADS</div>
+                                        <input value={addConfig.headsText || ''} onChange={e => setAddConfig({ ...addConfig, headsText: e.target.value })} placeholder="e.g. +50 coins" style={inp} />
+                                        {fuPicker(
+                                            { followUpType: addConfig.headsFollowUpType || 'instant', followUpAmount: addConfig.headsFollowUpAmount },
+                                            (k, v) => setAddConfig({ ...addConfig, [k === 'followUpType' ? 'headsFollowUpType' : 'headsFollowUpAmount']: v })
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div style={lbl}>TAILS</div>
+                                        <input value={addConfig.tailsText || ''} onChange={e => setAddConfig({ ...addConfig, tailsText: e.target.value })} placeholder="e.g. +1 day locked" style={inp} />
+                                        {fuPicker(
+                                            { followUpType: addConfig.tailsFollowUpType || 'instant', followUpAmount: addConfig.tailsFollowUpAmount },
+                                            (k, v) => setAddConfig({ ...addConfig, [k === 'followUpType' ? 'tailsFollowUpType' : 'tailsFollowUpAmount']: v })
+                                        )}
+                                    </div>
                                 </>)}
 
                                 {/* ── CARD PICK ── */}
@@ -865,14 +1016,31 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
                                 {/* ── TRUTH OR DARE ── */}
                                 {addMech === 'truth_dare' && (<>
-                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
-                                        <div style={lbl}>TRUTH</div><input value={addConfig.truthText || ''} onChange={e => setAddConfig({ ...addConfig, truthText: e.target.value })} placeholder="Confession prompt..." style={{ ...inp, marginBottom: 6 }} />
-                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(addConfig.truthFollowUp || 'writing', v => setAddConfig({ ...addConfig, truthFollowUp: v }))}</div>
-                                    </div>
-                                    <div style={{ padding: '12px', background: 'rgba(255,255,255,.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,.06)' }}>
-                                        <div style={lbl}>DARE</div><input value={addConfig.dareText || ''} onChange={e => setAddConfig({ ...addConfig, dareText: e.target.value })} placeholder="Physical challenge..." style={{ ...inp, marginBottom: 6 }} />
-                                        <div style={{ marginTop: 4 }}><span style={{ ...lbl, display: 'inline', marginRight: 8 }}>FOLLOW-UP</span>{fuSelect(addConfig.dareFollowUp || 'endurance', v => setAddConfig({ ...addConfig, dareFollowUp: v }))}</div>
-                                    </div>
+                                    {(['truth', 'dare'] as const).map(side => {
+                                        const textKey = side === 'truth' ? 'truthText' : 'dareText';
+                                        const fuKey   = side === 'truth' ? 'truthFollowUp' : 'dareFollowUp';
+                                        const cur     = addConfig[fuKey] || (side === 'truth' ? 'writing' : 'endurance');
+                                        const ph      = side === 'truth' ? 'Confession prompt...' : 'Physical challenge...';
+                                        const allTypes = [
+                                            { value: 'photo', label: 'PHOTO' }, { value: 'video', label: 'VIDEO' },
+                                            { value: 'writing', label: 'WRITING' }, { value: 'add_day', label: '+DAY' },
+                                            { value: 'remove_day', label: '−DAY' }, { value: 'add_coins', label: '+COINS' },
+                                            { value: 'remove_coins', label: '−COINS' }, { value: 'instant', label: 'NONE' },
+                                        ];
+                                        return (
+                                            <div key={side} style={{ padding: '12px 14px', background: 'rgba(255,255,255,.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,.06)' }}>
+                                                <div style={lbl}>{side.toUpperCase()}</div>
+                                                <input value={addConfig[textKey] || ''} onChange={e => setAddConfig({ ...addConfig, [textKey]: e.target.value })} placeholder={ph} style={{ ...inp, marginBottom: 10 }} />
+                                                <div style={lbl}>FOLLOW-UP</div>
+                                                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const }}>
+                                                    {allTypes.map(t => {
+                                                        const active = cur === t.value;
+                                                        return <button key={t.value} onClick={() => setAddConfig({ ...addConfig, [fuKey]: t.value })} style={{ padding: '5px 10px', borderRadius: 5, cursor: 'pointer', fontFamily: F, fontSize: '.35rem', letterSpacing: '1.5px', border: `1px solid ${active ? `rgba(${rgb},.5)` : 'rgba(255,255,255,.08)'}`, background: active ? `rgba(${rgb},.1)` : 'transparent', color: active ? `rgba(${rgb},.9)` : 'rgba(255,255,255,.3)', transition: 'all .12s' }}>{t.label}</button>;
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </>)}
 
                                 {/* ── SIMON SAYS ── */}

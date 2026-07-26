@@ -118,6 +118,7 @@ import {
 } from '@/scripts/profile-logic';
 import { bindInlineRisky } from '@/scripts/inline-risky';
 import { bindStreamPlayer, initStreamPlayer, destroyStreamPlayer } from '@/scripts/stream-player';
+import PaymentModal from '@/components/PaymentModal';
 
 
 export default function ProfilePage() {
@@ -157,6 +158,7 @@ export default function ProfilePage() {
     const [dutiesUploadedToday, setDutiesUploadedToday] = useState<boolean | null>(null);
     const [participationMap, setParticipationMap] = useState<Record<string, { status: string; data?: any }>>({});
     const [installPrompt, setInstallPrompt] = useState<any>(null);
+    const [coinPayment, setCoinPayment] = useState<{ coins: number; eur: number; memberId: string } | null>(null);
     const [installBannerDismissed, setInstallBannerDismissed] = useState(() =>
         typeof window !== 'undefined' && !!localStorage.getItem('installBannerDismissed')
     );
@@ -270,6 +272,8 @@ export default function ProfilePage() {
             setSilenceActive(active);
             setSilenceReason(reason);
         };
+        // Expose coin payment modal setter
+        (window as any).__showCoinPaymentModal = (p: { coins: number; eur: number; memberId: string }) => setCoinPayment(p);
 
         // Legacy Window Assignments
         if (typeof window !== 'undefined') {
@@ -2671,6 +2675,22 @@ export default function ProfilePage() {
             </div>
         )}
         {/* Desktop Challenge Modal moved inside DESKTOP_APP grid */}
+
+        {/* ── COIN PURCHASE PAYMENT MODAL ── */}
+        {coinPayment && (
+            <PaymentModal
+                amountEur={coinPayment.eur}
+                label="BOOST WALLET"
+                cardBody={{ memberId: coinPayment.memberId, amount: coinPayment.eur }}
+                cryptoApiPath="/api/coins/passimpay"
+                cryptoStatusApiPath="/api/coins/passimpay-status"
+                cryptoPayBody={{ coins: coinPayment.coins }}
+                cryptoStatusBody={{ memberId: coinPayment.memberId, coins: coinPayment.coins }}
+                confirmMessage="✓ PAYMENT CONFIRMED — CREDITING COINS..."
+                onSuccess={() => { setCoinPayment(null); window.location.reload(); }}
+                onClose={() => setCoinPayment(null)}
+            />
+        )}
         </>
     );
 }

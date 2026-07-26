@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Caveat:wght@400;600;700&family=Patrick+Hand&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Orbitron:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Dancing+Script:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -51,6 +51,141 @@ a {
 
 html {
   color-scheme: dark;
+}
+
+/* ── Coin Flip Button — animated gold border (same technique as kneeling button) ── */
+@property --coin-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+@property --coin-angle-offset {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+}
+@property --coin-pct {
+    syntax: "<percentage>";
+    initial-value: 5%;
+    inherits: false;
+}
+@property --coin-shine {
+    syntax: "<color>";
+    initial-value: #c5a059;
+    inherits: false;
+}
+
+@keyframes coin-rotate {
+    to { --coin-angle: 360deg; }
+}
+
+.coin-flip-btn {
+    --coin-gold: #c5a059;
+    --coin-gold-bright: #d4b06a;
+    --coin-duration: 3s;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    padding: 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: rgba(197,160,89,0.92);
+    background:
+        linear-gradient(135deg, #050401, #0c0a05) padding-box,
+        conic-gradient(
+            from calc(var(--coin-angle) - var(--coin-angle-offset)),
+            transparent,
+            var(--coin-gold) var(--coin-pct),
+            var(--coin-shine) calc(var(--coin-pct) * 2),
+            var(--coin-gold) calc(var(--coin-pct) * 3),
+            transparent calc(var(--coin-pct) * 4)
+        ) border-box;
+    border: 1.5px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow:
+        inset 0 0 0 1px #0c0a05,
+        0 0 20px rgba(197,160,89,0.18),
+        0 6px 24px rgba(0,0,0,0.72);
+    transition-property: --coin-angle-offset, --coin-pct, --coin-shine, box-shadow;
+    transition-duration: 600ms;
+    transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+    animation: coin-rotate var(--coin-duration) linear infinite;
+}
+
+.coin-flip-btn:active {
+    --coin-pct: 20% !important;
+    --coin-angle-offset: 95deg !important;
+    --coin-shine: var(--coin-gold-bright) !important;
+    box-shadow:
+        inset 0 0 0 1px #0c0a05,
+        0 0 32px rgba(197,160,89,0.32),
+        0 6px 24px rgba(0,0,0,0.72) !important;
+}
+
+.coin-flip-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.coin-flip-btn::before {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    background: radial-gradient(
+        circle at 2px 2px,
+        rgba(197,160,89,0.35) 0.5px,
+        transparent 0
+    ) padding-box;
+    background-size: 10px 10px;
+    background-repeat: space;
+    mask-image: conic-gradient(
+        from calc(var(--coin-angle) + 45deg),
+        black,
+        transparent 10% 90%,
+        black
+    );
+    border-radius: inherit;
+    opacity: 0.5;
+    z-index: 0;
+    animation: coin-rotate var(--coin-duration) linear infinite;
+}
+
+.coin-flip-btn::after {
+    content: '';
+    pointer-events: none;
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(-50deg, transparent, rgba(197,160,89,0.07), transparent);
+    opacity: 0.7;
+    z-index: 0;
+    border-radius: inherit;
+}
+
+.coin-flip-btn > span {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Vault / MechRunner shared keyframes ── */
+@keyframes vFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vPulse {
+    0%, 100% { opacity: 0.5; }
+    50%      { opacity: 1; }
 }
 
 /* ── Global view mobile responsive ── */
