@@ -10761,40 +10761,16 @@ export function closeQkLightbox() {
 // ─── PAYWALL ──────────────────────────────────────────────────────────────────
 
 export function _applyPaywall(paywall: any, memberId: string) {
-    const overlay = document.getElementById('paywallOverlay');
-    if (!overlay) return;
-    const shouldShow = paywall?.active === true;
-    const isShowing = overlay.style.display === 'flex';
-    // Guard: don't touch the DOM at all if state hasn't changed
-    if (shouldShow === isShowing) return;
     if (paywall?.active) {
-        const reasonEl = document.getElementById('paywallReason');
-        const amountEl = document.getElementById('paywallAmount');
-        const payBtn   = document.getElementById('paywallPayBtn');
-        const cryptoBtn = document.getElementById('paywallCryptoBtn');
-        if (reasonEl) reasonEl.textContent = paywall.reason || '';
-        if (amountEl) amountEl.textContent  = `€${Number(paywall.amount).toFixed(2)}`;
-
-        // Crypto pay button
-        if (cryptoBtn) {
-            cryptoBtn.onclick = () => {
-                const amount = Number(paywall.amount) || 0;
-                _showPaywallCryptoPicker(amount, memberId, overlay);
-            };
-        }
-
-        if (payBtn) {
-            payBtn.onclick = () => {
-                // Card payments unavailable — show notice and push to crypto
-                const notice = document.getElementById('paywallCardNotice');
-                if (notice) notice.style.display = 'flex';
-            };
-        }
-        overlay.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        sessionStorage.setItem('__paywalled', '1');
+        sessionStorage.setItem('__paywallReason', paywall.reason || '');
+        sessionStorage.setItem('__paywallAmount', String(paywall.amount || 0));
+        window.dispatchEvent(new CustomEvent('__paywallDetected', { detail: { paywall, memberId } }));
     } else {
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
+        sessionStorage.removeItem('__paywalled');
+        sessionStorage.removeItem('__paywallReason');
+        sessionStorage.removeItem('__paywallAmount');
+        window.dispatchEvent(new CustomEvent('__paywallCleared'));
     }
 }
 

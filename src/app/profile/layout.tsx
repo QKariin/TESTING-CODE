@@ -15,6 +15,26 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [showPayment, setShowPayment] = useState(false);
 
     useEffect(() => {
+        const onPaywall = (e: Event) => {
+            const { paywall } = (e as CustomEvent).detail || {};
+            if (!paywall) return;
+            setPaywalled(true);
+            setPaywallReason(paywall.reason || '');
+            setPaywallAmount(Number(paywall.amount) || 0);
+        };
+        const onCleared = () => {
+            setPaywalled(false);
+            setShowPayment(false);
+        };
+        window.addEventListener('__paywallDetected', onPaywall);
+        window.addEventListener('__paywallCleared', onCleared);
+        return () => {
+            window.removeEventListener('__paywallDetected', onPaywall);
+            window.removeEventListener('__paywallCleared', onCleared);
+        };
+    }, []);
+
+    useEffect(() => {
         // Detect return from Wix checkout
         const params = new URLSearchParams(window.location.search);
         if (params.get('wix_paid') === '1') {

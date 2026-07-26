@@ -227,12 +227,17 @@ export default function PaymentModal({
                     <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2.8rem', color: '#fff', fontWeight: 700, lineHeight: 1 }}>€{Number(amountEur).toFixed(2)}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <button onClick={handleCard} disabled={cardLoading}
-                        style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: cardLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: cardLoading ? 0.6 : 1 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        {cardLoading ? 'LOADING...' : 'PAY WITH CARD'}
-                    </button>
-                    {cardError && <div style={{ fontSize: '0.6rem', color: 'rgba(255,80,80,0.7)', fontFamily: 'Rajdhani,sans-serif', textAlign: 'center' }}>{cardError}</div>}
+                    {/* CARD — temporarily unavailable */}
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, color: 'rgba(255,255,255,0.18)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxSizing: 'border-box' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            PAY WITH CARD
+                        </div>
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,6,6,0.82)', borderRadius: 10, backdropFilter: 'blur(2px)' }}>
+                            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.48rem', color: 'rgba(200,60,60,0.85)', letterSpacing: 4, fontWeight: 700 }}>TEMPORARILY UNAVAILABLE</div>
+                            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.58rem', color: 'rgba(255,255,255,0.28)', letterSpacing: 1, marginTop: 4 }}>Use crypto below</div>
+                        </div>
+                    </div>
                     <button onClick={() => setScreen('crypto-picker')}
                         style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
