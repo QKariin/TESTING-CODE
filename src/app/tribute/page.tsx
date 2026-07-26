@@ -1160,23 +1160,6 @@ export default function TributePage() {
             </div>
 
         </div>
-        <iframe
-            ref={footerFrameRef}
-            id="footerFrame"
-            src="/footer-faq.html?v=6"
-            style={{
-                position: 'fixed',
-                left: 0,
-                width: '100%',
-                border: 'none',
-                zIndex: 9999999,
-                background: 'transparent',
-                colorScheme: 'dark',
-                ...(iframeFull
-                    ? { top: 0, bottom: 0, height: '100%' }
-                    : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
-            }}
-        />
         {/* ── TIER PICKER ── */}
         {showTierPicker && !showPayment && (
             <div style={{ position: 'fixed', inset: 0, background: '#030308', zIndex: 99999999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 28px', overflowY: 'auto' }}>
