@@ -557,6 +557,11 @@ export default function PaymentModal({
                     <a href={throneUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', marginBottom: 10, boxSizing: 'border-box' as const }}>
                         OPEN THRONE
                     </a>
+                    <button onClick={() => { setCardStep(null); setScreen('crypto-picker'); }}
+                        style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        SWITCH TO CRYPTO
+                    </button>
                     <button onClick={() => setCardStep(null)} style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
                 </div>
             </div>
