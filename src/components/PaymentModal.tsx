@@ -200,7 +200,7 @@ export default function PaymentModal({
     };
 
     const tickerColor = TICKER_COLORS[cryptoData?.currency] || '#bfbbbb';
-    const BASE: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 2147483647, overflow: 'hidden' };
+    const BASE: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 2147483647, overflow: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties;
     // Blurred background layer — slightly oversized so blur edges don't show
     const BG: React.CSSProperties = {
         position: 'absolute', inset: '-20px',
@@ -244,7 +244,7 @@ export default function PaymentModal({
 
     /* ── QR OVERLAY ── */
     if (screen === 'qr' && cryptoData) return (
-        <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '28px 24px 48px' }}>
+        <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'scroll', scrollbarWidth: 'none', padding: '28px 24px 48px' }}>
             <div style={BG} />
             <div style={OVERLAY} />
             <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
@@ -386,7 +386,7 @@ export default function PaymentModal({
     );
 
     if (cardStep === 'revolut') return (
-        <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'auto' }}>
+        <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'scroll', scrollbarWidth: 'none' }}>
             <div style={BG} />
             <div style={OVERLAY} />
             <div style={{ ...CARD, maxWidth: 420 }}>
@@ -447,7 +447,7 @@ export default function PaymentModal({
     );
 
     if (cardStep === 'moonpay') return (
-        <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'auto' }}>
+        <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'scroll', scrollbarWidth: 'none' }}>
             <div style={BG} />
             <div style={OVERLAY} />
             <div style={{ ...CARD, maxWidth: 420 }}>
@@ -579,6 +579,7 @@ export default function PaymentModal({
     /* ── METHOD PICKER (default) ── */
     return (
         <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+            <style>{`*::-webkit-scrollbar{display:none!important}`}</style>
             <div style={BG} />
             <div style={OVERLAY} />
             <div style={{ ...CARD }}>

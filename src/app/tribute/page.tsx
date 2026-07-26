@@ -30,6 +30,7 @@ export default function TributePage() {
     const [reviews, setReviews] = useState<any[]>([]);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
+    const [heroVisible, setHeroVisible] = useState(false);
     const [toasts, setToasts] = useState<any[]>([]);
     const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
     const [iframeFull, setIframeFull] = useState(false);
@@ -129,65 +130,14 @@ export default function TributePage() {
         return null;
     };
 
-    /* fetch last activity item + realtime for new ones */
+    /* FOMO notifications disabled on /tribute */
+
+    /* Hero text fade in */
     useEffect(() => {
-        // Fetch latest global_messages card as initial toast
-        const timer = setTimeout(async () => {
-            try {
-                const supabase = createClient();
-                const { data } = await supabase
-                    .from('global_messages')
-                    .select('message, sender_name, sender_avatar, sender_email, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-                if (data) {
-                    for (const msg of data) {
-                        const parsed = parseGlobalCard(msg);
-                        if (parsed) {
-                            // Look up avatar + hierarchy from profiles
-                            if (msg.sender_email && msg.sender_email !== 'system') {
-                                try {
-                                    const { data: p } = await supabase.from('profiles').select('avatar_url, hierarchy').ilike('member_id', msg.sender_email).limit(1);
-                                    if (p && p[0]) {
-                                        if (!parsed.sender_avatar && p[0].avatar_url) parsed.sender_avatar = p[0].avatar_url;
-                                        if (p[0].hierarchy) parsed.hierarchy = p[0].hierarchy;
-                                    }
-                                } catch {}
-                            }
-                            showToast(parsed); break;
-                        }
-                    }
-                }
-            } catch {}
-        }, 15000);
-
-        // Realtime: global_messages for risky game, tributes, promotions, etc.
-        const supabase = createClient();
-        const channel = supabase.channel('tribute-activity')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'global_messages' }, async (payload: any) => {
-                const row = payload.new;
-                if (!row) return;
-                const parsed = parseGlobalCard(row);
-                if (parsed) {
-                    if (row.sender_email && row.sender_email !== 'system') {
-                        try {
-                            const { data: p } = await supabase.from('profiles').select('avatar_url, hierarchy').ilike('member_id', row.sender_email).limit(1);
-                            if (p && p[0]) {
-                                if (!parsed.sender_avatar && p[0].avatar_url) parsed.sender_avatar = p[0].avatar_url;
-                                if (p[0].hierarchy) parsed.hierarchy = p[0].hierarchy;
-                            }
-                        } catch {}
-                    }
-                    showToast(parsed);
-                }
-            })
-            .subscribe();
-
-        return () => {
-            clearTimeout(timer);
-            supabase.removeChannel(channel);
-        };
-    }, []);
+        if (!mounted) return;
+        const t = setTimeout(() => setHeroVisible(true), 400);
+        return () => clearTimeout(t);
+    }, [mounted]);
 
     /* fetch real reviews */
     useEffect(() => {
@@ -609,8 +559,8 @@ export default function TributePage() {
             `}</style>
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', zIndex: 0, opacity: 0.55, filter: 'saturate(0.5) brightness(0.8)' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.1) 0%, rgba(2,2,2,0.5) 40%, rgba(2,2,2,0.85) 70%, #020202 90%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', zIndex: 0, opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.4) 50%, rgba(2,2,2,0.6) 80%, rgba(2,2,2,0.75) 100%)', zIndex: 0 }} />
             {/* Gold accent glow top */}
             <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '40vh', background: 'radial-gradient(ellipse at center top, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             {/* Noise texture */}
@@ -751,22 +701,26 @@ export default function TributePage() {
                 {/* ════════════════════════════════════════════
                     SECTION 1b: HERO — VIDEO + TEXT
                    ════════════════════════════════════════════ */}
-                <div className="trib-hero" style={{ paddingTop: 40, textAlign: 'center' }}>
+                <div className="trib-hero" style={{ paddingTop: '20vh', textAlign: 'center' }}>
 
                     {/* ── TEXT (mobile: first, desktop: right side) ── */}
                     <div className="trib-hero-text" style={{ animation: mounted ? 'fadeUp 1s ease-out 0.5s both' : 'none' }}>
                         <p style={{
-                            fontFamily: 'Cinzel, serif', fontSize: '0.95rem',
-                            color: 'rgba(255,255,255,0.4)', lineHeight: 2.4,
+                            fontFamily: 'Cinzel, serif', fontSize: '1.1rem',
+                            color: 'rgba(255,255,255,0.4)', lineHeight: 1.6,
                             maxWidth: 420, margin: '0 auto 12px', fontWeight: 400,
                             letterSpacing: '2px',
                         }}>
-                            A dominatrix.<br />A builder.<br /><span style={{ fontFamily: "'Italianno', cursive", fontSize: '1.8rem', letterSpacing: '1px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.2, display: 'inline-block', marginTop: 6 }}>A woman who turned devotion<br />into an empire.</span>
+                            <span style={{ display: 'block', opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(16px)', transition: 'opacity 1s ease, transform 1s ease', marginBottom: 24 }}>A dominatrix.</span>
+                            <span style={{ display: 'block', width: 1, height: 36, margin: '0 auto 24px', background: 'linear-gradient(180deg, rgba(197,160,89,0.3), transparent)', opacity: heroVisible ? 1 : 0, transition: 'opacity 1s ease 0.1s' }} />
+                            <span style={{ display: 'block', opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(16px)', transition: 'opacity 1s ease 0.15s, transform 1s ease 0.15s', marginBottom: 24 }}>A builder.</span>
+                            <span style={{ display: 'block', width: 1, height: 36, margin: '0 auto 24px', background: 'linear-gradient(180deg, rgba(197,160,89,0.3), transparent)', opacity: heroVisible ? 1 : 0, transition: 'opacity 1s ease 0.25s' }} />
+                            <span style={{ display: 'block', opacity: heroVisible ? 1 : 0, transform: heroVisible ? 'translateY(0)' : 'translateY(16px)', transition: 'opacity 1s ease 0.3s, transform 1s ease 0.3s' }}>A woman who turned devotion into an empire.</span>
                         </p>
                         <p style={{
-                            fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem',
-                            color: 'rgba(255,255,255,0.25)', lineHeight: 1.9,
-                            maxWidth: 400, margin: '0 auto',
+                            fontFamily: "'Italianno', cursive", fontSize: '1.3rem',
+                            color: 'rgba(255,255,255,0.5)', lineHeight: 1.7,
+                            maxWidth: 400, margin: '48px auto 0',
                         }}>
                             What started as private sessions evolved into something far greater.
                             A digital household where structure meets surrender, and every subject
@@ -788,13 +742,50 @@ export default function TributePage() {
                 </div>
 
                 {/* ════════════════════════════════════════════
+                    JOIN CTA — directly below hero
+                   ════════════════════════════════════════════ */}
+                <div
+                    id="sec-join"
+                    ref={setRef('sec-join')}
+                    className={`trib-section trib-join-section ${isVisible('sec-join') ? 'visible' : ''}`}
+                    style={{ marginTop: 60, textAlign: 'center' }}
+                >
+                    <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 4.5vw, 1.8rem)', color: '#fff', fontWeight: 600, letterSpacing: '3px', margin: '0 0 10px', lineHeight: 1.2 }}>
+                        TAKE YOUR PLACE
+                    </h2>
+                    <p style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, maxWidth: 360, margin: '0 auto 32px', fontWeight: 300 }}>
+                        Start your training with weekly or monthly access. Choose your commitment. Begin your service.
+                    </p>
+                    <div style={{ marginBottom: 28 }}>
+                        <div style={{ fontFamily: 'Cinzel, serif', color: '#fff', fontWeight: 700, lineHeight: 1 }}>
+                            <span style={{ fontSize: 'clamp(2.8rem, 10vw, 4rem)', textShadow: '0 4px 30px rgba(197,160,89,0.1)' }}>
+                                <span style={{ fontSize: '0.55em', fontWeight: 400 }}>&euro;</span>55
+                            </span>
+                        </div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500, color: 'rgba(197,160,89,0.35)', letterSpacing: '5px', marginTop: 6 }}>
+                            ACCESS FEE
+                        </div>
+                    </div>
+                    <div style={{ maxWidth: 400, margin: '0 auto' }}>
+                        <button className="trib-kneel-btn" onClick={handleTribute} disabled={loading} style={{ opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'white', textShadow: '0 1px 3px black', letterSpacing: 3, textTransform: 'uppercase' }}>
+                                {loading ? 'PROCESSING...' : 'ENTER THE HOUSEHOLD'}
+                            </span>
+                        </button>
+                    </div>
+                    {status && (
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center', marginTop: 12 }}>{status}</div>
+                    )}
+                </div>
+
+                {/* ════════════════════════════════════════════
                     SECTION 2: WHAT'S IN THE APP
                    ════════════════════════════════════════════ */}
                 <div
                     id="sec-features"
                     ref={setRef('sec-features')}
                     className={`trib-section ${isVisible('sec-features') ? 'visible' : ''}`}
-                    style={{ marginTop: 80 }}
+                    style={{ marginTop: 160 }}
                 >
                     {/* Section header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
@@ -896,76 +887,6 @@ export default function TributePage() {
                 </div>
 
 
-                {/* ════════════════════════════════════════════
-                    SECTION 3: JOIN CTA
-                   ════════════════════════════════════════════ */}
-                <div
-                    id="sec-join"
-                    ref={setRef('sec-join')}
-                    className={`trib-section trib-join-section ${isVisible('sec-join') ? 'visible' : ''}`}
-                    style={{ marginTop: 72, textAlign: 'center' }}
-                >
-                    {/* Decorative diamond */}
-                    <div style={{
-                        width: 8, height: 8, transform: 'rotate(45deg)',
-                        background: 'rgba(197,160,89,0.25)', margin: '0 auto 28px',
-                    }} />
-
-                    <h2 style={{
-                        fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 4.5vw, 1.8rem)',
-                        color: '#fff', fontWeight: 600, letterSpacing: '3px',
-                        margin: '0 0 10px', lineHeight: 1.2,
-                    }}>
-                        TAKE YOUR PLACE
-                    </h2>
-                    <p style={{
-                        fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.85rem',
-                        color: 'rgba(255,255,255,0.25)', lineHeight: 1.7, maxWidth: 360,
-                        margin: '0 auto 32px', fontWeight: 300,
-                    }}>
-                        Your entrance tribute. The first act of devotion.
-                        This is where your journey begins.
-                    </p>
-
-                    {/* Price */}
-                    <div style={{ marginBottom: 28 }}>
-                        <div style={{
-                            fontFamily: 'Cinzel, serif', color: '#fff', fontWeight: 700, lineHeight: 1,
-                        }}>
-                            <span style={{
-                                fontSize: 'clamp(2.8rem, 10vw, 4rem)',
-                                textShadow: '0 4px 30px rgba(197,160,89,0.1)',
-                            }}>
-                                <span style={{ fontSize: '0.55em', fontWeight: 400 }}>&euro;</span>55
-                            </span>
-                        </div>
-                        <div style={{
-                            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', fontWeight: 500,
-                            color: 'rgba(197,160,89,0.35)', letterSpacing: '5px', marginTop: 6,
-                        }}>
-                            ACCESS FEE
-                        </div>
-                    </div>
-
-
-                    {/* CTA Button — kneel style */}
-                    <div style={{ maxWidth: 400, margin: '0 auto' }}>
-                        <button className="trib-kneel-btn" onClick={handleTribute} disabled={loading}
-                            style={{ opacity: loading ? 0.6 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
-                            <span style={{
-                                fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem',
-                                color: 'white', textShadow: '0 1px 3px black',
-                                letterSpacing: 3, textTransform: 'uppercase',
-                            }}>
-                                {loading ? 'PROCESSING...' : 'ENTER THE HOUSEHOLD'}
-                            </span>
-                        </button>
-                    </div>
-
-                    {status && (
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#c5a059', letterSpacing: '2px', textAlign: 'center', marginTop: 12 }}>{status}</div>
-                    )}
-                </div>
 
 
                 {/* ════════════════════════════════════════════

@@ -205,7 +205,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     );
 
     if (paywalled && !paid) return (<>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap');`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap'); * { scrollbar-width: none !important; } *::-webkit-scrollbar { display: none !important; }`}</style>
         <div style={{ position: 'fixed', inset: 0, zIndex: 2147483647, background: 'rgba(2,5,18,0.97)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
             <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '2rem', color: '#c5a059', marginBottom: 8 }}>✦</div>
