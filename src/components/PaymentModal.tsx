@@ -470,7 +470,7 @@ export default function PaymentModal({
                             {s.text === '__MOONPAY__'
                                 ? <>Open <a href="https://www.moonpay.com" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(80,180,255,0.9)', textDecoration: 'underline' }}>Moonpay.com</a> in your browser.</>
                                 : s.text === '__USDT__'
-                                ? <>Make sure <strong style={{ color: '#fff' }}>USDT is selected.</strong></>
+                                ? <>Make sure <strong style={{ color: '#fff' }}>Bitcoin (BTC) is selected.</strong></>
                                 : s.text}
                         </div>
                     </div>
