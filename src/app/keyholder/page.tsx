@@ -390,7 +390,7 @@ export default function KeyholderPage() {
         <div style={{ background: 'transparent', color: '#fff', minHeight: '100svh', overflowX: 'hidden', position: 'relative', zIndex: 1, WebkitOverflowScrolling: 'touch' }}>
 
             <style>{`
-                html, body { overflow-x: hidden; background: #020202; }
+                html, body { overflow-x: hidden; overflow-y: auto; background: #020202; }
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
                 @font-face {
                     font-family: 'Rosella Solid';
