@@ -2687,6 +2687,7 @@ export default function ProfilePage() {
                 cryptoPayBody={{ coins: coinPayment.coins }}
                 cryptoStatusBody={{ memberId: coinPayment.memberId, coins: coinPayment.coins }}
                 confirmMessage="✓ PAYMENT CONFIRMED — CREDITING COINS..."
+                throneUrl="https://throne.com/queenkarin"
                 onSuccess={() => { setCoinPayment(null); window.location.reload(); }}
                 onClose={() => setCoinPayment(null)}
             />

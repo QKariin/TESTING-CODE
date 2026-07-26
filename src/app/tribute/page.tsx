@@ -1213,6 +1213,7 @@ export default function TributePage() {
                 cryptoPayBody={{ memberId: userEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
                 cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
+                throneUrl="https://throne.com/queenkarin"
                 onSuccess={() => { window.location.href = '/onboarding'; }}
                 onClose={() => { setShowPayment(false); setShowTierPicker(true); }}
             />

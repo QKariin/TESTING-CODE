@@ -1102,6 +1102,7 @@ export default function KeyholderPage() {
                     cryptoPayBody={{ tierId: selectedTier }}
                     cryptoStatusBody={{ tierId: selectedTier }}
                     confirmMessage="✓ PAYMENT CONFIRMED — REDIRECTING..."
+                    throneUrl="https://throne.com/queenkarin"
                     onSuccess={() => { navigateOut('/profile'); }}
                     onClose={() => setShowPayment(false)}
                 />

@@ -232,6 +232,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 cryptoPayBody={{ memberId: email, amount: paywallAmount }}
                 cryptoStatusBody={{ memberId: email }}
                 confirmMessage="✓ PAYMENT CONFIRMED — UNLOCKING..."
+                throneUrl="https://throne.com/queenkarin"
                 onSuccess={handleSuccess}
                 onClose={() => setShowPayment(false)}
             />

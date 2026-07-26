@@ -24,6 +24,7 @@ export default function TestPayment() {
                     cryptoPayBody={{ memberId: 'test@test.com', amount: 49 }}
                     cryptoStatusBody={{ memberId: 'test@test.com' }}
                     confirmMessage="✓ PAYMENT CONFIRMED — UNLOCKING..."
+                    throneUrl="https://throne.com/queenkarin"
                     onSuccess={() => setShow(false)}
                     onClose={() => setShow(false)}
                 />
