@@ -420,7 +420,8 @@ export default function PaymentModal({
                             <div style={{ textAlign: 'center', marginBottom: 12 }}>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#627eea', letterSpacing: 3, marginTop: 2 }}>ETH <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
@@ -487,7 +488,8 @@ export default function PaymentModal({
                             <div style={{ textAlign: 'center', marginBottom: 12 }}>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
                                 <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#627eea', letterSpacing: 3, marginTop: 2 }}>ETH <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
