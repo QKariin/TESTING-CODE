@@ -5,6 +5,8 @@
 
 /* Override Tailwind/globals white background */
 html, body {
+    height: 100% !important;
+    overflow: hidden !important;
     background-color: #000 !important;
     overscroll-behavior: none;
 }
@@ -55,8 +57,9 @@ html, body {
 .landing-page { scrollbar-width: none; -ms-overflow-style: none; }
 
 .landing-page {
-    width: 100%;
-    min-height: 100vh;
+    position: fixed;
+    inset: 0;
+    overflow-y: scroll;
     overflow-x: hidden;
     background: transparent !important;
     color: #fff;
