@@ -499,6 +499,7 @@ export default function TributePage() {
                 /* hide scrollbars everywhere */
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
+                html, body { overscroll-behavior: none; overscroll-behavior-y: none; -webkit-overflow-scrolling: auto; }
 
                 /* ─── DESKTOP ─── */
                 @media (min-width: 769px) {

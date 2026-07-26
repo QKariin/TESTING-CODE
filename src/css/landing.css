@@ -6,6 +6,9 @@
 /* Override Tailwind/globals white background */
 html, body {
     background-color: #000 !important;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: auto;
 }
 
 @font-face {
