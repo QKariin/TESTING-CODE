@@ -840,6 +840,79 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, dayChange, correct, total });
     }
 
+    // ── APPLY FOLLOWUP — auto-apply coins/day changes without review ──
+    if (action === 'apply_followup') {
+        const { orderType, followUpType, amount } = body;
+        const today = tzToday(tz);
+        const delta = Math.max(1, Math.abs(Number(amount) || 1));
+
+        // Apply coins change
+        if (followUpType === 'add_coins' || followUpType === 'remove_coins') {
+            const coinDelta = Math.max(1, Math.abs(Number(amount) || 50));
+            const { data: prof } = await supabaseAdmin.from('profiles').select('wallet').ilike('member_id', email).single();
+            const currentWallet = prof?.wallet ?? 0;
+            const newWallet = followUpType === 'add_coins'
+                ? currentWallet + coinDelta
+                : Math.max(0, currentWallet - coinDelta);
+            await supabaseAdmin.from('profiles').update({ wallet: newWallet }).ilike('member_id', email);
+            console.log(`[vault] apply_followup: ${followUpType} ${coinDelta} → wallet ${currentWallet} → ${newWallet}`);
+        }
+
+        // Apply skip pass
+        if (followUpType === 'add_skippass') {
+            const skipDelta = Math.max(1, Math.abs(Number(amount) || 1));
+            const { data: prof } = await supabaseAdmin.from('profiles').select('skippass').ilike('member_id', email).single();
+            const currentSkip = prof?.skippass ?? 0;
+            await supabaseAdmin.from('profiles').update({ skippass: currentSkip + skipDelta }).ilike('member_id', email);
+            console.log(`[vault] apply_followup: add_skippass ${skipDelta} → skippass ${currentSkip} → ${currentSkip + skipDelta}`);
+        }
+
+        // Apply day change
+        if (followUpType === 'add_day' || followUpType === 'remove_day') {
+            const dayDelta = followUpType === 'add_day' ? delta : -delta;
+            const newExpires = new Date(new Date(session.expires_at).getTime() + dayDelta * 86400000).toISOString();
+            const currentDay = session.current_day || 1;
+            const newLockDays = Math.max(currentDay, (session.lock_days || 0) + dayDelta);
+            await supabaseAdmin.from('vault_sessions').update({
+                expires_at: newExpires,
+                lock_days: newLockDays,
+            }).eq('id', session.id);
+            console.log(`[vault] apply_followup: ${followUpType} ${delta} → lock_days ${session.lock_days} → ${newLockDays}`);
+        }
+
+        // Mark order as auto-completed in vault_daily
+        const { data: daily } = await supabaseAdmin.from('vault_daily')
+            .select('id, orders').eq('session_id', session.id).eq('date', today)
+            .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+        if (daily) {
+            const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+            const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
+            if (idx >= 0) {
+                orders[idx].submitted = 'approved';
+                orders[idx].done = (orders[idx].done || 0) + 1;
+                orders[idx].submitted_text = `Auto: ${followUpType}${amount ? ` ×${amount}` : ''}`;
+                await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+            }
+        }
+
+        // Log auto-approved submission
+        try {
+            await supabaseAdmin.from('vault_submissions').insert({
+                session_id: session.id,
+                member_id: email,
+                date: today,
+                order_idx: 0,
+                order_type: orderType || followUpType,
+                label: followUpType,
+                text: `Auto-applied: ${followUpType}${amount ? ` ×${amount}` : ''}`,
+                status: 'approved',
+            });
+        } catch (_) {}
+
+        return NextResponse.json({ success: true, followUpType, amount });
+    }
+
     // ── SAVE GAMBLE RESULT — persist gamble outcome so it survives page reload ──
     if (action === 'save_gamble') {
         const { orderType, gambleResult } = body;
@@ -1140,6 +1213,11 @@ export async function POST(req: NextRequest) {
         try { await DbService.sendMessage(email, `LOCK_EXTENDED_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) {}
         console.log(`[vault] add_lock_days: +${d} days → lockDays=${newLockDays}`);
         return NextResponse.json({ success: true, lockDays: newLockDays, expiresAt: newExpires });
+    }
+
+    if (action === 'simon_task_fired') {
+        _pushToMember(email, '⚡ Simon Says', 'Your task has arrived. You have 60 seconds. Open now.');
+        return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

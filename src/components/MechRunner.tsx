@@ -168,7 +168,7 @@ export default function MechRunner({
     const [quizReveal, setQuizReveal]           = useState<number | null>(null);
     const [quizDone, setQuizDone]               = useState(false);
     const [simonStep, setSimonStep]             = useState(0);
-    const [simonPhase, setSimonPhase]           = useState<'idle'|'waiting'|'ready'|'task'|'complete'>('idle');
+    const [simonPhase, setSimonPhase]           = useState<'idle'|'waiting'|'ready'|'task'|'complete'|'failure'>('idle');
     const [simonWaitUntil, setSimonWaitUntil]   = useState(0);
     const [simonTaskSecs, setSimonTaskSecs]     = useState(0);
     const [simonTaskLimit, setSimonTaskLimit]   = useState(0);
@@ -247,20 +247,32 @@ export default function MechRunner({
                     setSimonLastTask(s.lastTask || null);
                     if (s.phase === 'waiting' && s.waitUntil) {
                         if (Date.now() >= s.waitUntil) {
-                            const lastTxt = s.lastTask?.text;
-                            const pool = lastTxt ? chain.filter((t: any) => t.text !== lastTxt) : chain;
-                            const src = pool.length > 0 ? pool : chain;
-                            const task = src[Math.floor(Math.random() * src.length)];
-                            if (task) {
-                                setSimonCurrentTask(task); setSimonLastTask(task);
-                                setSimonReadySecs(60);
-                                setSimonPhase('ready');
+                            // task window fired while closed — check if ready window also expired
+                            const readyUntil = s.waitUntil + 60000;
+                            if (Date.now() >= readyUntil) {
+                                setSimonPhase('failure');
+                            } else {
+                                const lastTxt = s.lastTask?.text;
+                                const pool = lastTxt ? chain.filter((t: any) => t.text !== lastTxt) : chain;
+                                const src = pool.length > 0 ? pool : chain;
+                                const task = src[Math.floor(Math.random() * src.length)];
+                                if (task) {
+                                    setSimonCurrentTask(task); setSimonLastTask(task);
+                                    setSimonReadySecs(Math.max(1, Math.ceil((readyUntil - Date.now()) / 1000)));
+                                    setSimonPhase('ready');
+                                }
                             }
                         } else { setSimonWaitUntil(s.waitUntil); setSimonPhase('waiting'); }
                     } else if (s.phase === 'ready' && s.currentTask) {
-                        setSimonCurrentTask(s.currentTask);
-                        setSimonReadySecs(s.readySecs ?? 60);
-                        setSimonPhase('ready');
+                        if (s.readyUntil && Date.now() >= s.readyUntil) {
+                            // missed the window — failure
+                            setSimonPhase('failure');
+                        } else {
+                            const remaining = s.readyUntil ? Math.max(1, Math.ceil((s.readyUntil - Date.now()) / 1000)) : (s.readySecs ?? 60);
+                            setSimonCurrentTask(s.currentTask);
+                            setSimonReadySecs(remaining);
+                            setSimonPhase('ready');
+                        }
                     } else if (s.phase === 'task' && s.currentTask) {
                         setSimonCurrentTask(s.currentTask);
                         setSimonTaskSecs(s.currentTask.timeLimit || 30); setSimonTaskLimit(s.currentTask.timeLimit || 30);
@@ -287,11 +299,18 @@ export default function MechRunner({
                 const src = pool.length > 0 ? pool : chain;
                 if (!src.length) return;
                 const task = src[Math.floor(Math.random() * src.length)];
+                const readyUntil = Date.now() + 60000;
                 setSimonCurrentTask(task); setSimonLastTask(task);
                 setSimonTaskLimit(task.timeLimit || 30);
                 setSimonReadySecs(60);
                 setSimonPhase('ready');
-                try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'ready', currentTask: task, step: simonStep, proofs: simonProofs, lastTask: task, readySecs: 60 })); } catch {}
+                try { localStorage.setItem('ss_state', JSON.stringify({ phase: 'ready', currentTask: task, step: simonStep, proofs: simonProofs, lastTask: task, readyUntil })); } catch {}
+                // fire push notification to wake user if not on app
+                if (!previewMode && mid) {
+                    fetch('/api/vault/session', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'simon_task_fired', memberId: mid }),
+                    }).catch(() => {});
+                }
             }
         }, 1000);
         return () => { if (simonWaitRef.current) { clearInterval(simonWaitRef.current); simonWaitRef.current = null; } };
@@ -1162,6 +1181,23 @@ export default function MechRunner({
                         </div>
                     );
                 }
+
+                // ── FAILURE ──
+                if (simonPhase === 'failure') return (
+                    <div style={{ textAlign: 'center', padding: '28px 10px 16px', animation: 'vFadeIn 0.5s ease' }}>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: `${R}0.4)`, letterSpacing: '8px', marginBottom: 28 }}>SIMON SAYS</div>
+                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${R}0.08)`, border: `1px solid ${R}0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={`${R}0.7)`} strokeWidth="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.3rem', color: `${R}0.75)`, letterSpacing: '4px', marginBottom: 12 }}>You failed.</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', lineHeight: 1.7, marginBottom: 32 }}>You did not open the task in time.<br />Queen Karin is disappointed.</div>
+                        <button onClick={() => {
+                            try { localStorage.removeItem('ss_state'); } catch {}
+                            setSimonPhase('idle'); setSimonStep(0); setSimonProofs([]); setSimonCurrentTask(null); setSimonLastTask(null);
+                            onClose?.();
+                        }} style={{ width: '100%', padding: '15px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '4px', color: `${R}0.5)`, background: 'transparent', border: `1px solid ${R}0.2)`, borderRadius: 10, cursor: 'pointer' }}>CLOSE</button>
+                    </div>
+                );
 
                 // ── COMPLETE ──
                 if (simonPhase === 'complete') return (
