@@ -71,11 +71,11 @@ export default function PaymentModal({
             const res = await fetch(cryptoApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...cryptoPayBody, currencyId: 20 }),
+                body: JSON.stringify({ ...cryptoPayBody, currencyId: 10 }),
             });
             const data = await res.json();
             if (data.success) {
-                setInlineAddress({ ...data, currency: 'USDT' });
+                setInlineAddress({ ...data, currency: 'BTC' });
                 if (pollRef.current) clearInterval(pollRef.current);
                 let polls = 0;
                 pollRef.current = setInterval(async () => {
@@ -396,7 +396,7 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Anonymous. No one knows. Not even your bank.</div>
                 {[
                     { n: '1', text: 'Open Revolut. At the bottom you will see 5 icons. Tap the coin one.' },
-                    { n: '2', text: 'Search Ethereum (ETH). Select it.' },
+                    { n: '2', text: 'Search Bitcoin (BTC). Select it.' },
                     { n: '3', text: `Tap Buy. Enter €${Number(amountEur).toFixed(2)}. Confirm.` },
                     { n: '4', text: 'Tap Send. Select To crypto address. Copy the address below and paste it in. Send.' },
                 ].map(s => (
