@@ -52,26 +52,6 @@ interface GlobalMessage {
     hierarchy?: string | null;
 }
 
-/* ── STAR SVG for marquee ── */
-const MarqueeStar = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)" style={{ margin: '0 14px', flexShrink: 0 }}>
-        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z" />
-    </svg>
-);
-
-/* ── MARQUEE TRACK (repeated items) ── */
-const MarqueeTrack = () => (
-    <span className="home-marquee-track" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, flexShrink: 0 }}>
-        <span>Tasks</span><MarqueeStar />
-        <span>Sessions</span><MarqueeStar />
-        <span>League</span><MarqueeStar />
-        <span>Tributes</span><MarqueeStar />
-        <span>Tasks</span><MarqueeStar />
-        <span>Sessions</span><MarqueeStar />
-        <span>League</span><MarqueeStar />
-        <span>Tributes</span><MarqueeStar />
-    </span>
-);
 
 /* ── HELPER: timeAgo ── */
 function timeAgo(dateStr: string): string {
@@ -214,37 +194,21 @@ export default function TestLandingPage() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── Scroll-driven scale ── */
+    /* ── Scroll reveal ── */
     useEffect(() => {
-        let rafId: number;
-        const loop = () => {
-            const vh = window.innerHeight;
-            const sections = document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card');
-            sections.forEach(el => {
-                const isHero = el.tagName === 'HEADER';
-                const rect = el.getBoundingClientRect();
-                const mid = vh / 2;
-
-                let progress;
-                if (isHero) {
-                    // Hero: fully visible when rect.top=0, gone by the time rect.top = -vh*0.5
-                    const heroRaw = Math.max(0, Math.min(1, (rect.top + vh * 0.5) / (vh * 0.5)));
-                    progress = 1 - Math.pow(1 - heroRaw, 2);
-                } else {
-                    const enterRaw = Math.max(0, Math.min(1, (vh - rect.top) / (vh * 0.6)));
-                    const leaveRaw = rect.bottom >= mid ? 1 : Math.max(0, rect.bottom / mid);
-                    const raw = Math.min(enterRaw, leaveRaw);
-                    progress = 1 - Math.pow(1 - raw, 2);
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    (e.target as HTMLElement).style.opacity = '1';
+                    (e.target as HTMLElement).style.transform = 'scale(1)';
+                    obs.unobserve(e.target);
                 }
-                const scale = isHero ? 0.92 + progress * 0.08 : 0.55 + progress * 0.45;
-                const opacity = progress;
-                el.style.setProperty('transform', `scale(${scale})`, 'important');
-                el.style.setProperty('opacity', `${opacity}`, 'important');
             });
-            rafId = requestAnimationFrame(loop);
-        };
-        rafId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(rafId);
+        }, { threshold: 0.08 });
+        document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
+            if (el.tagName !== 'HEADER') obs.observe(el);
+        });
+        return () => obs.disconnect();
     }, []);
 
     /* ── IntersectionObserver for glass-box ── */
@@ -599,12 +563,6 @@ export default function TestLandingPage() {
                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
                     <div className="funnel-label">THE HIERARCHY</div>
                     <div className="funnel-divider" />
-                    <div style={{ overflow: 'hidden', margin: '0 -20px 20px', maskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)', WebkitMaskImage: 'linear-gradient(90deg,transparent,black 15%,black 85%,transparent)' }}>
-                        <div className="home-marquee" style={{ display: 'flex', alignItems: 'center', gap: 0, whiteSpace: 'nowrap', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase' }}>
-                            <MarqueeTrack />
-                            <MarqueeTrack />
-                        </div>
-                    </div>
                     <div className="lb-tabs">
                         {(['today', 'weekly', 'monthly', 'alltime'] as const).map(period => {
                             const labels: Record<string, string> = { today: 'TODAY', weekly: 'WEEK', monthly: 'MONTH', alltime: 'ALL' };
