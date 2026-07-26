@@ -261,13 +261,10 @@ export default function TributePage() {
     ));
 
     return (<>
-        {/* ─── LAYERED BACKGROUNDS — outside position:relative wrapper so fixed works on iOS ─── */}
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden', opacity: 0.75 }}>
-            <div style={{ position: 'absolute', top: -10, left: -10, right: -10, bottom: -10, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
-        </div>
-        <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.4) 50%, rgba(2,2,2,0.6) 80%, rgba(2,2,2,0.75) 100%)', zIndex: 0, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }} />
+        {/* gradient overlay — fixed, no image needed, image is on html element */}
+        <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.5) 50%, rgba(2,2,2,0.7) 80%, rgba(2,2,2,0.85) 100%)', zIndex: 0, pointerEvents: 'none' }} />
 
-        <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', overflowX: 'hidden', position: 'relative' }}>
+        <div style={{ background: 'transparent', color: '#fff', minHeight: '100dvh', position: 'relative' }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
 
@@ -499,7 +496,8 @@ export default function TributePage() {
                 /* hide scrollbars everywhere */
                 * { scrollbar-width: none; }
                 *::-webkit-scrollbar { display: none; }
-                html, body { overscroll-behavior: none; overscroll-behavior-y: none; -webkit-overflow-scrolling: auto; }
+                html, body { overscroll-behavior: none; overflow-x: clip; }
+                html { background: url('/queen-payment-bg.png') center top / cover no-repeat fixed; background-color: #020202; }
 
                 /* ─── DESKTOP ─── */
                 @media (min-width: 769px) {

@@ -7,8 +7,6 @@
 html, body {
     background-color: #000 !important;
     overscroll-behavior: none;
-    overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: auto;
 }
 
 @font-face {
@@ -87,7 +85,7 @@ html, body {
     left: -50px;
     right: -50px;
     bottom: -50px;
-    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat;
+    background: url('/queen-bg-mobile.jpg') center 20%/cover no-repeat fixed;
 }
 
 /* BACKGROUND */
