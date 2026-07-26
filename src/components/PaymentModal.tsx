@@ -136,7 +136,7 @@ export default function PaymentModal({
     };
 
     const tickerColor = TICKER_COLORS[cryptoData?.currency] || '#bfbbbb';
-    const BASE: React.CSSProperties = { position: 'fixed', inset: 0, background: '#030308', zIndex: 99999999 };
+    const BASE: React.CSSProperties = { position: 'fixed', inset: 0, background: '#030308', zIndex: 2147483647 };
 
     /* ── LOADING ── */
     if (screen === 'loading') return (
