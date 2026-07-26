@@ -75,6 +75,7 @@ export async function POST(req: Request) {
             } catch {}
         }
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: tierId || null, amount, currency_id: String(currencyId), payment_type: 'tribute' }); } catch {}
         return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: amount });
     } catch (err: any) {
         console.error('[tribute/passimpay] error:', err);

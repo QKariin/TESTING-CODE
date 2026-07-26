@@ -87,6 +87,7 @@ export async function POST(req: Request) {
             }
         } catch {}
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: tierId || null, amount: amountEur, currency_id: String(currencyId), payment_type: 'keyholder' }); } catch {}
         return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur, tierId, days });
     } catch (err: any) {
         console.error('[keyholder/passimpay] error:', err);

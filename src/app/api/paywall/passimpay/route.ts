@@ -73,6 +73,7 @@ export async function POST(req: Request) {
             }).ilike('member_id', memberId);
         }
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: null, amount: Number(amount), currency_id: String(currencyId), payment_type: 'paywall' }); } catch {}
         return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: Number(amount) });
     } catch (err: any) {
         console.error('[passimpay] error:', err);

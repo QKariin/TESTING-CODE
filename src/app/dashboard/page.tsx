@@ -766,6 +766,15 @@ export default function DashboardPage() {
     const [showVideoChallenges, setShowVideoChallenges] = useState(false);
     const [showGlobal, setShowGlobal] = useState(false);
     const [showKeyholder, setShowKeyholder] = useState(false);
+    const [showPaymentLogs, setShowPaymentLogs] = useState(false);
+    const [paymentLogs, setPaymentLogs] = useState<any[]>([]);
+    const [paymentLogsLoading, setPaymentLogsLoading] = useState(false);
+
+    useEffect(() => {
+        if (!showPaymentLogs) return;
+        setPaymentLogsLoading(true);
+        fetch('/api/payment-logs').then(r => r.json()).then(d => { setPaymentLogs(d.logs || []); setPaymentLogsLoading(false); }).catch(() => setPaymentLogsLoading(false));
+    }, [showPaymentLogs]);
     const [keyholderMember, setKeyholderMember] = useState('');
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
@@ -1508,6 +1517,39 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {showPaymentLogs && !isMobile && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#08080c', padding: 24, overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '1.1rem', color: '#c5a059', letterSpacing: 4, fontWeight: 700 }}>PAYMENT REQUESTS</div>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button onClick={async () => {
+                                    setPaymentLogsLoading(true);
+                                    try {
+                                        const r = await fetch('/api/payment-logs');
+                                        const d = await r.json();
+                                        setPaymentLogs(d.logs || []);
+                                    } catch {}
+                                    setPaymentLogsLoading(false);
+                                }} style={{ background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', letterSpacing: 2, padding: '8px 16px', cursor: 'pointer', borderRadius: 6 }}>REFRESH</button>
+                                <button onClick={() => setShowPaymentLogs(false)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', letterSpacing: 2, padding: '8px 16px', cursor: 'pointer', borderRadius: 6 }}>CLOSE</button>
+                            </div>
+                        </div>
+                        {paymentLogsLoading && <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.8rem', letterSpacing: 2 }}>LOADING...</div>}
+                        {!paymentLogsLoading && paymentLogs.length === 0 && <div style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'Rajdhani',sans-serif", fontSize: '0.8rem', letterSpacing: 2 }}>NO PAYMENT REQUESTS YET</div>}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {paymentLogs.map((log, i) => (
+                                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 20 }}>
+                                    <div style={{ flex: 2, fontFamily: 'monospace', fontSize: '0.75rem', color: '#c5a059' }}>{log.member_id || 'unknown'}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{log.payment_type?.toUpperCase()}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: '#c5a059', fontWeight: 700 }}>€{log.amount}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>{log.tier_id || log.currency_id}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)' }}>{new Date(log.created_at).toLocaleString()}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
                     <div className="v-header">
@@ -1549,11 +1591,17 @@ export default function DashboardPage() {
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowPaymentLogs(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(180,40,40,0.6)' }}>KEYHOLDER</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(139,0,0,0.12)', fontSize: '1.1rem' }}>&#9919;</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowPaymentLogs(true); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showPaymentLogs ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>PAYMENTS</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>💳</div>
                         </div>
                     </div>
 
