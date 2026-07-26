@@ -559,8 +559,10 @@ export default function TributePage() {
             `}</style>
 
             {/* ─── LAYERED BACKGROUNDS ─── */}
-            <div style={{ position: 'fixed', inset: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', zIndex: 0, opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
-            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.4) 50%, rgba(2,2,2,0.6) 80%, rgba(2,2,2,0.75) 100%)', zIndex: 0 }} />
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', overflow: 'hidden', opacity: 0.75 }}>
+                <div style={{ position: 'absolute', top: -10, left: -10, right: -10, bottom: -10, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
+            </div>
+            <div style={{ position: 'fixed', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.4) 50%, rgba(2,2,2,0.6) 80%, rgba(2,2,2,0.75) 100%)', zIndex: 0, transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }} />
             {/* Gold accent glow top */}
             <div style={{ position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)', width: '120vw', height: '40vh', background: 'radial-gradient(ellipse at center top, rgba(197,160,89,0.04) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
             {/* Noise texture */}
