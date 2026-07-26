@@ -48,11 +48,72 @@ export default function PaymentModal({
     const [cryptoData, setCryptoData] = useState<any>(null);
     const [confirmed, setConfirmed] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [inlineAddress, setInlineAddress] = useState<any>(null);
+    const [inlineLoading, setInlineLoading] = useState(false);
+    const [inlineCopied, setInlineCopied] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         return () => { if (pollRef.current) clearInterval(pollRef.current); };
     }, []);
+
+    useEffect(() => {
+        if ((cardStep === 'revolut' || cardStep === 'moonpay') && !inlineAddress && !inlineLoading) {
+            fetchInlineAddress();
+        }
+    }, [cardStep]);
+
+    const fetchInlineAddress = async () => {
+        setInlineLoading(true);
+        try {
+            const res = await fetch(cryptoApiPath, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...cryptoPayBody, currencyId: 70 }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setInlineAddress({ ...data, currency: 'USDT' });
+                if (pollRef.current) clearInterval(pollRef.current);
+                let polls = 0;
+                pollRef.current = setInterval(async () => {
+                    polls++;
+                    if (polls > 120) { if (pollRef.current) clearInterval(pollRef.current); return; }
+                    try {
+                        const r = await fetch(cryptoStatusApiPath, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...cryptoStatusBody, orderId: data.orderId }),
+                        });
+                        const d = await r.json();
+                        if (d.paid) {
+                            if (pollRef.current) clearInterval(pollRef.current);
+                            setConfirmed(true);
+                            setTimeout(() => onSuccess?.(), 2500);
+                        }
+                    } catch {}
+                }, 5000);
+            }
+        } catch {}
+        setInlineLoading(false);
+    };
+
+    const copyInlineAddress = () => {
+        const addr = inlineAddress?.address || '';
+        if (!addr) return;
+        const fallback = () => {
+            const ta = document.createElement('textarea');
+            ta.value = addr;
+            ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;width:1px;height:1px';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); } catch {}
+            document.body.removeChild(ta);
+            setInlineCopied(true); setTimeout(() => setInlineCopied(false), 2000);
+        };
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(addr).then(() => { setInlineCopied(true); setTimeout(() => setInlineCopied(false), 2000); }).catch(fallback);
+        } else { fallback(); }
+    };
 
     const copyAddress = () => {
         const addr = cryptoData?.address || '';
@@ -343,9 +404,40 @@ export default function PaymentModal({
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, paddingTop: 2, textAlign: 'left' }}>{s.text}</div>
                     </div>
                 ))}
-                <button className="coin-flip-btn" onClick={() => { setCardStep(null); handleCryptoPick(70, 'USDT'); }} style={{ width: '100%', marginTop: 8, marginBottom: 10 }}>
-                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>GET MY ADDRESS</span>
-                </button>
+                <div style={{ marginTop: 20 }}>
+                    {inlineLoading && (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+                            <style>{`@keyframes _pmSpin{to{transform:rotate(360deg)}}`}</style>
+                            <div style={{ width: 28, height: 28, border: '2px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', borderRadius: '50%', animation: '_pmSpin 0.8s linear infinite' }} />
+                        </div>
+                    )}
+                    {inlineAddress && !inlineLoading && (
+                        <>
+                            <div style={{ height: 1, width: '100%', background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
+                            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#26a17b', letterSpacing: 3, marginTop: 2 }}>USDT <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
+                            </div>
+                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8 }}>{inlineAddress.address}</div>
+                            <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
+                                {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
+                            </button>
+                            {confirmed ? (
+                                <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+                                    <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+                                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
+                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 3 }}>WAITING FOR PAYMENT</span>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
                 <button onClick={() => setCardStep('options')}
                     style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
             </div>
@@ -380,9 +472,38 @@ export default function PaymentModal({
                         </div>
                     </div>
                 ))}
-                <button className="coin-flip-btn" onClick={() => { setCardStep(null); handleCryptoPick(70, 'USDT'); }} style={{ width: '100%', marginTop: 8, marginBottom: 10 }}>
-                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>GET MY ADDRESS</span>
-                </button>
+                <div style={{ marginTop: 20 }}>
+                    {inlineLoading && (
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+                            <div style={{ width: 28, height: 28, border: '2px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', borderRadius: '50%', animation: '_pmSpin 0.8s linear infinite' }} />
+                        </div>
+                    )}
+                    {inlineAddress && !inlineLoading && (
+                        <>
+                            <div style={{ height: 1, width: '100%', background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
+                            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
+                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: '#26a17b', letterSpacing: 3, marginTop: 2 }}>USDT <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span> <span style={{ color: '#c5a059' }}>€{Number(amountEur).toFixed(2)}</span></div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
+                            </div>
+                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8 }}>{inlineAddress.address}</div>
+                            <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
+                                {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
+                            </button>
+                            {confirmed ? (
+                                <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
+                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 3 }}>WAITING FOR PAYMENT</span>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
                 <button onClick={() => setCardStep('options')}
                     style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
             </div>
