@@ -264,7 +264,7 @@ export default function TributePage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)', transform: 'scale(1.03)' }} />
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.5) 60%, rgba(2,2,2,0.75) 100%)', pointerEvents: 'none' }} />
 
-        <div style={{ position: 'fixed', inset: 0, overflowY: 'scroll', zIndex: 1, color: '#fff' }}>
+        <div style={{ position: 'fixed', inset: 0, overflowY: 'scroll', overflowX: 'hidden', zIndex: 1, color: '#fff' }}>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Italianno&family=Rajdhani:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
 
