@@ -526,7 +526,15 @@ export default function PaymentModal({
                         </div>
                     </div>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 6 }}>The comfortable option.</div>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', letterSpacing: 1, marginBottom: 24 }}>For those who prefer the familiar.</div>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', letterSpacing: 1, marginBottom: 16 }}>For those who prefer the familiar.</div>
+
+                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(197,160,89,0.6)', flexShrink: 0 }} />
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                            Available for <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Week Entry Program only.</strong><br/>
+                            Usual price €55.00 + 20% lazy tax = <strong style={{ color: '#c5a059' }}>€66.00</strong>
+                        </div>
+                    </div>
 
                     <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '20px', marginBottom: 20, textAlign: 'center' }}>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 6 }}>YOU WILL PAY</div>
