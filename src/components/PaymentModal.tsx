@@ -427,13 +427,24 @@ export default function PaymentModal({
                                     <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: '#fff', fontWeight: 600, lineHeight: 1.7 }}>{line}</div>
                                 ))}
                             </div>
-                            {/* slide 2: show wallet address to copy */}
+                            {/* slide 2: show PassimPay-generated address to copy */}
                             {revolutSlide === 1 && (
                                 <div style={{ marginBottom: 16 }}>
-                                    <div style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none' }}>bc1p28prkn6lc7k8adks0s85glyf60j23l5c9yudg4pr0zjsqvf7gn8su3nw3d</div>
-                                    <button onClick={() => { navigator.clipboard.writeText('bc1p28prkn6lc7k8adks0s85glyf60j23l5c9yudg4pr0zjsqvf7gn8su3nw3d').catch(() => {}); setInlineCopied(true); setTimeout(() => setInlineCopied(false), 2000); }} style={{ width: '100%', padding: '13px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                                        {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
-                                    </button>
+                                    {inlineLoading && (
+                                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '12px 0', marginBottom: 8 }}>
+                                            <style>{`@keyframes _pmSpin{to{transform:rotate(360deg)}}`}</style>
+                                            <div style={{ width: 16, height: 16, border: '2px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', borderRadius: '50%', animation: '_pmSpin 0.8s linear infinite' }} />
+                                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>Generating address...</span>
+                                        </div>
+                                    )}
+                                    {inlineAddress && !inlineLoading && (
+                                        <>
+                                            <div style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none' }}>{inlineAddress.address}</div>
+                                            <button onClick={copyInlineAddress} style={{ width: '100%', padding: '13px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
+                                                {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             )}
                             {/* navigation */}
