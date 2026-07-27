@@ -53,11 +53,17 @@ export default function PaymentModal({
     const [inlineAddress, setInlineAddress] = useState<any>(null);
     const [inlineLoading, setInlineLoading] = useState(false);
     const [inlineCopied, setInlineCopied] = useState(false);
+    const [revolutSlide, setRevolutSlide] = useState(0);
+    const [revolutDone, setRevolutDone] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         return () => { if (pollRef.current) clearInterval(pollRef.current); };
     }, []);
+
+    useEffect(() => {
+        if (cardStep === 'revolut') { setRevolutSlide(0); setRevolutDone(false); }
+    }, [cardStep]);
 
     useEffect(() => {
         if ((cardStep === 'revolut' || cardStep === 'moonpay') && !inlineAddress && !inlineLoading) {
@@ -394,56 +400,91 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, marginBottom: 12, textAlign: 'center' }}>REVOLUT</div>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>2 minutes. That's it.</div>
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Anonymous. No one knows. Not even your bank.</div>
-                {[
-                    { n: '1', text: 'Open Revolut. At the bottom you will see 5 icons. Tap the coin one.' },
-                    { n: '2', text: 'Search Bitcoin (BTC). Select it.' },
-                    { n: '3', text: `Tap Buy. Enter €${Number(amountEur).toFixed(2)}. Confirm.` },
-                    { n: '4', text: 'Tap Send. Select To crypto address. Copy the address below and paste it in. Send.' },
-                ].map(s => (
-                    <div key={s.n} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'flex-start' }}>
-                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', color: '#c5a059', fontWeight: 700 }}>{s.n}</span>
-                        </div>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, paddingTop: 2, textAlign: 'left' }}>{s.text}</div>
-                    </div>
-                ))}
-                <div style={{ marginTop: 20 }}>
-                    {inlineLoading && (
-                        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-                            <style>{`@keyframes _pmSpin{to{transform:rotate(360deg)}}`}</style>
-                            <div style={{ width: 28, height: 28, border: '2px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', borderRadius: '50%', animation: '_pmSpin 0.8s linear infinite' }} />
-                        </div>
-                    )}
-                    {inlineAddress && !inlineLoading && (
+                {(() => {
+                    const steps = [
+                        { img: '/revolut-guide/step1.png', lines: ['Open Revolut.', 'Tap Crypto at the bottom. Then tap Send.'] },
+                        { img: '/revolut-guide/step2.jpg', lines: ['Copy the address below.', 'Paste it in the search bar.'] },
+                        { img: '/revolut-guide/step3.jpg', lines: ['Tap the suggestion that appears.'] },
+                        { img: '/revolut-guide/step4.jpg', lines: ['Tap the button next to "0 BTC".', 'Switch to EUR.'] },
+                        { img: '/revolut-guide/step5.jpg', lines: [`The price for your program is: €${Number(amountEur).toFixed(0)}`, 'Tap Continue.'] },
+                    ];
+                    const step = steps[revolutSlide] as { img: string; lines: string[] };
+                    if (!revolutDone) return (
                         <>
-                            <div style={{ height: 1, width: '100%', background: 'rgba(255,255,255,0.06)', marginBottom: 20 }} />
-                            <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
-                                <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
-                                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
+                            {/* progress dots */}
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 18 }}>
+                                {steps.map((_, i) => (
+                                    <div key={i} style={{ height: 5, width: i === revolutSlide ? 20 : 5, borderRadius: 3, background: i === revolutSlide ? '#c5a059' : 'rgba(255,255,255,0.15)', transition: 'all 0.3s' }} />
+                                ))}
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
+                            {/* image */}
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+                                <img src={step.img} alt={`Step ${revolutSlide + 1}`} style={{ width: '100%', maxWidth: 260, borderRadius: 18, border: '1px solid rgba(255,255,255,0.08)', display: 'block' }} />
                             </div>
-                            <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none', fontVariant: 'normal' }}>{inlineAddress.address}</div>
-                            <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                                {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
-                            </button>
-                            {confirmed ? (
-                                <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
-                            ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
-                                    <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-                                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
-                                    <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 3 }}>WAITING FOR PAYMENT</span>
+                            {/* instruction */}
+                            <div style={{ textAlign: 'center', marginBottom: revolutSlide === 1 ? 14 : 22 }}>
+                                {step.lines.map((line, i) => (
+                                    <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: '#fff', fontWeight: 600, lineHeight: 1.7 }}>{line}</div>
+                                ))}
+                            </div>
+                            {/* slide 2: show wallet address to copy */}
+                            {revolutSlide === 1 && (
+                                <div style={{ marginBottom: 16 }}>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none' }}>bc1p28prkn6lc7k8adks0s85glyf60j23l5c9yudg4pr0zjsqvf7gn8su3nw3d</div>
+                                    <button onClick={() => { navigator.clipboard.writeText('bc1p28prkn6lc7k8adks0s85glyf60j23l5c9yudg4pr0zjsqvf7gn8su3nw3d').catch(() => {}); setInlineCopied(true); setTimeout(() => setInlineCopied(false), 2000); }} style={{ width: '100%', padding: '13px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
+                                        {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
+                                    </button>
                                 </div>
                             )}
+                            {/* navigation */}
+                            {revolutSlide < steps.length - 1 ? (
+                                <button onClick={() => setRevolutSlide(s => s + 1)} style={{ width: '100%', padding: '15px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer' }}>NEXT</button>
+                            ) : (
+                                <button onClick={() => onClose()} style={{ width: '100%', padding: '15px', background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.4)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer' }}>THANK YOU QUEEN KARIN</button>
+                            )}
                         </>
-                    )}
-                </div>
-                <button onClick={() => setCardStep('options')}
-                    style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
+                    );
+                    return (
+                        <div style={{ marginTop: 8 }}>
+                            <style>{`@keyframes _pmSpin{to{transform:rotate(360deg)}} @keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+                            {inlineLoading && (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
+                                    <div style={{ width: 28, height: 28, border: '2px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', borderRadius: '50%', animation: '_pmSpin 0.8s linear infinite' }} />
+                                </div>
+                            )}
+                            {inlineAddress && !inlineLoading && (
+                                <>
+                                    <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 4 }}>SEND EXACTLY</div>
+                                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '1.6rem', color: '#fff', fontWeight: 900 }}>{inlineAddress.cryptoAmount}</div>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
+                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
+                                    </div>
+                                    <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none', fontVariant: 'normal' }}>{inlineAddress.address}</div>
+                                    <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
+                                        {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
+                                    </button>
+                                    {confirmed ? (
+                                        <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+                                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
+                                            <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 3 }}>WAITING FOR PAYMENT</span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    );
+                })()}
+                <button onClick={() => {
+                    if (revolutDone) { setRevolutDone(false); }
+                    else if (revolutSlide > 0) { setRevolutSlide(s => s - 1); }
+                    else { setCardStep('options'); }
+                }} style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
             </div>
         </div>
     );
