@@ -24,20 +24,42 @@ export async function POST(req: Request) {
         if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
-        const amountStr = Number(amount).toFixed(2);
 
-        // Step 1: Create order
+        // Step 1: Get live EUR→USD + EUR→crypto rates from CoinGecko
+        // PassimPay platform is USD-based, so we must convert EUR→USD before creating order
+        const cgMap: Record<string, string> = {
+            '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
+            '70': 'tether', '71': 'tether', '72': 'tether',
+        };
+        const cgId = cgMap[String(currencyId)] || 'bitcoin';
+        let cryptoAmount: string | null = null;
+        let amountUsd = Number(amount); // fallback: treat EUR ≈ USD if CoinGecko fails
+        try {
+            const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur,usd`, { cache: 'no-store' });
+            const rateData = await rateRes.json();
+            const eurPrice = rateData[cgId]?.eur;
+            const usdPrice = rateData[cgId]?.usd;
+            if (eurPrice && usdPrice) {
+                amountUsd = Number(amount) * (usdPrice / eurPrice);
+                const raw = Number(amount) / eurPrice;
+                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
+            } else if (eurPrice) {
+                const raw = Number(amount) / eurPrice;
+                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
+            }
+        } catch {}
+
+        // Step 2: Create order (amount in USD — PassimPay platform currency)
         const orderRes = await ppRequest('/createorder', {
             platform_id: platformId,
             order_id: orderId,
-            amount: amountStr,
+            amount: amountUsd.toFixed(2),
         }, apiKey);
         const orderData = await orderRes.json();
         console.log('[passimpay] createorder:', orderData);
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        // Step 2: Get wallet address for chosen currency
-        // Note: payment_id must come before platform_id in params (PHP SDK order)
+        // Step 3: Get wallet address for chosen currency
         const walletRes = await ppRequest('/getpaymentwallet', {
             payment_id: String(currencyId),
             platform_id: platformId,
@@ -46,24 +68,6 @@ export async function POST(req: Request) {
         const walletData = await walletRes.json();
         console.log('[passimpay] getwallet:', walletData);
         if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet address returned' }, { status: 500 });
-
-        // Step 3: Get live EUR→crypto rate from CoinGecko
-        const cgMap: Record<string, string> = {
-            '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
-            '70': 'tether', '71': 'tether', '72': 'tether',
-        };
-        const cgId = cgMap[String(currencyId)] || 'bitcoin';
-        let cryptoAmount: string | null = null;
-        try {
-            const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur`, { cache: 'no-store' });
-            const rateData = await rateRes.json();
-            const eurPrice = rateData[cgId]?.eur;
-            if (eurPrice) {
-                const raw = Number(amount) / eurPrice;
-                // USDT is stable, show 2dp; others show 8dp
-                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
-            }
-        } catch {}
 
         // Store orderId so webhook can find this member
         const { data: profile } = await supabaseAdmin.from('profiles').select('parameters').ilike('member_id', memberId).single();
