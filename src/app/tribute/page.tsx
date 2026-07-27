@@ -40,9 +40,6 @@ export default function TributePage() {
     const [showTierPicker, setShowTierPicker] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
     const [selectedTier, setSelectedTier] = useState<{ id: string; price: number } | null>(null);
-    const [showEmailGate, setShowEmailGate] = useState(false);
-    const [anonymousEmail, setAnonymousEmail] = useState('');
-    const [emailInput, setEmailInput] = useState('');
 
     const TRIBUTE_TIERS = [
         { id: 'weekly',  label: '1 WEEK',  period: '7 DAYS',   price: 55,  desc: 'First step. Prove you are worthy of Her attention.' },
@@ -1175,7 +1172,7 @@ export default function TributePage() {
                     <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, textAlign: 'center', marginBottom: 36 }}>ENTRANCE TRIBUTE</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {TRIBUTE_TIERS.map(tier => (
-                            <button key={tier.id} onClick={() => { setSelectedTier(tier); setShowTierPicker(false); if (!userEmail && !anonymousEmail) { setShowEmailGate(true); } else { setShowPayment(true); } }}
+                            <button key={tier.id} onClick={() => { setSelectedTier(tier); setShowTierPicker(false); setShowPayment(true); }}
                                 style={{ position: 'relative', width: '100%', padding: '22px 24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
                                 {tier.badge && (
                                     <div style={{ position: 'absolute', top: -9, right: 16, fontFamily: 'Orbitron,sans-serif', fontSize: '0.35rem', color: '#c5a059', background: '#030308', padding: '2px 8px', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 3, letterSpacing: 2 }}>{tier.badge}</div>
@@ -1193,39 +1190,15 @@ export default function TributePage() {
             </div>
         )}
 
-        {showEmailGate && selectedTier && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 99999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 28px' }}>
-                <div style={{ width: '100%', maxWidth: 380, background: '#0a0a0a', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 16, padding: '36px 28px' }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, textAlign: 'center', marginBottom: 16 }}>ONE MORE THING</div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 8 }}>Your email address</div>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>So we know who the tribute is from.</div>
-                    <input
-                        type="email"
-                        placeholder="your@email.com"
-                        value={emailInput}
-                        onChange={e => setEmailInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter' && emailInput.includes('@')) { setAnonymousEmail(emailInput); setShowEmailGate(false); setShowPayment(true); } }}
-                        style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#fff', fontFamily: 'Rajdhani,sans-serif', fontSize: '1rem', outline: 'none', marginBottom: 12, boxSizing: 'border-box' }}
-                        autoFocus
-                    />
-                    <button onClick={() => { if (emailInput.includes('@')) { setAnonymousEmail(emailInput); setShowEmailGate(false); setShowPayment(true); } }}
-                        style={{ width: '100%', padding: '15px', background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.35)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                        CONTINUE
-                    </button>
-                    <button onClick={() => { setShowEmailGate(false); setShowTierPicker(true); }}
-                        style={{ width: '100%', padding: '12px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>BACK</button>
-                </div>
-            </div>
-        )}
 
         {showPayment && selectedTier && (
             <PaymentModal
                 amountEur={selectedTier.price}
                 label="ENTRANCE TRIBUTE"
-                cardBody={{ memberId: userEmail || anonymousEmail || '', amount: selectedTier.price }}
+                cardBody={{ memberId: userEmail || '', amount: selectedTier.price }}
                 cryptoApiPath="/api/tribute/passimpay"
                 cryptoStatusApiPath="/api/tribute/passimpay-status"
-                cryptoPayBody={{ memberId: userEmail || anonymousEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
+                cryptoPayBody={{ memberId: userEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
                 cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 throneUrl="https://throne.com/queenkarin"
