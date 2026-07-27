@@ -22,9 +22,11 @@ export async function POST(req: Request) {
 
         console.log('[passimpay webhook]', JSON.stringify(payload));
 
-        const { type, orderId } = payload;
+        const orderId = payload.order_id || payload.orderId;
+        const type = payload.type;
 
-        if (type !== 'deposit' || !orderId) {
+        if (!orderId) {
+            console.log('[passimpay webhook] no orderId found in payload, skipping');
             return NextResponse.json({ ok: true });
         }
 
