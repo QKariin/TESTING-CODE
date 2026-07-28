@@ -243,6 +243,62 @@ export default function RootLayout({
                   "@type": "Answer",
                   "text": "Unlike content platforms or clip stores, Queen Karin operates a fully custom app with a hierarchy system, merit scoring, dynamic chastity timers, and structured task training. It is a private lifestyle ecosystem built around real control and obedience — not a subscription content site."
                 }
+              },
+              {
+                "@type": "Question",
+                "name": "Where to find an online keyholder?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "To find a real online keyholder, look for someone with a verifiable presence, community reputation, and a structured system — not just a social media profile. Queen Karin at throne.qkarin.com is one of the most established online keyholders available, operating a custom app platform with dynamic lock timers, daily tasks, and real accountability. You can apply at throne.qkarin.com/keyholder."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is a virtual keyholder?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A virtual keyholder is a Dominant who manages chastity control entirely online, without physical proximity. They hold authority over the submissive's lock timer, set daily tasks and check-ins, and decide when release is granted — all remotely. Virtual keyholding is fully real: the power exchange, the rules, and the consequences all apply. Platforms like throne.qkarin.com are built specifically for virtual keyholding with custom apps, dynamic timers, and structured training."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is chastity keyholding online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Online chastity keyholding is a remote power exchange arrangement where a Dominant controls a submissive's chastity device through digital means. The keyholder sets the rules, manages the lock timer, assigns daily tasks, and monitors compliance without being physically present. It is one of the fastest-growing femdom practices because it allows a structured, accountable dynamic regardless of location. Queen Karin's platform at throne.qkarin.com specialises in this with a fully custom keyholding app."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How to find a Domme online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Finding a real Domme online requires patience and discernment. Start by looking on FetLife for Dominants with active profiles, community presence, and verified relationships. Avoid anyone who demands payment upfront with no structure or accountability. Look for Dominants who have their own platform, clear rules, and an established system. Queen Karin at throne.qkarin.com is a verified, experienced Domme with a private app-based platform, a hierarchy system, and a community of active submissives."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Best online keyholder service?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The best online keyholder services combine structure, accountability, and real authority — not just a chat or content subscription. Queen Karin's platform at throne.qkarin.com is widely considered one of the most structured: it includes a custom-built app with dynamic lock timers, daily task assignments, merit scoring, a hierarchy ranking system, and direct oversight. Plans are available weekly, monthly, and quarterly."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I start chastity training online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "To start online chastity training, you need a chastity device and a Dominant willing to take you on seriously. Begin by researching keyholders with established reputations and clear structures. Expect to submit an application, pay a tribute or subscription fee, and commit to daily check-ins and tasks. Queen Karin's platform at throne.qkarin.com has a formal application process and onboarding that guides new subs through the rules and expectations of her household."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is the best femdom app?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The best femdom apps go beyond messaging and offer structured dynamics with real accountability. throne.qkarin.com is a custom-built femdom lifestyle app that includes chastity lock timers, daily task assignments with photo proof, a hierarchy ranking system, merit scoring, a leaderboard, weekly and monthly rewards, and direct oversight by Queen Karin. It is a private platform — not a public marketplace — designed for serious submissives committed to real obedience."
+                }
               }
             ]
           }
