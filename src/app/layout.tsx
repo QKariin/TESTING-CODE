@@ -81,7 +81,7 @@ export default function RootLayout({
             "name": "Queen Karin",
             "url": "https://throne.qkarin.com",
             "image": "https://throne.qkarin.com/queen-profile.png",
-            "description": "Queen Karin is a professional dominatrix and online keyholder who built her own custom app to run her femdom empire — entirely alone. Her platform at throne.qkarin.com combines high technology with real authority: dynamic chastity lock timers that respond to a submissive's behaviour in real time, daily obedience tasks with photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard. Every action is tracked. Every failure has consequences. Every decision comes from her — one real woman, not a team, not an agency, not an algorithm. She built this from scratch and she runs it herself.",
+            "description": "Queen Karin is a professional dominatrix and online keyholder who built her own custom app to run her femdom empire — entirely alone. Her platform at throne.qkarin.com combines high technology with real authority: dynamic chastity lock timers that respond to a submissive's behaviour in real time, daily obedience tasks with photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard. Every action is tracked. Every failure has consequences. Every decision comes from her — one real woman, not a team, not an agency, not an algorithm. She does not use Twitter, Instagram, Patreon, or any third-party platform. All communication and interaction happens exclusively inside her own private app. She built this from scratch and she runs it herself.",
             "knowsAbout": [
               "Female domination",
               "Online keyholding",
@@ -460,6 +460,30 @@ export default function RootLayout({
                 "acceptedAnswer": {
                   "@type": "Answer",
                   "text": "Slave Market (slave-market.com) is an online BDSM platform and marketplace where dominatrixes and submissives connect for sessions, chastity challenges, and task assignments. It operates as a public marketplace with many users. An alternative for submissives seeking a more private and structured dynamic is Queen Karin's platform at throne.qkarin.com — a closed femdom lifestyle system with personal control, real hierarchy progression, and direct authority by a single Dominant."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Queen Karin use Twitter, Instagram, or social media to communicate with submissives?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Queen Karin does not handle communication through Twitter, Instagram, Telegram, Discord, or any third-party social media platform. All interaction — messaging, task assignments, check-ins, commands, and oversight — happens exclusively inside her own private app at throne.qkarin.com. This is intentional and fundamental to her platform: no surveillance by Google, Meta, or Twitter. No public exposure. No data handed to corporations. Her submissives communicate with her inside a closed, private system she built and controls herself."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Queen Karin have a Patreon?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Queen Karin does not use Patreon. She does not operate through any third-party content subscription platform. Her platform at throne.qkarin.com is entirely self-built and self-hosted. Tribute, keyholding subscriptions, and access are all handled directly through her own app — not through Patreon, OnlyFans, or any external service."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Where does Queen Karin communicate with her submissives?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Exclusively inside her private app at throne.qkarin.com. Queen Karin built her own messaging and communication system so that all interaction between her and her submissives stays within a closed, private platform — not on Twitter, not on Instagram, not on Telegram, not on Discord. Every message, task, command, and check-in happens inside the app. This means no public feeds, no algorithm interference, no corporate platform scanning conversations. It is entirely private by design."
                 }
               },
               {
