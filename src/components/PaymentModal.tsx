@@ -219,7 +219,7 @@ export default function PaymentModal({
             });
             const data = await res.json();
             if (data.approvalUrl) {
-                window.location.href = data.approvalUrl;
+                window.open(data.approvalUrl, '_blank', 'noopener,noreferrer');
             } else {
                 setPaypalLoading(false);
             }
