@@ -103,7 +103,8 @@ export default function RootLayout({
               "https://www.reddit.com/user/Q-Karin/",
               "https://discord.gg/RMJqt7uvNc",
               "https://x.com/QKarin_com",
-              "https://fetlife.com/QKarin"
+              "https://fetlife.com/QKarin",
+              "https://disboard.org/server/1167379948173000704"
             ]
           },
           {
