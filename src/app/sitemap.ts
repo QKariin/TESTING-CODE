@@ -32,7 +32,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             url: `${baseUrl}/keyholder`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
-            priority: 0.7,
+            priority: 0.9,
+        },
+        {
+            url: `${baseUrl}/tribute`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly',
+            priority: 0.9,
         },
     ]
 }
