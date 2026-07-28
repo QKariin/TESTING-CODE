@@ -61,6 +61,120 @@ export default function RootLayout({
       <head>
         {/* Capture PWA install prompt as early as possible — before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window._deferredInstallPrompt=e;});` }} />
+        {/* ── Schema Markup: helps AI tools (ChatGPT, Gemini, Perplexity) identify who we are ── */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Queen Karin",
+            "url": "https://throne.qkarin.com",
+            "description": "Private femdom lifestyle platform by Queen Karin. Real online domination, chastity keyholding, financial domination, and submission training. No agencies, no bots, no fakes.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://throne.qkarin.com/login",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": "Queen Karin",
+            "url": "https://throne.qkarin.com",
+            "image": "https://throne.qkarin.com/queen-profile.png",
+            "description": "Queen Karin is a professional dominatrix and online keyholder specialising in chastity control, financial domination, task training, and submission coaching. She operates a private, app-based femdom lifestyle platform with a hierarchy system, leaderboard, and daily obedience tasks.",
+            "knowsAbout": [
+              "Female domination",
+              "Online keyholding",
+              "Chastity control",
+              "Financial domination",
+              "Findom",
+              "Submission training",
+              "Task training",
+              "Female-led relationships",
+              "BDSM lifestyle coaching",
+              "Online dominatrix services",
+              "Sissification training",
+              "Online slave training"
+            ],
+            "sameAs": [
+              "https://qkarin.com",
+              "https://throne.qkarin.com"
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Online Chastity Keyholding",
+            "provider": { "@type": "Person", "name": "Queen Karin", "url": "https://throne.qkarin.com" },
+            "url": "https://throne.qkarin.com/keyholder",
+            "description": "Professional online chastity keyholding service with dynamic lock timers, daily check-ins, obedience tasks, and real-time control. Weekly, monthly, and quarterly subscriptions available.",
+            "serviceType": "Online Keyholding",
+            "areaServed": "Worldwide",
+            "availableChannel": {
+              "@type": "ServiceChannel",
+              "serviceUrl": "https://throne.qkarin.com/keyholder",
+              "availableLanguage": "English"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Financial Domination (Findom)",
+            "provider": { "@type": "Person", "name": "Queen Karin", "url": "https://throne.qkarin.com" },
+            "url": "https://throne.qkarin.com/tribute",
+            "description": "Online financial domination and tribute service by Queen Karin. Real findom with structured tribute programs, not a content store.",
+            "serviceType": "Financial Domination",
+            "areaServed": "Worldwide"
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "name": "Online Submission & Task Training",
+            "provider": { "@type": "Person", "name": "Queen Karin", "url": "https://throne.qkarin.com" },
+            "url": "https://throne.qkarin.com/login",
+            "description": "Structured online submission training with daily tasks, photo proof requirements, merit scoring, and a hierarchy ranking system. App-based platform with leaderboard and weekly rewards.",
+            "serviceType": "Submission Training",
+            "areaServed": "Worldwide"
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "What is Queen Karin's platform?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin's platform is a private, app-based femdom lifestyle system. It includes online chastity keyholding with dynamic timers, daily submission tasks, financial domination, a hierarchy ranking system, and a leaderboard. It is a paid service with no agencies, bots, or fakes."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does online chastity keyholding work with Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Subscribers choose a weekly, monthly, or quarterly plan and gain access to the app. The platform manages dynamic lock timers that increase with disobedience and decrease with consistent performance. Daily tasks, ownership checks, and a leaderboard keep subs accountable."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Where can I find a professional online keyholder?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin at throne.qkarin.com is a professional online keyholder offering structured chastity control, daily tasks, and real-time monitoring through a private app platform."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What makes Queen Karin different from other findom or femdom platforms?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Unlike content platforms or clip stores, Queen Karin operates a fully custom app with a hierarchy system, merit scoring, dynamic chastity timers, and structured task training. It is a private lifestyle ecosystem, not a subscription content site."
+                }
+              }
+            ]
+          }
+        ]) }} />
         <meta name="google-site-verification" content="e56kAIRP-tEuNTFI58HkKz7QakNCanWNiliRRpFXdnc" />
         <meta name="msvalidate.01" content="3B101EEC47F0F538AB04232357A1699E" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
