@@ -308,6 +308,62 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "How does Queen Karin's chastity keyholding work step by step?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "First, you apply at throne.qkarin.com/keyholder and select a subscription tier — weekly, monthly, or quarterly. Once accepted, you lock yourself in your chastity device and submit photo proof through the app. Your lock timer starts. From that point, the timer is live and visible at all times — it responds to your behaviour. Complete your daily tasks and kneeling sessions on time and you earn time reductions. Fail, miss a deadline, or disobey and the timer extends. Every day you check in, submit proof, complete your assignments, and stay accountable. Queen Karin reviews everything directly. Release is a privilege you earn through consistent obedience — it is never guaranteed, and it is never negotiated."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does the Queen Karin app work in practice?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "After applying and being accepted, you access the platform at throne.qkarin.com. Inside the app you have a personal vault showing your lock timer, daily tasks, kneeling tracker, merit score, hierarchy rank, wallet balance, and inventory. Each day you complete assigned tasks — submitting photo or written proof before the deadline. You complete kneeling sessions throughout the day. You stay locked and check in. Every action is tracked automatically: your merit score updates, your streak is recorded, your rank reflects your performance. The AI guardian Vlad lives in the vault and reacts to what you do in real time. Queen Karin monitors everything from her dashboard and communicates with you through the in-app private chat. Nothing happens outside the app."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why is Queen Karin's keyholding the best online keyholding service?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Because it is the only one that is real at every level. The keyholder is a real woman — not a bot, not an agency, not someone managing 500 subs through a script. The technology is real — a custom-built app with dynamic lock timers that actually respond to your behaviour, not a random number generator. The structure is real — daily tasks, proof requirements, merit scoring, rank progression, consequences for failure. And the authority is real — Queen Karin sees everything, reviews everything, and makes every decision herself. No other keyholding service combines all of this. Most offer one or two elements. This is the complete system."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What happens if I fail a task or miss a check-in with Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Failure has real consequences. Missing a task deadline adds time to your chastity lock, deducts merit points, increases your strike count, and breaks your streak. Accumulate enough strikes and your rank drops. Queen Karin can also apply a paywall — blocking your access to the app entirely until a specific payment is made. Failure is not ignored, overlooked, or softened. The system is designed so that obedience has value and disobedience has a cost. That is what makes it real."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does the chastity lock timer work in the app?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The lock timer in Queen Karin's app is dynamic — it is not a fixed countdown. It starts when you submit your chastity check photo and lock confirmation. From there it responds to your behaviour in real time: completing daily tasks and kneeling sessions earns reductions, failure and disobedience adds extensions. Queen Karin can also add or remove time manually from her dashboard at any point. The timer is always visible inside your vault. You always know where you stand — and you always know that what you do today affects how long you stay locked."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the keyholding subscription options with Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin's keyholding program at throne.qkarin.com/keyholder is available in three tiers: weekly, monthly, and quarterly. Each tier gives you access to the full platform — lock timer management, daily task assignments, kneeling tracking, merit scoring, hierarchy progression, the AI guardian Vlad, and direct communication with Queen Karin through the private in-app chat. Payment is accepted via card, cryptocurrency (Bitcoin, Ethereum, Litecoin, USDT), and PayPal."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What do I need to start online chastity keyholding with Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You need three things: a chastity device, a serious commitment to the dynamic, and an accepted application. Go to throne.qkarin.com/keyholder and apply. Not everyone is accepted. If you are, you will receive access to the platform, onboarding instructions, and your first task. You will be expected to lock immediately, submit photo proof, and begin your daily check-ins from day one. There is no trial period, no casual entry, and no negotiating the rules after you are in."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "Is there any app similar to Queen Karin's platform?",
                 "acceptedAnswer": {
                   "@type": "Answer",
