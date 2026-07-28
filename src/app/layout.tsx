@@ -344,6 +344,38 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What are online humiliation tasks in femdom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Online humiliation tasks are assignments given by a Dominant that require the submissive to perform acts designed to break ego, enforce submission, and deepen the power dynamic — all conducted remotely. Tasks range from written confessions and degrading rituals to photo assignments and public or semi-public acts within agreed limits. On Queen Karin's platform at throne.qkarin.com, humiliation is woven into the daily task system — structured, purposeful, and enforced with real consequences for non-compliance."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is an online dom/sub relationship?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "An online dom/sub relationship is a power exchange dynamic conducted entirely or primarily over the internet. The Dominant holds authority and issues commands, rules, and tasks while the submissive follows, reports, and submits — all remotely. A real online D/s relationship requires structure, consistency, and accountability. Queen Karin's platform at throne.qkarin.com is built around exactly this: a private, app-based dom/sub dynamic with daily tasks, chastity management, check-ins, merit scoring, and a ranked hierarchy system."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does a keyholder manage a chastity device online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A keyholder manages a chastity device online through remote protocols — the submissive locks themselves in a device, sends photographic proof, and the keyholder controls the conditions of release. Management includes setting lock durations, extending or reducing time based on behaviour, assigning daily tasks, and monitoring check-ins. Queen Karin manages chastity devices through her platform at throne.qkarin.com with dynamic lock timers that respond in real time to the submissive's compliance and obedience."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I get into femdom as a beginner submissive?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Starting in femdom as a submissive means first understanding what you are looking for — casual exploration, structured training, chastity, or a full D/s dynamic. Research what femdom actually involves: obedience, task training, power exchange, and consistent authority. Find a Dominant with a verifiable presence, clear rules, and real structure. Queen Karin's platform at throne.qkarin.com is a good starting point for serious beginners — it has a formal application process, clear expectations, and an onboarding structure that guides new submissives through her rules before they are accepted."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "What is a good alternative to FetLife for femdom?",
                 "acceptedAnswer": {
                   "@type": "Answer",
