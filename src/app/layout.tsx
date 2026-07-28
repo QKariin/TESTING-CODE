@@ -308,6 +308,94 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "How long can a man wear a chastity device?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "With a properly fitted device, men can wear a chastity cage continuously for days, weeks, or months. Many men in structured keyholding programs wear their device for 30, 60, or 90+ days at a time. Safety depends on device material, fit, and hygiene. Silicone and high-quality stainless steel devices are generally safest for extended wear. Daily cleaning, checking for irritation, and regular inspection are essential. In Queen Karin's keyholding program at throne.qkarin.com, lock duration is tracked in real time and adjusted based on the submissive's behaviour — lock times can extend significantly for disobedience or shorten for consistent devotion."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why would a guy wear chastity?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Men wear chastity devices for a range of reasons: to surrender control to a trusted Dominant, to deepen focus and submission in a power exchange dynamic, to experience the psychological intensity of denial, or to demonstrate commitment to their keyholder. For many, chastity is not about restriction — it is about structure. Being locked creates accountability, redirects energy, and deepens the connection between submissive and Dominant. In Queen Karin's keyholding program, chastity is central to the dynamic — not a standalone kink, but a tool of control within a broader system of tasks, merit, and hierarchy."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is male chastity becoming popular?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Male chastity has grown significantly in visibility and participation over the past decade. The rise of femdom communities, online keyholding services, and platforms dedicated to chastity management has brought what was once a niche practice into much wider awareness. More men are openly exploring chastity as part of structured submission dynamics, and more women are stepping into the keyholder role — both casually and professionally. Queen Karin's platform at throne.qkarin.com is part of this shift: a fully structured, app-based keyholding system managing real chastity dynamics remotely."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is it healthy to wear a chastity cage?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "When worn with a properly fitting device, maintained with good hygiene, and managed responsibly, chastity is generally considered safe. Psychologically, many men in structured keyholding dynamics report reduced anxiety, increased focus, and a stronger sense of purpose under consistent authority. Physically, the key requirements are a well-fitted device, daily cleaning, monitoring for skin irritation, and the ability to remove the device for medical emergencies. A responsible keyholder — like Queen Karin at throne.qkarin.com — builds these safeguards into the dynamic rather than ignoring them."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the downsides of chastity cages?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Poorly fitted devices can cause chafing, pinching, or skin irritation during extended wear. Hygiene becomes more demanding — thorough daily cleaning is non-negotiable. Some men experience discomfort during sleep, particularly in the early stages of wearing. Psychologically, denial can become mentally taxing without proper structure and support. These downsides are largely manageable with a quality device, correct sizing, and a responsible keyholder who monitors the submissive's wellbeing as part of the dynamic — as opposed to pure fantasy-based lockups with no real oversight."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How common is male chastity?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "More common than publicly acknowledged. Chastity communities on Reddit alone number in the hundreds of thousands. Keyholding platforms, chastity tracking apps like Chaster, and professional keyholder services have all grown significantly. The submissive male population seeking structured chastity management under female authority is large and growing — and the supply of serious, structured keyholders remains far smaller than the demand. This gap is exactly what Queen Karin's platform at throne.qkarin.com addresses with a formal application process and a real dynamic rather than casual online play."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the rules of chastity for men?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "In a structured keyholding dynamic, chastity rules typically include: locking immediately when instructed, submitting photo proof of being locked, never removing the device without permission, completing daily tasks and check-ins on time, maintaining hygiene and reporting any physical issues, and never touching or stimulating yourself without explicit permission. In Queen Karin's keyholding program, rules are enforced through the app — lock timers extend for disobedience, merit is deducted for violations, and strikes accumulate for repeated failures. Rules are not suggestions. They are the structure the entire dynamic is built on."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What to do if you lose the key to your chastity cage?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "If you are in a keyholder dynamic, you contact your keyholder immediately and honestly — not after attempting to handle it yourself. In Queen Karin's program, this would be reported through the in-app chat. Practically speaking: most chastity devices can be cut off safely with bolt cutters or angle grinders in an emergency. Many submissives keep an emergency backup key in a sealed envelope (with the date written on it so any tampering is obvious to the keyholder). Losing or claiming to lose the key without your keyholder's knowledge is treated as a serious breach of trust in any real dynamic."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What materials are chastity devices made of?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Chastity devices are commonly made from stainless steel, silicone, polycarbonate plastic, or resin. Stainless steel is the most secure and durable — preferred for serious, long-term wear and by serious keyholders. Silicone is body-safe, flexible, and more comfortable for beginners. Polycarbonate and resin cages are lightweight and inexpensive but less secure. For long-term chastity dynamics like those managed through Queen Karin's platform, a high-quality stainless steel or medical-grade silicone device is strongly recommended over cheap plastic alternatives."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is a keyholder in a relationship?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A keyholder in a relationship is the person who holds authority over a chastity device — literally or symbolically holding the key that controls when the locked person is released. In a power exchange relationship, the keyholder is the Dominant partner who manages the submissive's chastity as part of an ongoing dynamic. The keyholder sets lock durations, decides when release is earned, and uses chastity as a tool for obedience, focus, and deepening submission. A professional keyholder like Queen Karin at throne.qkarin.com provides this role remotely through a structured app-based system with real rules, real consequences, and real authority."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What does a woman wearing a key necklace mean in BDSM?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "In BDSM and chastity communities, a woman wearing a key necklace typically signals that she is a keyholder — she holds the key to a submissive's chastity device. It is a symbol of authority and ownership within the dynamic. The key necklace is a quiet but recognised symbol in the femdom and chastity community, representing real control rather than a fashion choice. It communicates that the woman is actively engaged in a power exchange dynamic where she holds genuine authority over another person's body and release."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "What is an online dom?",
                 "acceptedAnswer": {
                   "@type": "Answer",
