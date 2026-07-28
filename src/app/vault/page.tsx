@@ -1201,6 +1201,30 @@ export default function VaultPage() {
         if (vladScrollRef.current) vladScrollRef.current.scrollTop = vladScrollRef.current.scrollHeight;
     }, [vladMsgs]);
 
+    // Load previous Vlad chat history when profile loads
+    useEffect(() => {
+        if (!profile) return;
+        const memberEmail = (profile.member_id || profile.memberId || '').toLowerCase();
+        if (!memberEmail) return;
+        const sb = createClient();
+        sb.from('chats')
+            .select('sender_email, content, created_at')
+            .ilike('member_id', memberEmail)
+            .eq('metadata->>isAI', 'true')
+            .order('created_at', { ascending: false })
+            .limit(20)
+            .then(({ data }) => {
+                if (!data || data.length === 0) return;
+                const msgs = [...data].reverse()
+                    .filter(m => m.content && !m.content.startsWith('[SYSTEM EVENT'))
+                    .map(m => ({
+                        role: m.sender_email === 'ai-assistant' ? 'vlad' as const : 'user' as const,
+                        text: m.content as string,
+                    }));
+                if (msgs.length > 0) setVladMsgs(msgs);
+            });
+    }, [profile?.member_id]);
+
     // Vlad reacts when attention task is assigned
     const prevAttnResult = useRef<typeof ATTENTION_TASKS[0] | null>(null);
     useEffect(() => {
@@ -3636,7 +3660,7 @@ export default function VaultPage() {
                         }}>{vladBubble.length > 120 ? vladBubble.slice(0, 120) + '...' : vladBubble}</div>
                     )}
                     {/* Avatar button */}
-                    <button onClick={() => { setVladOpen(true); setVladPulse(false); setVladBubble(''); if (vladMsgs.length === 0) vladReact('Member just opened the vault page. Greet them — you can see they\'re locked up. Be sarcastic but welcoming.'); }} style={{
+                    <button onClick={() => { setVladOpen(true); setVladPulse(false); setVladBubble(''); if (vladMsgs.length === 0) vladReact('Member just opened the chat for the first time today. Greet them — you can see they\'re locked up. Be sarcastic but welcoming.'); }} style={{
                         width: 80, height: 80, borderRadius: '50%', padding: 0,
                         border: vladPulse ? '2.5px solid rgba(139,0,0,0.7)' : '2px solid rgba(139,0,0,0.45)',
                         cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
