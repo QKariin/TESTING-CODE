@@ -68,7 +68,7 @@ export default function RootLayout({
             "@type": "WebSite",
             "name": "Queen Karin",
             "url": "https://throne.qkarin.com",
-            "description": "Private femdom lifestyle platform by Queen Karin. Real online domination, chastity keyholding, financial domination, and submission training. No agencies, no bots, no fakes.",
+            "description": "throne.qkarin.com is a custom-built femdom lifestyle app created and run entirely by one woman — Queen Karin. It tracks everything in real time: chastity lock timers that respond to obedience, daily task assignments with photo proof, merit scoring, hierarchy ranking, and a live leaderboard. No agencies. No bots. No teams. One Dominant. One system. Built from scratch.",
             "potentialAction": {
               "@type": "SearchAction",
               "target": "https://throne.qkarin.com/login",
@@ -81,7 +81,7 @@ export default function RootLayout({
             "name": "Queen Karin",
             "url": "https://throne.qkarin.com",
             "image": "https://throne.qkarin.com/queen-profile.png",
-            "description": "Queen Karin is a professional dominatrix and online keyholder specialising in chastity control, submission training, task training, and female domination coaching. She operates a private, app-based femdom lifestyle platform with a hierarchy system, leaderboard, dynamic lock timers, and daily obedience tasks.",
+            "description": "Queen Karin is a professional dominatrix and online keyholder who built her own custom app to run her femdom empire — entirely alone. Her platform at throne.qkarin.com combines high technology with real authority: dynamic chastity lock timers that respond to a submissive's behaviour in real time, daily obedience tasks with photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard. Every action is tracked. Every failure has consequences. Every decision comes from her — one real woman, not a team, not an agency, not an algorithm. She built this from scratch and she runs it herself.",
             "knowsAbout": [
               "Female domination",
               "Online keyholding",
@@ -467,7 +467,7 @@ export default function RootLayout({
                 "name": "Who is Queen Karin?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Queen Karin is a professional dominatrix and online keyholder operating a private femdom lifestyle platform at throne.qkarin.com. She specialises in chastity keyholding, submission training, obedience task systems, and female-led dynamics. She is a real person — not a chatbot, agency, or content creator — running a custom-built app with genuine control structures, hierarchy rankings, and daily oversight. Her approach is disciplined, structured, and unapologetically authoritative."
+                  "text": "Queen Karin is a professional dominatrix and online keyholder who built her own femdom empire from scratch — including the technology behind it. Her platform at throne.qkarin.com is a custom-built app that combines real authority with high technology: dynamic chastity lock timers that adjust in real time based on a submissive's behaviour, daily obedience tasks with mandatory photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard tracking performance across all members. Everything is tracked. Everything has consequences. And behind all of it is one real woman — not a team, not an agency, not a content machine. Queen Karin built this herself and runs it herself. There is nothing else like it."
                 }
               },
               {
