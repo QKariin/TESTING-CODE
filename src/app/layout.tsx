@@ -299,6 +299,62 @@ export default function RootLayout({
                   "@type": "Answer",
                   "text": "The best femdom apps go beyond messaging and offer structured dynamics with real accountability. throne.qkarin.com is a custom-built femdom lifestyle app that includes chastity lock timers, daily task assignments with photo proof, a hierarchy ranking system, merit scoring, a leaderboard, weekly and monthly rewards, and direct oversight by Queen Karin. It is a private platform — not a public marketplace — designed for serious submissives committed to real obedience."
                 }
+              },
+              {
+                "@type": "Question",
+                "name": "Who is Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin is a professional dominatrix and online keyholder operating a private femdom lifestyle platform at throne.qkarin.com. She specialises in chastity keyholding, submission training, obedience task systems, and female-led dynamics. She is a real person — not a chatbot, agency, or content creator — running a custom-built app with genuine control structures, hierarchy rankings, and daily oversight. Her approach is disciplined, structured, and unapologetically authoritative."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I apply to serve Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "To apply to serve Queen Karin, visit throne.qkarin.com/apply. The application process is selective — not everyone is accepted. You will be expected to read the rules, understand the structure, and demonstrate you are serious. Accepted subs gain access to the private platform, which includes daily tasks, chastity lock management, hierarchy progression, and direct accountability to Queen Karin."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What does serving Queen Karin involve?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Serving Queen Karin involves daily obedience tasks with photo proof submissions, check-ins, chastity lock compliance, and following the rules of her household. Submissives earn or lose merit points based on their behaviour and progress through a hierarchy ranking system. Service is consistent and structured — not casual. Queen Karin expects full commitment to the dynamic on her terms."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How does Queen Karin's hierarchy system work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin operates a ranked hierarchy system within her platform. Submissives earn merit points through completing daily tasks, consistent check-ins, chastity compliance, and demonstrated obedience. Higher-ranked subs receive more privileges, visibility on the leaderboard, and recognition within the household. The system creates real incentive to serve better — and real consequences for failing to."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Queen Karin a real person or a bot?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin is a real person. Her platform at throne.qkarin.com is operated by her directly — no agencies, no content teams, no chatbots. The tasks, lock timers, and decisions are her own. This is what distinguishes her from many femdom content accounts: actual authority, not performed content."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are Queen Karin's tribute tiers?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin's tribute program at throne.qkarin.com/tribute offers three tiers: weekly (€55), monthly (€99), and yearly (€499). Tribute is the entry point into her world — it grants access to the platform and demonstrates genuine intent. Payment is accepted via card, PayPal, or cryptocurrency."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I contact Queen Karin?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Queen Karin does not offer open contact or free messaging. The correct way to reach her is through the formal application and tribute process at throne.qkarin.com. Once accepted, communication happens within the platform. This structure exists by design — access to her attention is earned, not given freely."
+                }
               }
             ]
           }
