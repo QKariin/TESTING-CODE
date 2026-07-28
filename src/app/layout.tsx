@@ -308,6 +308,54 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What is the meaning of Dom woman?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A Dom woman — short for Dominant woman — is a woman who takes the controlling role in a power exchange dynamic. She sets the rules, holds authority, and makes decisions within an agreed structure. A Dom woman is not simply assertive or bossy — she is someone who actively leads a dynamic with consistency, intention, and real consequences for non-compliance. In femdom, the Dom woman holds complete authority over the submissive's behaviour, time, tasks, and in some cases their body through practices like chastity. Queen Karin at throne.qkarin.com is a professional Dom woman running a private lifestyle platform built entirely around her authority."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is it healthy to be a sub or dom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, when practised consensually and with clear communication, both Dominant and submissive roles can be psychologically healthy. Research suggests that people in consensual BDSM dynamics often show higher levels of self-awareness, communication skills, and emotional intelligence than those outside the community. For submissives, surrendering control in a structured, safe dynamic can reduce anxiety and provide a sense of purpose. For Dominants, the responsibility of holding authority develops discipline, emotional regulation, and leadership. The key factor in health is consent, structure, and mutual respect within the dynamic."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Which gender is more dominant?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Dominance is not determined by gender. Both men and women can be Dominant or submissive, and this varies widely by individual. However, femdom — female domination — is a growing and increasingly prominent dynamic in which women hold the authority. Female Dominants (Dommes) are widely considered among the most skilled in the BDSM world because of the emotional intelligence, structure, and consistency required to lead a real dynamic. Queen Karin at throne.qkarin.com is an example of a professional female Dominant who has built an entire private ecosystem of control, structure, and authority."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is there a downside to being dominant?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. The emotional and psychological cost of being Dominant is rarely discussed. A Dominant woman is expected to be consistently authoritative, composed, creative, patient, and available — while managing her own emotions privately and absorbing constant resistance, entitlement, and disrespect from those who confuse fantasy with reality. Dom drop — a crash of exhaustion, emotional flatness, or sadness after an intense dynamic — is real. Boundary violations, manipulation from submissives, and the pressure of maintaining authority without showing vulnerability are ongoing challenges. Being Dominant is not a position of ease. It is a position of constant responsibility."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is a dominant alpha female?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A dominant alpha female is a woman who naturally commands authority, sets the tone in any environment, and does not adjust her standards to accommodate others. In the context of femdom and BDSM, an alpha female Dominant is a woman who leads dynamics on her own terms — with no apology, no negotiation of her core rules, and no performance of dominance for someone else's entertainment. Her authority is real, consistent, and non-negotiable. Queen Karin is an example: a professional Dominant who built her own platform and runs her dynamics entirely on her terms, without compromise."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How to handle a dominant woman?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "You do not handle a dominant woman — you respect her. A dominant woman does not need to be managed, softened, or brought down to a more comfortable level. What she requires is someone who shows up consistently, follows agreed rules without constant reminders, communicates honestly, and does not confuse her authority with an invitation to push limits. In a femdom dynamic specifically, the correct approach is to listen, comply, and demonstrate your value through action rather than words. Attempting to negotiate, manipulate, or test a Dominant's patience is the fastest way to lose access to her world entirely."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "How does Queen Karin's chastity keyholding work step by step?",
                 "acceptedAnswer": {
                   "@type": "Answer",
