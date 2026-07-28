@@ -308,6 +308,86 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What is the meaning of a submissive man?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A submissive man is someone who genuinely desires to surrender control, follow authority, and serve within a structured dynamic. Submission is not weakness — it is a deliberate choice to operate under someone else's leadership. A submissive man is often highly disciplined, emotionally self-aware, and capable of sustained commitment. In a femdom context, a submissive man chooses to place himself under the authority of a Dominant woman, following her rules, completing her tasks, and deferring to her decisions as part of an ongoing power exchange relationship."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is being a submissive man bad?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Being a submissive man is not bad — it is simply a preference and orientation, like any other. The stigma around male submission comes from cultural conditioning that equates masculinity with dominance. In reality, choosing to submit to a Dominant woman requires significant self-awareness, emotional maturity, and discipline. Many high-functioning, successful men explore submission as a way to decompress, find structure, and experience connection through a dynamic they cannot get elsewhere. What matters is that submission is chosen consciously, practiced with a trustworthy Dominant, and not used as an excuse for self-neglect."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What makes a man submit to a woman?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A man submits to a woman when she demonstrates genuine authority — not performance, not aggression, but consistent, calm, and intelligent control. Real submission is not provoked by a costume or a tone of voice. It is built through trust, structure, and the experience of following someone whose leadership actually improves your behaviour and focus. A woman who holds her standards firmly, enforces consequences without apology, and remains composed under pressure earns submission organically. Queen Karin builds this through her platform at throne.qkarin.com — real structure, real consequences, and real authority that subs return to precisely because it is genuine."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the traits of a submissive person?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Common traits of genuinely submissive people include: a strong desire to please and serve someone they respect, comfort in following clear instructions, satisfaction in completing tasks and meeting expectations, sensitivity to the emotional state of their Dominant, a tendency to put others' needs before their own, and a deep need for structure and defined rules. Submissive people are often highly empathetic and attentive. In a healthy dynamic, these traits are channelled productively under an authority figure who recognises and respects them rather than exploiting them."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why do men like being submissive?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "For many men, submission offers something they cannot access anywhere else — the relief of surrendering control, the clarity of having clear expectations, and the psychological satisfaction of serving someone they genuinely respect. In everyday life, men are often expected to lead, perform, and make constant decisions. Submission in a structured femdom dynamic inverts this entirely. The rules are set. The expectations are clear. The consequences are real. Many men find this profoundly grounding — and find that genuine submission to a real Dominant like Queen Karin creates a level of focus and purpose they cannot replicate elsewhere."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why is submission a turn on?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Submission triggers arousal because it involves real vulnerability, trust, and surrender — all of which activate deep psychological and physiological responses. The act of giving up control to someone you trust is intimately connected to the nervous system's threat and reward pathways. In a structured femdom dynamic, the combination of genuine authority, accountability, and the ever-present possibility of consequences creates a sustained tension that many submissives find more compelling than any single act. It is the ongoing reality of being under real authority — not a scene, but a dynamic — that makes structured submission genuinely addictive."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Are submissive men rare?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Submissive men are not rare — openly submissive men are rare, because social stigma suppresses expression. Studies consistently show that submissive or passive sexual and relational preferences are among the most common in men, despite being among the least discussed. The femdom and male chastity communities online number in the millions globally. The demand for structured, professional female Dominants like Queen Karin at throne.qkarin.com significantly exceeds the available supply — which is precisely why her platform operates with a selective application process rather than open access."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the benefits of a submissive man?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A genuinely submissive man who is well-matched with a Dominant can be deeply loyal, attentive, and dedicated. He tends to prioritise his Dominant's needs, follows through on commitments, and brings a level of devotion and care that is difficult to find outside a structured dynamic. For a Dominant woman like Queen Karin, the benefits of a serious, committed submissive are real — consistent compliance, genuine effort, and a dynamic that functions as intended rather than constantly requiring correction. The challenge is that most men who claim submission are not actually prepared for what real structure demands."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What do men crave the most in a relationship?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "While this varies by individual, submissive men consistently report craving structure, clarity, and genuine authority from a partner. They want someone who means what they say, enforces what they agree, and does not soften their standards to avoid conflict. Beyond that — purpose, consistency, and the feeling that their effort is seen and recognised. A well-run femdom dynamic like Queen Karin's platform at throne.qkarin.com provides exactly this: daily structure, real consequences, merit recognition, and a hierarchy that rewards genuine commitment."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is being submissive in a relationship bad?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No — as long as the submission is chosen, healthy, and within a structure that respects both people. Submission becomes harmful when it is coerced, when it erodes self-worth, or when it exists without any reciprocal care from the Dominant. In a healthy femdom dynamic, submission is empowering — it gives the submissive clarity, purpose, and connection. The key markers of a healthy submission: the submissive chose it freely, the rules are clear, the Dominant enforces consequences consistently but does not abuse them, and both parties benefit from the dynamic."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "How long can a man wear a chastity device?",
                 "acceptedAnswer": {
                   "@type": "Answer",
