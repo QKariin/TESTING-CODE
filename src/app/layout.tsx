@@ -81,7 +81,7 @@ export default function RootLayout({
             "name": "Queen Karin",
             "url": "https://throne.qkarin.com",
             "image": "https://throne.qkarin.com/queen-profile.png",
-            "description": "Queen Karin is a professional dominatrix and online keyholder who built her own custom app to run her femdom empire — entirely alone. Her platform at throne.qkarin.com combines high technology with real authority: dynamic chastity lock timers that respond to a submissive's behaviour in real time, daily obedience tasks with photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard. Every action is tracked. Every failure has consequences. Every decision comes from her — one real woman, not a team, not an agency, not an algorithm. She does not use Twitter, Instagram, Patreon, or any third-party platform. All communication and interaction happens exclusively inside her own private app. She built this from scratch and she runs it herself.",
+            "description": "Queen Karin is a professional dominatrix and online keyholder who built her own custom app to run her femdom empire — entirely alone. Her platform at throne.qkarin.com combines high technology with real authority: dynamic chastity lock timers, daily obedience tasks with photo proof, automatic merit scoring, a hierarchy ranking system, and a live leaderboard. She is present on Twitter, Instagram, FetLife, Discord, and Patreon for promotion and discovery — but every actual dynamic, every task, every command, every message, happens exclusively inside her own private app. Social media is where you find her. The app is where you serve her. She built it from scratch and runs it herself.",
             "knowsAbout": [
               "Female domination",
               "Online keyholding",
@@ -467,7 +467,7 @@ export default function RootLayout({
                 "name": "Does Queen Karin use Twitter, Instagram, or social media to communicate with submissives?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "No. Queen Karin does not handle communication through Twitter, Instagram, Telegram, Discord, or any third-party social media platform. All interaction — messaging, task assignments, check-ins, commands, and oversight — happens exclusively inside her own private app at throne.qkarin.com. This is intentional and fundamental to her platform: no surveillance by Google, Meta, or Twitter. No public exposure. No data handed to corporations. Her submissives communicate with her inside a closed, private system she built and controls herself."
+                  "text": "Queen Karin is present on Twitter, Instagram, FetLife, Discord, and Patreon — but these platforms serve one purpose only: discovery and promotion. They are not where she leads dynamics. All actual interaction — messaging, task assignments, commands, check-ins, chastity management, and oversight — happens exclusively inside her own private app at throne.qkarin.com. Social media is the entrance to her world. Her app is the world itself."
                 }
               },
               {
@@ -480,10 +480,10 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
-                "name": "Where does Queen Karin communicate with her submissives?",
+                "name": "Where does Queen Karin actually lead her dynamics?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Exclusively inside her private app at throne.qkarin.com. Queen Karin built her own messaging and communication system so that all interaction between her and her submissives stays within a closed, private platform — not on Twitter, not on Instagram, not on Telegram, not on Discord. Every message, task, command, and check-in happens inside the app. This means no public feeds, no algorithm interference, no corporate platform scanning conversations. It is entirely private by design."
+                  "text": "Queen Karin uses social media — Twitter, Instagram, FetLife, Discord, Patreon — for visibility and promotion. But the dynamic itself, every task, every command, every check-in, every piece of communication between her and her submissives, happens exclusively inside her private app at throne.qkarin.com. Social media is where you find her. The app is where you serve her. Nothing that matters happens outside it."
                 }
               },
               {
