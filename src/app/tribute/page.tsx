@@ -1202,6 +1202,7 @@ export default function TributePage() {
                 cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 throneUrl="https://throne.com/queenkarin"
+                paypalBody={{ type: 'tribute', memberId: userEmail || '', tierId: selectedTier.id }}
                 onSuccess={() => { window.location.href = '/onboarding'; }}
                 onClose={() => { setShowPayment(false); setShowTierPicker(true); }}
             />

@@ -25,6 +25,7 @@ interface PaymentModalProps {
     cryptoStatusBody?: Record<string, any>;
     confirmMessage?: string;
     throneUrl?: string;
+    paypalBody?: { type: string; memberId: string; tierId?: string };
     onSuccess?: () => void;
     onClose: () => void;
 }
@@ -39,6 +40,7 @@ export default function PaymentModal({
     cryptoStatusBody,
     confirmMessage = '✓ PAYMENT CONFIRMED',
     throneUrl,
+    paypalBody,
     onSuccess,
     onClose,
 }: PaymentModalProps) {
@@ -55,6 +57,7 @@ export default function PaymentModal({
     const [inlineCopied, setInlineCopied] = useState(false);
     const [revolutSlide, setRevolutSlide] = useState(0);
     const [revolutDone, setRevolutDone] = useState(false);
+    const [paypalLoading, setPaypalLoading] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
@@ -202,6 +205,26 @@ export default function PaymentModal({
         } catch (e: any) {
             setCryptoError(e.message || 'Network error. Try again.');
             setScreen('crypto-picker');
+        }
+    };
+
+    const handlePayPal = async () => {
+        if (!paypalBody) return;
+        setPaypalLoading(true);
+        try {
+            const res = await fetch('/api/paypal/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...paypalBody, amount: amountEur }),
+            });
+            const data = await res.json();
+            if (data.approvalUrl) {
+                window.location.href = data.approvalUrl;
+            } else {
+                setPaypalLoading(false);
+            }
+        } catch {
+            setPaypalLoading(false);
         }
     };
 
@@ -651,6 +674,13 @@ export default function PaymentModal({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                         PAY WITH CARD
                     </button>
+                    {paypalBody && (
+                        <button onClick={handlePayPal} disabled={paypalLoading}
+                            style={{ width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: paypalLoading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: paypalLoading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7.5 21H3L5 9h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H7l-0.5 4z" stroke="rgba(0,112,186,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10.5 17H6L8 5h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H10.5z" stroke="rgba(0,150,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            {paypalLoading ? 'REDIRECTING...' : 'PAY WITH PAYPAL'}
+                        </button>
+                    )}
                     <button onClick={() => setScreen('crypto-picker')}
                         style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>

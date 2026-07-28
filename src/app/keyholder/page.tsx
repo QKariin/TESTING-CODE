@@ -1106,6 +1106,7 @@ export default function KeyholderPage() {
                     cryptoStatusBody={{ tierId: selectedTier }}
                     confirmMessage="✓ PAYMENT CONFIRMED — REDIRECTING..."
                     throneUrl="https://throne.com/queenkarin"
+                    paypalBody={{ type: 'keyholder', memberId: userEmail || '', tierId: selectedTier }}
                     onSuccess={() => { navigateOut('/profile'); }}
                     onClose={() => setShowPayment(false)}
                 />
