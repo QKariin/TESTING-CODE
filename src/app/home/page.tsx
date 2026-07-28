@@ -126,6 +126,7 @@ export default function TestLandingPage() {
     const [lbPeriod, setLbPeriod] = useState('weekly');
     const [lbEntries, setLbEntries] = useState<LeaderboardEntry[]>([]);
     const [reviews, setReviews] = useState<ReviewData[]>([]);
+    const [reviewsLoaded, setReviewsLoaded] = useState(false);
     const [showAllReviews, setShowAllReviews] = useState(false);
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
@@ -196,35 +197,41 @@ export default function TestLandingPage() {
         return () => el.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── Scroll reveal ── */
-    useEffect(() => {
-        const root = landingPageRef.current;
-        if (!root) return;
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    (e.target as HTMLElement).style.opacity = '1';
-                    (e.target as HTMLElement).style.transform = 'scale(1)';
-                    obs.unobserve(e.target);
-                }
-            });
-        }, { threshold: 0.08, root });
-        root.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
-            if (el.tagName !== 'HEADER') obs.observe(el);
+    /* ── Scroll reveal (scroll-listener, works with fixed scroll container) ── */
+    const revealedRef = useRef(new Set<Element>());
+    const runReveal = useCallback(() => {
+        const container = landingPageRef.current;
+        if (!container) return;
+        const vh = container.clientHeight;
+        container.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
+            if (revealedRef.current.has(el) || el.tagName === 'HEADER') return;
+            const rect = el.getBoundingClientRect();
+            if (rect.top < vh * 0.92 && rect.bottom > 0) {
+                el.style.opacity = '1';
+                el.style.transform = 'scale(1)';
+                revealedRef.current.add(el);
+            }
         });
-        return () => obs.disconnect();
+        container.querySelectorAll<HTMLElement>('.glass-box').forEach(el => {
+            if (revealedRef.current.has(el)) return;
+            const rect = el.getBoundingClientRect();
+            if (rect.top < vh * 0.92 && rect.bottom > 0) {
+                el.classList.add('sharp');
+                revealedRef.current.add(el);
+            }
+        });
     }, []);
 
-    /* ── IntersectionObserver for glass-box ── */
     useEffect(() => {
-        const root = landingPageRef.current;
-        if (!root) return;
-        const focusObs = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('sharp'); });
-        }, { threshold: 0.1, root });
-        root.querySelectorAll('.glass-box').forEach(b => focusObs.observe(b));
-        return () => focusObs.disconnect();
-    }, []);
+        const container = landingPageRef.current;
+        if (!container) return;
+        runReveal();
+        container.addEventListener('scroll', runReveal, { passive: true });
+        return () => container.removeEventListener('scroll', runReveal);
+    }, [runReveal]);
+
+    // Re-check when reviews load (new .grow-card elements added to DOM)
+    useEffect(() => { setTimeout(runReveal, 50); }, [reviews, runReveal]);
 
     /* ── Livestream blurred preview ── */
     useEffect(() => {
@@ -249,7 +256,8 @@ export default function TestLandingPage() {
             .then(data => {
                 const revs = data.reviews || data;
                 if (Array.isArray(revs)) setReviews(revs);
-            }).catch(() => {});
+                setReviewsLoaded(true);
+            }).catch(() => { setReviewsLoaded(true); });
     }, []);
 
     /* ── Footer iframe message listener ── */
@@ -660,7 +668,6 @@ export default function TestLandingPage() {
                 </div>
 
                 {/* REVIEWS — keyholder-style: 3 visible, clamped, grow animation */}
-                {reviews.length > 0 && (
                 <div id="reviews" style={{ paddingTop: 40, paddingBottom: 60, position: 'relative', zIndex: 2 }}>
                     <h2 className="grow-card" style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: '0 0 40px', textAlign: 'center' }}>You are not the first. You won&rsquo;t be the last.</h2>
 
@@ -730,9 +737,11 @@ export default function TestLandingPage() {
                                 }}>SHOW LESS</button>
                             </div>
                         )}
+                        {reviewsLoaded && reviews.length === 0 && (
+                            <div style={{ textAlign: 'center', fontFamily: 'Cinzel,serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 4, padding: '40px 0' }}>BE THE FIRST TO LEAVE A REVIEW</div>
+                        )}
                     </div>
                 </div>
-                )}
 
                 {/* Bottom padding */}
                 <div style={{ height: 40 }} />
