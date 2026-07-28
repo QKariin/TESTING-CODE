@@ -27,8 +27,8 @@ export async function POST(req: Request) {
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
         if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
-        const VALID_AMOUNTS: Record<string, number> = { weekly: 55, monthly: 99, yearly: 299 };
-        const amount = tierId && VALID_AMOUNTS[tierId] ? VALID_AMOUNTS[tierId] : (reqAmount && [55, 99, 299].includes(Number(reqAmount)) ? Number(reqAmount) : 55);
+        const VALID_AMOUNTS: Record<string, number> = { weekly: 55, monthly: 99, yearly: 499 };
+        const amount = tierId && VALID_AMOUNTS[tierId] ? VALID_AMOUNTS[tierId] : (reqAmount && [55, 99, 499].includes(Number(reqAmount)) ? Number(reqAmount) : 55);
         const orderId = `trib${Date.now()}${(memberId || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
         // Step 1: Get live EUR→USD + EUR→crypto rates (PassimPay is USD-based)

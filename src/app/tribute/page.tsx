@@ -44,7 +44,7 @@ export default function TributePage() {
     const TRIBUTE_TIERS = [
         { id: 'weekly',  label: '1 WEEK',  period: '7 DAYS',   price: 55,  desc: 'First step. Prove you are worthy of Her attention.' },
         { id: 'monthly', label: '1 MONTH', period: '30 DAYS',  price: 99,  desc: 'Full month under Her rule. Real commitment begins here.', badge: 'POPULAR' },
-        { id: 'yearly',  label: '1 YEAR',  period: '365 DAYS', price: 299, desc: 'Total surrender for a full year. No excuses. No exits.', badge: 'BEST VALUE' },
+        { id: 'yearly',  label: '1 YEAR',  period: '365 DAYS', price: 499, desc: 'Total surrender for a full year. No excuses. No exits.', badge: 'BEST VALUE' },
     ];
 
     useEffect(() => {
