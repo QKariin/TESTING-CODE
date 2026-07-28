@@ -370,6 +370,10 @@ export default function PaymentModal({
                     style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>
                     I ALREADY HAVE CRYPTO
                 </button>
+                <button onClick={() => setCardStep(null)}
+                    style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer', marginTop: 4 }}>
+                    BACK
+                </button>
             </div>
         </div>
     );
