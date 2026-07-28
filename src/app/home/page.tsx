@@ -464,7 +464,7 @@ export default function TestLandingPage() {
             <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
 
             {/* Hero header — scrolls with page */}
-            <header className="grow-card" style={{ position: 'relative', zIndex: 2, height: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', background: 'rgba(5,5,6,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: '0 0 18px 18px', marginBottom: 14, overflow: 'hidden', opacity: 1, transform: 'scale(1)' }}>
+            <header className="grow-card" style={{ position: 'relative', zIndex: 2, height: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', background: isScrolled ? 'transparent' : 'rgba(5,5,6,0.6)', backdropFilter: isScrolled ? 'none' : 'blur(8px)', WebkitBackdropFilter: isScrolled ? 'none' : 'blur(8px)', borderRadius: '0 0 18px 18px', marginBottom: 14, overflow: 'hidden', opacity: 1, transform: 'scale(1)', transition: 'background 0.5s ease' }}>
                 <div className="header-inner">
                     <div className="welcome">WELCOME TO</div>
                     <h1 className="royal-brand">Queen Karin&apos;s</h1>
