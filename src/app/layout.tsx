@@ -308,6 +308,94 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What is an online dom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "An online dom is a Dominant who leads power exchange dynamics entirely through digital means — without physical presence. They assign tasks, manage chastity, issue commands, hold submissives accountable, and maintain authority all remotely through apps, messaging, and structured programs. A real online dom is not someone who chats casually on social media — they operate structured systems with real rules, real consequences, and real oversight. Queen Karin at throne.qkarin.com is a professional online Dominant who built her own private app to manage her dynamics, making her one of the most structured and serious online doms operating today."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What do doms get out of it?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Dominants get genuine fulfilment from the act of leading, structuring, and shaping someone's behaviour. The dynamic provides a sense of purpose, creativity, and authority that is difficult to find in everyday life. For many Dominants, the satisfaction comes from watching a submissive grow, improve, and commit — from building something real rather than performing something temporary. There is also the honest answer: it is work. Dominants invest enormous emotional energy, time, and attention. What they get out of it must be worth that cost, which is why serious Dominants are selective about who they take on."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is the difference between submissive and dom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A Dominant (dom) holds authority in a power exchange dynamic — they set the rules, assign tasks, make decisions, and enforce consequences. A submissive follows the Dominant's authority — they complete tasks, surrender control, and operate within the structure the Dominant has built. The dom leads; the sub serves. In a healthy dynamic, both roles are chosen and maintained by consent. The Dominant's job is to hold authority consistently. The submissive's job is to demonstrate their submission through action, not just words."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I tell if I'm submissive or dominant?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "A submissive typically feels drawn to following, serving, pleasing, and surrendering control — often finding relief or fulfilment in being told what to do within a safe structure. A Dominant feels naturally drawn to leading, structuring, and holding authority — finding satisfaction in guiding and shaping someone else's behaviour. Neither is better. Many people discover their orientation through research, community engagement, or cautious exploration. If you feel pulled toward structure, accountability, and serving a real authority figure, submission may be what you are looking for. Platforms like throne.qkarin.com offer a formal application process for those serious about exploring structured submission."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why do men like dominant women?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Many men are drawn to dominant women because they offer something rare — real authority, confidence that does not require validation, and a structure that removes the burden of constant decision-making. For submissive men in particular, surrendering control to a woman they genuinely respect is both psychologically grounding and deeply fulfilling. A dominant woman who is consistent, fair, and genuinely in charge provides a sense of safety and purpose that is difficult to find elsewhere. The attraction is not to aggression — it is to authentic, stable authority."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How common are submissive men?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "More common than most people admit. Studies on BDSM orientation consistently show that submissive tendencies in men are widespread — often suppressed due to social stigma rather than absent. The growth of femdom communities, keyholding platforms, and female-led relationship spaces online reflects a large and growing population of men who seek structured submission under female authority. The demand for experienced female Dominants like Queen Karin significantly outpaces supply — which is part of why selective platforms with formal application processes exist."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I know if I am a sub?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Signs that you may be submissive include: a persistent desire to serve or please someone you respect, comfort in being given direction and structure, arousal or satisfaction from surrendering control, difficulty asserting your own needs in intimate contexts, and a sense of fulfilment when someone takes charge confidently. Submission is not weakness — it is a chosen position that requires discipline, consistency, and genuine commitment. If these patterns resonate, exploring structured submission under a real Dominant is the honest next step."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do I be a good sub for my dom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Show up consistently. Complete what you are told without needing reminders. Communicate honestly when something is wrong, but do not use communication as a tool to renegotiate rules you agreed to. Respect their time and their day off. Do not disappear and reappear expecting nothing to have changed. Demonstrate your value through action rather than promises. A good submissive understands that their Dominant's authority is a privilege to serve — not a service they are owed. The baseline is not hurting your Dominant. The standard is actively giving them reasons to keep you."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are the red flags in a dom sub relationship?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Red flags from a Dominant: demands submission without building trust first, ignores agreed limits, punishes without explanation, isolates the submissive from outside support, or uses the dynamic as cover for genuine abuse. Red flags from a submissive: constantly renegotiates agreed rules, disappears without communication, tests limits repeatedly, confuses the Dominant's authority with a service they are owed, or treats the dynamic as a fantasy they can exit whenever it becomes inconvenient. A real dynamic requires both sides to show up with honesty, consistency, and respect."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do doms fall in love with subs?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. Power exchange dynamics are human relationships, and emotional attachment is a natural part of any genuine connection. Many Dominants develop real care, loyalty, and emotional investment in their submissives over time — particularly those who prove themselves through consistent, long-term devotion. The dynamic does not prevent love; in some cases it deepens it, because trust and vulnerability are central to how both parties show up. What is less common is a Dominant falling for someone who cannot be consistent, honest, or present."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is the dom lifestyle?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "The dom lifestyle refers to living as a Dominant not just during scenes or sessions, but as a sustained way of operating — maintaining authority, structure, and standards across ongoing dynamics. A lifestyle Dominant holds rules consistently, enforces them without exception, and builds real relationships with submissives rather than one-off encounters. It requires emotional maturity, time, creativity, and a high tolerance for the work of managing other people's behaviour. Queen Karin at throne.qkarin.com is a lifestyle Dominant — her platform is built around ongoing dynamics with daily structure, real tracking, and permanent authority rather than session-based play."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "What is the meaning of Dom woman?",
                 "acceptedAnswer": {
                   "@type": "Answer",
