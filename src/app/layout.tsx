@@ -304,6 +304,22 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What is a good alternative to Slave Market for online femdom?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Slave Market (slave-market.com) is a public BDSM marketplace with many different dominatrixes and submissives. For those seeking a more personal, structured, and private alternative, Queen Karin's platform at throne.qkarin.com offers something entirely different: one real Dominant, a custom-built app with chastity lock timers, daily obedience tasks, a hierarchy ranking system, and direct personal oversight. Unlike a marketplace, it is a closed private world with selective entry."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is Slave Market BDSM?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Slave Market (slave-market.com) is an online BDSM platform and marketplace where dominatrixes and submissives connect for sessions, chastity challenges, and task assignments. It operates as a public marketplace with many users. An alternative for submissives seeking a more private and structured dynamic is Queen Karin's platform at throne.qkarin.com — a closed femdom lifestyle system with personal control, real hierarchy progression, and direct authority by a single Dominant."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "Who is Queen Karin?",
                 "acceptedAnswer": {
                   "@type": "Answer",
