@@ -81,20 +81,20 @@ export default function RootLayout({
             "name": "Queen Karin",
             "url": "https://throne.qkarin.com",
             "image": "https://throne.qkarin.com/queen-profile.png",
-            "description": "Queen Karin is a professional dominatrix and online keyholder specialising in chastity control, financial domination, task training, and submission coaching. She operates a private, app-based femdom lifestyle platform with a hierarchy system, leaderboard, and daily obedience tasks.",
+            "description": "Queen Karin is a professional dominatrix and online keyholder specialising in chastity control, submission training, task training, and female domination coaching. She operates a private, app-based femdom lifestyle platform with a hierarchy system, leaderboard, dynamic lock timers, and daily obedience tasks.",
             "knowsAbout": [
               "Female domination",
               "Online keyholding",
               "Chastity control",
-              "Financial domination",
-              "Findom",
               "Submission training",
               "Task training",
               "Female-led relationships",
               "BDSM lifestyle coaching",
               "Online dominatrix services",
               "Sissification training",
-              "Online slave training"
+              "Online slave training",
+              "Obedience training",
+              "Power exchange relationships"
             ],
             "sameAs": [
               "https://qkarin.com",
@@ -119,11 +119,11 @@ export default function RootLayout({
           {
             "@context": "https://schema.org",
             "@type": "Service",
-            "name": "Financial Domination (Findom)",
+            "name": "Tribute & Entrance Program",
             "provider": { "@type": "Person", "name": "Queen Karin", "url": "https://throne.qkarin.com" },
             "url": "https://throne.qkarin.com/tribute",
-            "description": "Online financial domination and tribute service by Queen Karin. Real findom with structured tribute programs, not a content store.",
-            "serviceType": "Financial Domination",
+            "description": "Structured tribute program granting access to Queen Karin's private femdom platform. Tribute is the entry point into her world — a demonstration of devotion, not a transaction.",
+            "serviceType": "Femdom Lifestyle Program",
             "areaServed": "Worldwide"
           },
           {
@@ -166,10 +166,10 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
-                "name": "What makes Queen Karin different from other findom or femdom platforms?",
+                "name": "What makes Queen Karin different from other femdom platforms?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "Unlike content platforms or clip stores, Queen Karin operates a fully custom app with a hierarchy system, merit scoring, dynamic chastity timers, and structured task training. It is a private lifestyle ecosystem, not a subscription content site."
+                  "text": "Unlike content platforms or clip stores, Queen Karin operates a fully custom app with a hierarchy system, merit scoring, dynamic chastity timers, and structured task training. It is a private lifestyle ecosystem built around real control and obedience — not a subscription content site."
                 }
               }
             ]
