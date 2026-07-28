@@ -100,7 +100,8 @@ export default function RootLayout({
               "https://qkarin.com",
               "https://throne.qkarin.com",
               "https://www.reddit.com/r/QKarin/",
-              "https://www.reddit.com/user/Q-Karin/"
+              "https://www.reddit.com/user/Q-Karin/",
+              "https://discord.gg/RMJqt7uvNc"
             ]
           },
           {
