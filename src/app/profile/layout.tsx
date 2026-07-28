@@ -219,7 +219,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 <button onClick={() => setShowPayment(true)} style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#c5a059,#8b6914)', border: 'none', borderRadius: 10, color: '#000', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', boxShadow: '0 8px 30px rgba(197,160,89,0.3)', marginBottom: 12 }}>
                     SUBMIT PAYMENT
                 </button>
-                <a href="https://paypal.me/QKarin-" target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+                <a href="https://paypal.me/QKarin" target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '3px', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
                     PAY WITH PAYPAL
                 </a>
             </div>
