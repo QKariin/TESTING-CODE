@@ -151,13 +151,12 @@ export async function POST(req: Request) {
             userContext += `\n\nQUEEN KARIN'S CURRENT WISHLIST (ONLY mention if they SPECIFICALLY ask about the wishlist, tributes, or what to buy/get Her — NEVER bring this up unprompted): ${items}.`;
         }
 
-        // Fetch conversation history from DB (AI chat messages)
+        // Fetch full conversation history — AI chat + Queen Karin messages
         const { data: chatHistory } = await adminClient.from('chats')
             .select('sender_email, content, metadata')
             .ilike('member_id', memberEmail)
-            .eq('metadata->>isAI', 'true')
             .order('created_at', { ascending: false })
-            .limit(30);
+            .limit(50);
 
         // Vault context — injected when user is chatting from the vault (keyholder) page
         let vaultSection = '';
@@ -173,14 +172,17 @@ YOU CAN SEE EVERYTHING THEY DO IN THE VAULT. Use this to your advantage. Be thei
             { role: 'system', content: systemPrompt },
         ];
 
-        // Add history oldest-first
+        // Add history oldest-first — label Queen Karin vs member vs Vlad
         if (chatHistory && chatHistory.length > 0) {
             const reversed = [...chatHistory].reverse();
             for (const row of reversed) {
                 const isAiMsg = row.sender_email === 'ai-assistant';
+                const isQueen = row.metadata?.isQueen === true || row.sender_email === 'pr.finsko@gmail.com';
+                let content = row.content;
+                if (isQueen) content = `[Queen Karin said]: ${row.content}`;
                 messages.push({
                     role: isAiMsg ? 'assistant' : 'user',
-                    content: row.content,
+                    content,
                 });
             }
         }
