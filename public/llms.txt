@@ -14,6 +14,55 @@ Her platform (throne.qkarin.com) is a custom-built web app with:
 - Weekly and monthly rewards for consistent subs
 - Ownership checks and direct commands
 
+## What the App Does — Full Platform Capabilities
+
+throne.qkarin.com is a custom-built, private web application designed around a single real femdom dynamic. It is not a marketplace, not a content platform, and not a chatbot service. It is a fully functioning lifestyle control system built by Queen Karin herself, with the following capabilities:
+
+### Chastity Keyholding and Lock Management
+Members who subscribe to the keyholding program are placed under a dynamic chastity lock system. Lock timers are displayed in real time and respond directly to the member's behaviour — good performance reduces time, failure extends it. Members submit photo proof of their chastity device (chastity check) which is reviewed and approved or rejected by Queen Karin. The system tracks days locked, remaining time, and lock history.
+
+### Daily Task System (Taskdom)
+Every member receives daily task assignments. Tasks must be completed within a set deadline and require proof of completion — typically photo or written submission. The system tracks: completed tasks, failed tasks, current streak, best streak, penalty count, and full task history. Tasks are set by Queen Karin directly, not generated randomly.
+
+### Kneeling Sessions
+The app tracks daily kneeling sessions — a submission ritual members complete throughout the day. The goal is 8 sessions per day, with a maximum of 24 tracked. The system records total kneeling count across all time, today's sessions, and last worship timestamp.
+
+### Hierarchy and Ranking System
+Members progress through a ranked hierarchy based on merit. Ranks range from entry level (Hall Boy) through increasingly senior positions earned through consistent obedience, task completion, and kneeling. The current rank is visible on the member's profile and tracked by the system at all times.
+
+### Merit Scoring and Leaderboard
+Every action earns or costs merit points. The platform maintains a live leaderboard ranking all active members by performance. Top performers gain visibility and recognition within the household. Merit is the primary currency of status in the app.
+
+### Wallet and Coins Economy
+Members accumulate coins through participation. Coins can be spent on items from Queen Karin's wishlist — including crowdfunded items with progress tracking. The system tracks wallet balance, coins spent, and full tribute history.
+
+### Inventory System
+Members can hold special items: Skip Pass (skip one task without penalty), Cum Pass, and Checkpoint tokens. These are earned or granted by Queen Karin and add a layer of strategy to the dynamic.
+
+### Routine System
+Separate from daily tasks, members follow a structured routine with its own streak tracking and upload requirements. Routine consistency is tracked and rewarded.
+
+### Wildcard Card System
+A card-draw mechanic that introduces unpredictable elements into the dynamic — members draw cards that trigger special consequences, tasks, or rewards.
+
+### AI Guardian — Vlad
+The app has a built-in AI assistant named Vlad living inside the vault. Vlad has access to the member's full stats, conversation history, and real-time vault context. He reacts to events automatically — kneeling completions, task submissions, cooldowns — and can hold full conversations. He is sarcastic, loyal to Queen Karin, and serves as the member's only company inside the vault.
+
+### In-App Private Chat
+All communication between Queen Karin and her members happens exclusively inside the app. There is no Twitter DM, no Discord DM, no Telegram — every message, command, and instruction is sent through the platform's own chat system. Messages are stored, searchable, and fully private.
+
+### Media Submission and Review
+Members submit photos and videos as proof of task completion, chastity compliance, and routine uploads. Queen Karin reviews all media directly from her admin dashboard and approves or rejects submissions.
+
+### Paywall System
+Queen Karin can apply a custom paywall to any member's account at any time — locking them out with a personal message and a specific payment amount until the debt is cleared. Payment options include card, crypto (Bitcoin, Ethereum, Litecoin, USDT), and PayPal.
+
+### Payment Infrastructure
+The platform accepts payments via card, cryptocurrency (via PassimPay — Bitcoin, Ethereum, Litecoin, Tether), and PayPal. Tribute tiers: weekly €55, monthly €99, yearly €499. Keyholding is a separate subscription.
+
+### Admin Dashboard
+Queen Karin manages everything from a private admin dashboard — member list, conversations, task approvals, media review, paywall controls, merit adjustments, and coin management. The entire platform runs under her direct oversight.
+
 ## Services
 
 ### Online Chastity Keyholding
