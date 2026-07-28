@@ -136,6 +136,7 @@ export default function TestLandingPage() {
     // Refs
     const faqIsOpenRef = useRef(false);
     const fomoFiredRef = useRef(false);
+    const landingPageRef = useRef<HTMLDivElement>(null);
     const lastSeenIdRef = useRef<string | number | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const footerFrameRef = useRef<HTMLIFrameElement>(null);
@@ -186,12 +187,13 @@ export default function TestLandingPage() {
 
     /* ── Scroll listener ── */
     useEffect(() => {
+        const el = landingPageRef.current;
+        if (!el) return;
         const handleScroll = () => {
-            const y = window.scrollY;
-            setIsScrolled(y > window.innerHeight * 0.35);
+            setIsScrolled(el.scrollTop > window.innerHeight * 0.35);
         };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        el.addEventListener('scroll', handleScroll, { passive: true });
+        return () => el.removeEventListener('scroll', handleScroll);
     }, []);
 
     /* ── Scroll reveal ── */
@@ -438,7 +440,7 @@ export default function TestLandingPage() {
         <style>{`html, body { height: 100% !important; overflow: hidden !important; }`}</style>
         {/* Fixed background — outside landing-page so transforms can't break position:fixed */}
         <div className="landing-bg" />
-        <div className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
+        <div ref={landingPageRef} className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
 
             {/* Google Fonts */}
             {/* eslint-disable-next-line @next/next/no-page-custom-font */}
