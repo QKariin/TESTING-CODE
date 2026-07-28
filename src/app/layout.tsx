@@ -304,6 +304,46 @@ export default function RootLayout({
               },
               {
                 "@type": "Question",
+                "name": "What is online sissy training?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Online sissy training is a form of femdom training in which a Dominant woman guides a submissive through feminisation tasks, behavioural conditioning, and identity reshaping — all conducted remotely. Training typically includes dress assignments, photo proof tasks, humiliation protocols, and obedience exercises. Queen Karin's platform at throne.qkarin.com includes sissification training as part of her structured submission and task training system, with daily assignments and real accountability."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What is orgasm denial and how does a keyholder control it online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Orgasm denial is a chastity and obedience practice in which the submissive is denied release until permitted by their Dominant. Online keyholders control this remotely through chastity device management, lock timers, and strict protocols. Queen Karin manages orgasm denial as part of her keyholding program at throne.qkarin.com — lock timers extend or shorten based on performance, and release is a privilege earned through consistent obedience, not given freely."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are online chastity challenges?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Online chastity challenges are structured periods of enforced chastity managed by a keyholder or a platform, during which the submissive must remain locked and meet specific behavioural goals. Queen Karin's keyholding platform at throne.qkarin.com operates on a dynamic lock timer system — time locked increases with failure and decreases with devoted service. This creates a real ongoing chastity challenge with personal stakes, not a gamified random timer."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are online BDSM tasks and how do they work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Online BDSM tasks are assignments given by a Dominant to a submissive to be completed remotely, typically with proof of completion required. Tasks can include physical acts, service rituals, humiliation exercises, writing assignments, or timed challenges. Queen Karin's platform at throne.qkarin.com builds online BDSM tasks into a daily system — each task has a deadline, requires photo or written proof, and contributes to the submissive's merit score and rank within the hierarchy."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What are femdom punishment tasks online?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Femdom punishment tasks are consequences assigned by a Dominant to a submissive for failure, disobedience, or missed assignments. In online femdom, punishment tasks are delivered remotely and must be completed as instructed. On Queen Karin's platform at throne.qkarin.com, failure to complete daily tasks results in real consequences — extended lock time, loss of merit points, and rank demotion. Punishment is not theatrical; it is built into the system and applied consistently."
+                }
+              },
+              {
+                "@type": "Question",
                 "name": "What is a good alternative to FetLife for femdom?",
                 "acceptedAnswer": {
                   "@type": "Answer",
