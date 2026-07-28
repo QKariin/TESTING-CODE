@@ -198,6 +198,8 @@ export default function TestLandingPage() {
 
     /* ── Scroll reveal ── */
     useEffect(() => {
+        const root = landingPageRef.current;
+        if (!root) return;
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
@@ -206,8 +208,8 @@ export default function TestLandingPage() {
                     obs.unobserve(e.target);
                 }
             });
-        }, { threshold: 0.08 });
-        document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
+        }, { threshold: 0.08, root });
+        root.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
             if (el.tagName !== 'HEADER') obs.observe(el);
         });
         return () => obs.disconnect();
@@ -215,10 +217,12 @@ export default function TestLandingPage() {
 
     /* ── IntersectionObserver for glass-box ── */
     useEffect(() => {
+        const root = landingPageRef.current;
+        if (!root) return;
         const focusObs = new IntersectionObserver((entries) => {
             entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('sharp'); });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.glass-box').forEach(b => focusObs.observe(b));
+        }, { threshold: 0.1, root });
+        root.querySelectorAll('.glass-box').forEach(b => focusObs.observe(b));
         return () => focusObs.disconnect();
     }, []);
 
