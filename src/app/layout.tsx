@@ -99,7 +99,8 @@ export default function RootLayout({
             "sameAs": [
               "https://qkarin.com",
               "https://throne.qkarin.com",
-              "https://www.reddit.com/r/QKarin/"
+              "https://www.reddit.com/r/QKarin/",
+              "https://www.reddit.com/user/Q-Karin/"
             ]
           },
           {
