@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { findRow } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,13 +13,7 @@ export async function GET(req: Request) {
     const email = searchParams.get('email');
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
 
-    const { data, error } = await supabaseAdmin
-        .from('user_routines')
-        .select('history')
-        .ilike('member_id', email.toLowerCase())
-        .maybeSingle();
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const data = await findRow('user_routines', email.toLowerCase(), 'history');
 
     const history: any[] = data?.history || [];
     // Return in descending order, matching the old format

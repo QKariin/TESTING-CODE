@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,13 +49,9 @@ export async function POST(req: Request) {
         }
 
         // 3. Fetch member's profile
-        const { data: profile, error: profErr } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, wallet, name, member_id')
-            .ilike('member_id', email)
-            .single();
+        const profile = await findProfile(email, 'ID, wallet, name, member_id');
 
-        if (profErr || !profile) {
+        if (!profile) {
             return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         }
 

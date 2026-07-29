@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -152,8 +153,7 @@ export async function POST(req: Request) {
 
     // Also post a card to global chat
     try {
-        const { data: prof } = await supabaseAdmin
-            .from('profiles').select('name, avatar_url').ilike('member_id', senderEmail).maybeSingle();
+        const prof = await findProfile(senderEmail, 'name, avatar_url');
         await supabaseAdmin.from('global_messages').insert({
             sender_email: 'system',
             sender_name: 'SYSTEM',

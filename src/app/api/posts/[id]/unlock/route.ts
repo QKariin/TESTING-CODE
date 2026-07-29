@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { rankMeetsRequirement } from '@/lib/hierarchyRules';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,11 +21,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
 
         // Resolve UUID from profiles
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, wallet, hierarchy')
-            .ilike('member_id', email)
-            .single();
+        const profile = await findProfile(email, 'ID, wallet, hierarchy');
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         const memberId = profile.ID;
 

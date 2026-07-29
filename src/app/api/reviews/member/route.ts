@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { resolveIdentifier } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +16,8 @@ export async function GET(req: Request) {
 
     try {
         // Resolve email
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-        let email = memberId.toLowerCase();
-
-        if (isUUID) {
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('member_id')
-                .eq('ID', memberId)
-                .single();
-            if (profile?.member_id) email = profile.member_id.toLowerCase();
-        }
+        const resolved = await resolveIdentifier(memberId);
+        const email = (resolved.email || memberId).toLowerCase();
 
         const { data: reviews } = await supabaseAdmin
             .from('reviews')
