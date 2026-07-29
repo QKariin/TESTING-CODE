@@ -1,43 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
 import { cached, cacheDelete } from '@/lib/api-cache';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findTaskRow } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
 const TTL = 10_000; // 10s
 const COOLDOWN_MS = process.env.NODE_ENV === 'development' ? 60 * 1000 : 60 * 60 * 1000;
 
-// Resolve tasks row with UUID + legacy email fallback
-async function getTasksRow(memberId: string, fields: string) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-
-    if (isUuid) {
-        const { data } = await supabaseAdmin.from('tasks').select(fields).eq('ID', memberId).maybeSingle();
-        if (data) return data;
-
-        // Fallback: find email via profile, look up task by email
-        const { data: profile } = await supabaseAdmin
-            .from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
-        if (profile?.member_id) {
-            const { data: row } = await supabaseAdmin
-                .from('tasks').select(fields).ilike('member_id', profile.member_id).maybeSingle();
-            if (row) return row;
-        }
-    } else {
-        const { data } = await supabaseAdmin.from('tasks').select(fields).ilike('member_id', memberId).maybeSingle();
-        if (data) return data;
-    }
-    return null;
-}
-
 async function getKneelStatus(memberId: string, tz: string) {
-    const taskRow = await getTasksRow(memberId, 'lastWorship, kneelCount, "today kneeling"');
+    const taskRow = await findTaskRow(memberId, 'lastWorship, kneelCount, "today kneeling"');
 
     // Fetch kneel_history separately — column may not exist yet
     let rawKneelHistory: any = null;
     try {
-        const hRow = await getTasksRow(memberId, 'kneel_history');
+        const hRow = await findTaskRow(memberId, 'kneel_history');
         rawKneelHistory = hRow?.kneel_history ?? null;
     } catch (_) { }
 

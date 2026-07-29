@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findTaskRow, findRow } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,20 +12,9 @@ export async function GET(req: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
     try {
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-        const email = memberId.toLowerCase();
-
-        const [{ data }, { data: userRoutineRow }] = await Promise.all([
-            supabaseAdmin
-                .from('tasks')
-                .select('Taskdom_History')
-                .or(isUUID ? `ID.eq.${memberId}` : `member_id.ilike.${memberId}`)
-                .maybeSingle(),
-            supabaseAdmin
-                .from('user_routines')
-                .select('history')
-                .ilike('member_id', email)
-                .maybeSingle(),
+        const [data, userRoutineRow] = await Promise.all([
+            findTaskRow(memberId, 'Taskdom_History'),
+            findRow('user_routines', memberId, 'history'),
         ]);
 
         let history: any[] = [];

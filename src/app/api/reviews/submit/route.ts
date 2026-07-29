@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 import { discordReviewSubmitted } from '@/lib/discord';
 import { invalidateReviewsCache } from '@/app/api/reviews/public/route';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +24,7 @@ export async function POST(req: Request) {
         }
 
         // Resolve email from profileId
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, member_id, wallet, parameters')
-            .eq(isUUID ? 'ID' : 'member_id', profileId)
-            .single();
+        const profile = await findProfile(profileId, 'ID, member_id, wallet, parameters');
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
