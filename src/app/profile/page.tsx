@@ -820,7 +820,7 @@ export default function ProfilePage() {
 
     // ─── ROUTINE STATUS POLL ──────────────────────────────────────────────
     useEffect(() => {
-        if (!profile) return;
+        if (!profile || paywallDetected) return;
         const memberId = profile.id || profile.memberId;  // UUID
         if (!memberId) return;
 
@@ -836,7 +836,7 @@ export default function ProfilePage() {
         checkRoutine();
         const t = setInterval(checkRoutine, 30000);
         return () => clearInterval(t);
-    }, [profile]);
+    }, [profile, paywallDetected]);
 
     // ─── 2. ATTACH KNEEL LISTENERS + APPLY LOCKS ─────────────────────────
     useEffect(() => {

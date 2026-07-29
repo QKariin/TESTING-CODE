@@ -150,7 +150,11 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 // Initial check on load
                 await check();
 
-                // ── Realtime subscription - fires INSTANTLY when admin updates the profile ──
+                // If paywalled after initial check, skip polling — profile stays dead.
+                // Only the realtime subscription (below) can resurrect it via payment webhook.
+                const isPaywalled = sessionStorage.getItem('__paywalled') === '1';
+
+                // ── Realtime subscription - fires INSTANTLY when admin/webhook updates the profile ──
                 // No row filter: avoids case-sensitive eq() mismatch. Filter in JS below.
                 realtimeChannel = supabase
                     .channel('layout-lock-' + emailLower)
@@ -162,8 +166,10 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     })
                     .subscribe();
 
-                // Polling fallback: re-check every 15s in case realtime misses the update
-                pollInterval = setInterval(check, 15000);
+                // Polling fallback: only when NOT paywalled (paywalled = dead, no polling)
+                if (!isPaywalled) {
+                    pollInterval = setInterval(check, 15000);
+                }
             } catch {}
         }
 
