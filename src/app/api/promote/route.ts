@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { HIERARCHY_RULES } from '@/lib/hierarchyRules';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { discordPromotion } from '@/lib/discord';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,7 @@ export async function POST(req: Request) {
         const memberId = body.memberId || body.memberEmail;
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-        const { data: profile } = isUuid
-            ? await supabaseAdmin.from('profiles').select('*').eq('ID', memberId).maybeSingle()
-            : await supabaseAdmin.from('profiles').select('*').ilike('member_id', memberId).maybeSingle();
+        const profile = await findProfile(memberId);
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 

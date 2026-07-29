@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
+import { findProfile } from '@/lib/lookup';
 
 async function getCallerEmail(): Promise<string | null> {
     try {
@@ -23,10 +24,7 @@ export async function POST(request: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
     // Look up profile
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-    const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('member_id').ilike('member_id', memberId).maybeSingle();
+    const profile = await findProfile(memberId, 'member_id');
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
@@ -101,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Update profiles.parameters for backward compat
     try {
-        const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
+        const prof = await findProfile(email, 'ID, parameters');
         if (prof) {
             const currentStreak = userRoutine ? (userRoutine.current_streak || 0) + 1 : 1;
             const best = Math.max(currentStreak, userRoutine?.best_streak || 0);

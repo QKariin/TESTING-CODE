@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service'; // Use Admin to bypass RLS for increments
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +25,8 @@ export async function POST(req: Request) {
         const COIN_REWARD = 10;
         const POINT_REWARD = 50;
 
-        // 1. Get current balance - look up by UUID (profiles.id) if UUID, else by member_id (email)
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, wallet, score, member_id, parameters')
-            .eq(isUUID ? 'ID' : 'member_id', profileId)
-            .single();
+        // 1. Get current balance
+        const profile = await findProfile(profileId, 'ID, wallet, score, member_id, parameters');
 
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 

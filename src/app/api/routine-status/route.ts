@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { cached } from '@/lib/api-cache';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findProfile, identifierFilter } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -9,17 +10,15 @@ const TTL = 15_000; // 15s cache
 
 async function getRoutineStatus(memberId: string, tz: string) {
     // Get routine name from profiles
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-    const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('routine, member_id').eq('ID', memberId).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('routine, member_id').ilike('member_id', memberId).maybeSingle();
+    const profile = await findProfile(memberId, 'routine, member_id');
 
     const routine = profile?.routine || null;
     const email = (profile?.member_id || memberId).toLowerCase();
 
     // Save timezone to profile (fire & forget)
     if (profile && tz && tz !== 'UTC') {
-        supabaseAdmin.from('profiles').update({ timezone: tz }).ilike('member_id', email).then(() => {}).catch(() => {});
+        const f = identifierFilter(email);
+        supabaseAdmin.from('profiles').update({ timezone: tz })[f.method](f.column, f.value).then(() => {}).catch(() => {});
     }
 
     // Check today's routine from user_routines table

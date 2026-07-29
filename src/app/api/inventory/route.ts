@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
 import { DbService } from '@/lib/supabase-service';
+import { findProfile, identifierFilter } from '@/lib/lookup';
 
 const CUMPASS_PRICES: Record<string, number> = {
     'hall boy': 500,
@@ -62,18 +63,16 @@ export async function POST(request: NextRequest) {
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
         const qty = Math.max(1, Number(quantity) || 1);
 
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-        const { data: target } = isUuid
-            ? await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint, member_id').eq('ID', memberId).maybeSingle()
-            : await supabaseAdmin.from('profiles').select('cumpass, skippass, checkpoint, member_id').ilike('member_id', memberId).maybeSingle();
+        const target = await findProfile(memberId, 'cumpass, skippass, checkpoint, member_id');
 
         if (!target) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         const current = Number(target[item as keyof typeof target] || 0);
+        const f = identifierFilter(memberId);
         const { error: updateErr } = await supabaseAdmin
             .from('profiles')
             .update({ [item]: current + qty })
-            .eq(isUuid ? 'ID' : 'member_id', memberId);
+            [f.method](f.column, f.value);
 
         if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
@@ -108,13 +107,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch current profile for buy/use
-    const { data: profile, error: pErr } = await supabaseAdmin
-        .from('profiles')
-        .select('wallet, hierarchy, cumpass, skippass, checkpoint')
-        .ilike('member_id', callerEmail)
-        .maybeSingle();
+    const profile = await findProfile(callerEmail, 'wallet, hierarchy, cumpass, skippass, checkpoint');
 
-    if (pErr || !profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
     const rank = (profile.hierarchy || 'Hall Boy').toLowerCase();
 
@@ -128,13 +123,14 @@ export async function POST(request: NextRequest) {
         if (wallet < price) return NextResponse.json({ error: 'Insufficient coins', needed: price, wallet }, { status: 400 });
 
         // Deduct coins and add item
+        const fBuy = identifierFilter(callerEmail);
         const { error: updateErr } = await supabaseAdmin
             .from('profiles')
             .update({
                 wallet: wallet - price,
                 [item]: (Number(profile[item as keyof typeof profile]) || 0) + 1,
             })
-            .ilike('member_id', callerEmail);
+            [fBuy.method](fBuy.column, fBuy.value);
 
         if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
@@ -143,7 +139,7 @@ export async function POST(request: NextRequest) {
         // Send inventory card to chat
         const cardData = { item, source: 'buy', price, newCount };
         // Look up user's UUID for message sending
-        const { data: pLookup } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', callerEmail).maybeSingle();
+        const pLookup = await findProfile(callerEmail, 'ID');
         if (pLookup?.ID) {
             try { await DbService.sendMessage(pLookup.ID, `INVENTORY_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) { }
         }
@@ -162,10 +158,11 @@ export async function POST(request: NextRequest) {
         if (current <= 0) return NextResponse.json({ error: 'No passes available' }, { status: 400 });
 
         // Decrement item count
+        const fUse = identifierFilter(callerEmail);
         const { error: updateErr } = await supabaseAdmin
             .from('profiles')
             .update({ [item]: current - 1 })
-            .ilike('member_id', callerEmail);
+            [fUse.method](fUse.column, fUse.value);
 
         if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
