@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { DbService } from '@/lib/supabase-service';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,8 +144,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
             // Send chat card to user
             try {
-                const { data: profile } = await supabaseAdmin.from('profiles')
-                    .select('ID').ilike('member_id', submission.member_id).maybeSingle();
+                const profile = await findProfile(submission.member_id, 'ID');
                 if (profile) {
                     const cardData = {
                         status: 'approve', points, type: 'video_challenge',
@@ -175,8 +175,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
             // Send rejection card
             try {
-                const { data: profile } = await supabaseAdmin.from('profiles')
-                    .select('ID').ilike('member_id', submission.member_id).maybeSingle();
+                const profile = await findProfile(submission.member_id, 'ID');
                 if (profile) {
                     const cardData = {
                         status: 'reject', points: 0, type: 'video_challenge',

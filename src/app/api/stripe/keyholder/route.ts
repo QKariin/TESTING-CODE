@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 const TIERS: Record<string, { amountCents: number; name: string; label: string; days: number }> = {
     weekly:    { amountCents:  5500, name: 'Exclusive Access — 7 Days',   label: '7-day premium membership',   days: 7   },
@@ -35,19 +36,7 @@ export async function POST(req: Request) {
 
         // Mark profile as chastity source immediately
         try {
-            await supabaseAdmin
-                .from('profiles')
-                .update({
-                    parameters: supabaseAdmin.rpc ? undefined : undefined, // handled below
-                })
-                .ilike('member_id', identifier);
-
-            // Use raw update to merge into parameters JSONB
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', identifier)
-                .maybeSingle();
+            const profile = await findProfile(identifier, 'ID, parameters');
 
             if (profile) {
                 const params = profile.parameters || {};

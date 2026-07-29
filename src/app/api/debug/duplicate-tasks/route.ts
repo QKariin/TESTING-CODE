@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
         if (rows.length <= 1) continue;
 
         // Find the profile's current UUID
-        const { data: prof } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', email).maybeSingle();
+        const prof = await findProfile(email, 'ID');
         const profileUuid = prof?.ID || '';
 
         duplicates.push({

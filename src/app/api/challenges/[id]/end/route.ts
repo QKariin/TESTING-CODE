@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -45,8 +46,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
             // Add placement points to profile score
             if (earnedPoints > 0) {
-                const { data: prof } = await supabaseAdmin.from('profiles').select('score').eq('member_id', p.member_id).single();
-                if (prof) await supabaseAdmin.from('profiles').update({ score: (prof.score || 0) + earnedPoints }).eq('member_id', p.member_id);
+                const prof = await findProfile(p.member_id, 'ID, score');
+                if (prof) await supabaseAdmin.from('profiles').update({ score: (prof.score || 0) + earnedPoints }).eq('ID', prof.ID);
             }
 
             // Finisher badge for all

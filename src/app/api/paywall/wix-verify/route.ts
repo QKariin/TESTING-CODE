@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,11 +28,7 @@ export async function POST(req: Request) {
         if (!paid) return NextResponse.json({ paid: false, status: checkout?.status });
 
         // Unlock paywall in Supabase
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('parameters, name')
-            .ilike('member_id', memberId)
-            .single();
+        const profile = await findProfile(memberId, 'ID, parameters, name');
 
         if (profile) {
             const params = profile.parameters || {};
@@ -55,7 +52,7 @@ export async function POST(req: Request) {
                         ],
                     },
                 })
-                .ilike('member_id', memberId);
+                .eq('ID', profile.ID);
         }
 
         return NextResponse.json({ paid: true });

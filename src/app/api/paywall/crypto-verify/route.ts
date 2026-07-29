@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,11 +27,7 @@ export async function POST(req: Request) {
         // Payment confirmed — unlock paywall
         const email = (memberId || order.user_email || '').toLowerCase();
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, parameters')
-            .ilike('member_id', email)
-            .maybeSingle();
+        const profile = await findProfile(email, 'ID, parameters');
 
         if (profile) {
             const params = profile.parameters || {};

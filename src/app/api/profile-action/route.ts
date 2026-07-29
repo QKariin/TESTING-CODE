@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { cacheDelete } from '@/lib/api-cache';
 import { discordRoutineSubmitted } from '@/lib/discord';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { resolveIdentifier } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -60,12 +61,8 @@ export async function POST(req: Request) {
 
                     // Block duplicate routine submission for today
                     // memberId can be UUID or email — resolve to email for user_routines lookup
-                    const isUuid0 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-                    let routineEmail = memberId.toLowerCase();
-                    if (isUuid0) {
-                        const { data: p0 } = await supabaseAdmin.from('profiles').select('member_id').eq('ID', memberId).maybeSingle();
-                        if (p0?.member_id) routineEmail = p0.member_id.toLowerCase();
-                    }
+                    const resolved0 = await resolveIdentifier(memberId);
+                    const routineEmail = (resolved0.email || memberId).toLowerCase();
                     const { data: existingRoutine } = await supabaseAdmin
                         .from('user_routines')
                         .select('pending_submitted_at, history')

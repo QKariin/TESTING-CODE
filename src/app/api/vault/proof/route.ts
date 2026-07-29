@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +20,7 @@ export async function POST(req: Request) {
         const email = (clientMemberId || user.email || (user.user_metadata?.provider_id
             ? `twitter_${user.user_metadata.provider_id}` : user.id)).toLowerCase();
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles').select('ID, member_id, name').ilike('member_id', email).maybeSingle();
+        const profile = await findProfile(email, 'ID, member_id, name');
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
         const memberId = (profile.member_id || email).toLowerCase();
 

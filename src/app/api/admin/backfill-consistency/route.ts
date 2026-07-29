@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +17,7 @@ async function runBackfill() {
 
     for (const ur of (userRoutines || [])) {
         try {
-            const { data: prof } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', ur.member_id)
-                .maybeSingle();
+            const prof = await findProfile(ur.member_id, 'ID, parameters');
             if (!prof) continue;
 
             const params = prof.parameters || {};

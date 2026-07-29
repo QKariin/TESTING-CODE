@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,12 +72,11 @@ export async function POST(req: Request) {
         // Store pending order in profile if exists (for webhook matching)
         if (memberId) {
             try {
-                const { data: profile } = await supabaseAdmin
-                    .from('profiles').select('parameters').ilike('member_id', memberId).single();
+                const profile = await findProfile(memberId, 'ID, parameters');
                 if (profile) {
                     await supabaseAdmin.from('profiles').update({
                         parameters: { ...(profile.parameters || {}), pendingTributePay: { orderId, tierId: tierId || 'weekly', amount, created: new Date().toISOString() } },
-                    }).ilike('member_id', memberId);
+                    }).eq('ID', profile.ID);
                 }
             } catch {}
         }

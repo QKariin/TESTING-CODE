@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,8 +60,7 @@ export async function GET(req: Request) {
 
                 // Notify user via chat
                 try {
-                    const { data: profile } = await supabaseAdmin.from('profiles')
-                        .select('ID').ilike('member_id', sub.member_id).maybeSingle();
+                    const profile = await findProfile(sub.member_id, 'ID');
                     if (profile) {
                         await DbService.sendMessage(
                             profile.ID,

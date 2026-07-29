@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,8 +122,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         // Push notification to admin
         try {
-            const { data: profile } = await supabaseAdmin.from('profiles')
-                .select('name').ilike('member_id', caller.email).maybeSingle();
+            const profile = await findProfile(caller.email, 'name');
             const name = profile?.name || caller.email.split('@')[0];
 
             const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;

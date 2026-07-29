@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { checkAndPromote } from '@/lib/promote';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ async function getTaskRow(memberId: string): Promise<{ task: any; taskId: string
     } else {
         // Email lookup
         const { data } = await supabaseAdmin.from('tasks').select(TASK_FIELDS).ilike('member_id', memberId).maybeSingle();
-        const { data: profile } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberId).maybeSingle();
+        const profile = await findProfile(memberId, 'ID');
         return { task: data || null, taskId: data?.ID || profile?.ID || '', taskEmail: memberId };
     }
 }
@@ -177,7 +178,7 @@ export async function POST(req: Request) {
 
         // Mark reward as claimable (prevents direct API abuse)
         try {
-            const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', taskEmail).maybeSingle();
+            const prof = await findProfile(taskEmail, 'ID, parameters');
             if (prof) {
                 const params = prof.parameters || {};
                 params.reward_pending = true;
@@ -243,7 +244,7 @@ export async function POST(req: Request) {
             const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
             const apiKey = process.env.ONESIGNAL_REST_API_KEY;
             if (apiKey && email) {
-                const { data: prof } = await supabaseAdmin.from('profiles').select('name').ilike('member_id', email).maybeSingle();
+                const prof = await findProfile(email, 'name');
                 const name = prof?.name || email.split('@')[0];
                 const sendAfter = new Date(nowMs + COOLDOWN_MS).toISOString();
                 fetch('https://api.onesignal.com/notifications', {

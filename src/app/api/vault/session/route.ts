@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
 import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
 import { DbService } from '@/lib/supabase-service';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
         if (prof?.member_id) email = prof.member_id.toLowerCase();
         if (prof?.timezone) savedTz = prof.timezone;
     } else {
-        const { data: prof } = await supabaseAdmin.from('profiles').select('timezone').ilike('member_id', email).maybeSingle();
+        const prof = await findProfile(email, 'ID, timezone');
         if (prof?.timezone) savedTz = prof.timezone;
     }
     // Use client tz if provided, fall back to saved profile timezone (same as routine-status)
@@ -344,7 +345,7 @@ export async function POST(req: NextRequest) {
         if (prof?.member_id) email = prof.member_id.toLowerCase();
         if (!tz && prof?.timezone) tz = prof.timezone;
     } else if (!tz) {
-        const { data: prof } = await supabaseAdmin.from('profiles').select('timezone').ilike('member_id', email).maybeSingle();
+        const prof = await findProfile(email, 'timezone');
         if (prof?.timezone) tz = prof.timezone;
     }
     if (!tz) tz = 'UTC';
@@ -594,7 +595,7 @@ export async function POST(req: NextRequest) {
 
             // Push notification to Queen
             try {
-                const { data: prof } = await supabaseAdmin.from('profiles').select('name').ilike('member_id', email).maybeSingle();
+                const prof = await findProfile(email, 'name');
                 const name = prof?.name || 'A subject';
                 const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
                 const ONESIGNAL_KEY = process.env.ONESIGNAL_REST_API_KEY;
@@ -653,7 +654,7 @@ export async function POST(req: NextRequest) {
                         last_approved_date: date,
                     }).eq('member_id', email);
                     // Sync to profiles.parameters
-                    const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
+                    const prof = await findProfile(email, 'ID, parameters');
                     if (prof) {
                         const params = prof.parameters || {};
                         params.consistency = newStreak;
@@ -669,7 +670,7 @@ export async function POST(req: NextRequest) {
                     member_id: email, routine_name: 'Daily Routine',
                     history: [entry], current_streak: 1, best_streak: 1, last_approved_date: date,
                 });
-                const { data: prof } = await supabaseAdmin.from('profiles').select('ID, parameters').ilike('member_id', email).maybeSingle();
+                const prof = await findProfile(email, 'ID, parameters');
                 if (prof) {
                     const params = prof.parameters || {};
                     params.consistency = 1;
@@ -849,21 +850,21 @@ export async function POST(req: NextRequest) {
         // Apply coins change
         if (followUpType === 'add_coins' || followUpType === 'remove_coins') {
             const coinDelta = Math.max(1, Math.abs(Number(amount) || 50));
-            const { data: prof } = await supabaseAdmin.from('profiles').select('wallet').ilike('member_id', email).single();
+            const prof = await findProfile(email, 'ID, wallet');
             const currentWallet = prof?.wallet ?? 0;
             const newWallet = followUpType === 'add_coins'
                 ? currentWallet + coinDelta
                 : Math.max(0, currentWallet - coinDelta);
-            await supabaseAdmin.from('profiles').update({ wallet: newWallet }).ilike('member_id', email);
+            if (prof) await supabaseAdmin.from('profiles').update({ wallet: newWallet }).eq('ID', prof.ID);
             console.log(`[vault] apply_followup: ${followUpType} ${coinDelta} → wallet ${currentWallet} → ${newWallet}`);
         }
 
         // Apply skip pass
         if (followUpType === 'add_skippass') {
             const skipDelta = Math.max(1, Math.abs(Number(amount) || 1));
-            const { data: prof } = await supabaseAdmin.from('profiles').select('skippass').ilike('member_id', email).single();
+            const prof = await findProfile(email, 'ID, skippass');
             const currentSkip = prof?.skippass ?? 0;
-            await supabaseAdmin.from('profiles').update({ skippass: currentSkip + skipDelta }).ilike('member_id', email);
+            if (prof) await supabaseAdmin.from('profiles').update({ skippass: currentSkip + skipDelta }).eq('ID', prof.ID);
             console.log(`[vault] apply_followup: add_skippass ${skipDelta} → skippass ${currentSkip} → ${currentSkip + skipDelta}`);
         }
 
@@ -1077,10 +1078,7 @@ export async function POST(req: NextRequest) {
     if (action === 'skip_order') {
         const { orderType, cost, useSkipPass } = body;
         // Look up profile
-        const isUuid2 = /^[0-9a-f]{8}-/i.test(email);
-        const { data: prof } = isUuid2
-            ? await supabaseAdmin.from('profiles').select('ID, wallet, skippass').eq('ID', email).maybeSingle()
-            : await supabaseAdmin.from('profiles').select('ID, wallet, skippass').ilike('member_id', email).maybeSingle();
+        const prof = await findProfile(email, 'ID, wallet, skippass');
         if (!prof) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
         if (useSkipPass) {
@@ -1413,7 +1411,7 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
 // Broadcast realtime event to member's vault page so it refreshes instantly
 async function _notifyMember(memberEmail: string, event: string, payload: any) {
     try {
-        const { data: prof } = await supabaseAdmin.from('profiles').select('ID').ilike('member_id', memberEmail).maybeSingle();
+        const prof = await findProfile(memberEmail, 'ID');
         if (!prof) return;
         const ch = supabaseAdmin.channel(`vault-notify-${prof.ID}`);
         await ch.subscribe();

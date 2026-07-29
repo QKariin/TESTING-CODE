@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,13 +88,7 @@ export async function GET(req: Request) {
     }
 
     // 3. Fetch full profile
-    const { data: profile, error: fullProfErr } = await supabaseAdmin
-        .from('profiles')
-        .select('ID, name, cumpass, skippass, checkpoint, wallet')
-        .ilike('member_id', winnerEmail)
-        .maybeSingle();
-
-    if (fullProfErr) step(`Full profile error: ${fullProfErr.message}`);
+    const profile = await findProfile(winnerEmail, 'ID, name, cumpass, skippass, checkpoint, wallet');
     if (!profile) {
         step('STOP: Full profile not found');
         return NextResponse.json({ success: false, log });

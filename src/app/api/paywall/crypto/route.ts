@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 import crypto from 'crypto';
 
 const CRYPTAPI_BASE = 'https://api.cryptapi.io';
@@ -32,11 +33,7 @@ export async function POST(req: Request) {
         const email = (memberId || user.email || '').toLowerCase();
 
         // Get paywall amount from profile
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('parameters')
-            .ilike('member_id', email)
-            .maybeSingle();
+        const profile = await findProfile(email, 'parameters');
 
         const paywallAmount = profile?.parameters?.paywall?.amount;
         if (!paywallAmount) {

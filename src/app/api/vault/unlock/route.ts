@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { DbService } from '@/lib/supabase-service';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Resolve email
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberId);
-    const { data: profile } = isUuid
-        ? await supabaseAdmin.from('profiles').select('member_id, ID').eq('ID', memberId).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('member_id, ID').ilike('member_id', memberId).maybeSingle();
+    const profile = await findProfile(memberId, 'member_id, ID');
 
     if (!profile) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 

@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordDirectTribute, discordRiskyTribute } from '@/lib/discord';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 // 9 card types for the risky game
 const RISKY_CARDS = [
@@ -46,13 +47,8 @@ export async function POST(request: Request) {
         }
 
         // Fetch profile
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
-        const q = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url, hierarchy').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url, hierarchy').ilike('member_id', memberEmail).single();
-        const { data: profile, error: profileErr } = await q;
-
-        if (profileErr || !profile) {
+        const profile = await findProfile(memberEmail, 'wallet, score, parameters, member_id, ID, name, avatar_url, hierarchy');
+        if (!profile) {
             return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         }
 

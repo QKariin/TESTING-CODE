@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -27,11 +28,7 @@ export async function POST(req: Request) {
         if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
         // Read paywall amount from profile
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('parameters')
-            .ilike('member_id', memberId)
-            .maybeSingle();
+        const profile = await findProfile(memberId, 'parameters');
 
         const amount = Number(profile?.parameters?.paywall?.amount) || 55;
         const reason = profile?.parameters?.paywall?.reason || 'Access Tribute';

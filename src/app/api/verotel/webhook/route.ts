@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { discordNewMember } from '@/lib/discord';
 import crypto from 'crypto';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,11 +85,7 @@ export async function GET(req: NextRequest) {
         // ── PAYWALL TRIBUTE ──
         if (type === 'paywall_tribute') {
             const paywallMemberId = payUrl.split(':')[2] || userEmail;
-            const { data: paywallProfile } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', paywallMemberId)
-                .maybeSingle();
+            const paywallProfile = await findProfile(paywallMemberId, 'ID, parameters');
 
             if (paywallProfile) {
                 const params = paywallProfile.parameters || {};

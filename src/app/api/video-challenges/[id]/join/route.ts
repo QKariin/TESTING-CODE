@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller } from '@/lib/api-auth';
 import { rankMeetsRequirement } from '@/lib/hierarchyRules';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,9 +25,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         }
 
         // Fetch profile
-        const { data: profile } = await supabaseAdmin
-            .from('profiles').select('ID, member_id, name, avatar_url, wallet, hierarchy, checkpoint')
-            .ilike('member_id', caller.email).maybeSingle();
+        const profile = await findProfile(caller.email, 'ID, member_id, name, avatar_url, wallet, hierarchy, checkpoint');
         if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
 
         // Check tier requirement

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,8 +28,7 @@ export async function POST(req: Request) {
         if (!paid) return NextResponse.json({ paid: false });
 
         // Payment confirmed — credit coins
-        const { data: profile } = await supabaseAdmin
-            .from('profiles').select('ID, wallet, parameters').ilike('member_id', memberId).maybeSingle();
+        const profile = await findProfile(memberId, 'ID, wallet, parameters');
         if (!profile) return NextResponse.json({ paid: true, error: 'Profile not found' });
 
         const profileParams = profile.parameters || {};

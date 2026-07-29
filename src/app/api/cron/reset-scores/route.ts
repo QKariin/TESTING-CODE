@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { discordLeaderboardChampion } from '@/lib/discord';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // prevent timeout — cron does self-fetch + multiple DB ops
@@ -49,11 +50,7 @@ async function rewardWinner(scoreCol: string) {
     if (!winnerEmail) return null;
 
     // Fetch winner profile
-    const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('ID, name, cumpass, skippass, checkpoint, wallet')
-        .ilike('member_id', winnerEmail)
-        .maybeSingle();
+    const profile = await findProfile(winnerEmail, 'ID, name, cumpass, skippass, checkpoint, wallet');
 
     if (!profile) return null;
 
@@ -123,7 +120,7 @@ async function rewardWinner(scoreCol: string) {
     const { error: updateErr } = await supabaseAdmin
         .from('profiles')
         .update(profileUpdate)
-        .ilike('member_id', winnerEmail);
+        .eq('ID', profile.ID);
 
     if (updateErr) {
         console.error(`[cron/reward] Failed to update ${winnerEmail}:`, updateErr.message);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { identifierFilter } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
 
         const memberId = profile.member_id;
         const params = profile.parameters || {};
+        const f = identifierFilter(memberId);
 
         await supabaseAdmin
             .from('profiles')
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
                     ],
                 },
             })
-            .ilike('member_id', memberId);
+            [f.method](f.column, f.value);
 
         console.log('[passimpay webhook] paywall cleared for:', memberId);
         return NextResponse.json({ ok: true });

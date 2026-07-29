@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordChallengeVerified } from '@/lib/discord';
 import { getTierForDays, getDailyCashback, getFinishBonus, TierDef, ChallengeDifficulty, TASKS_PER_DAY } from '@/lib/challenge-tasks';
+import { findProfile } from '@/lib/lookup';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -72,8 +73,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             }
 
             // Fetch profile for notification cards
-            const { data: prof } = await supabaseAdmin
-                .from('profiles').select('name, avatar_url').ilike('member_id', completion.member_id).maybeSingle();
+            const prof = await findProfile(completion.member_id, 'name, avatar_url');
 
             // Count total verified completions for this participant in this challenge
             const { data: allVerified } = await supabaseAdmin
@@ -170,12 +170,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                             const cashback = isRejoin ? 0 : getDailyCashback(currentTier, difficulty);
                             if (cashback > 0) {
                                 // Credit to wallet
-                                const { data: memberProfile } = await supabaseAdmin
-                                    .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                                const memberProfile = await findProfile(completion.member_id, 'ID, wallet');
                                 if (memberProfile) {
                                     await supabaseAdmin.from('profiles')
                                         .update({ wallet: (memberProfile.wallet || 0) + cashback })
-                                        .ilike('member_id', completion.member_id);
+                                        .eq('ID', memberProfile.ID);
                                 }
                                 dailyCashbackAwarded = cashback;
                             }
@@ -194,12 +193,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                         const isRejoinFinish = (part.rejoin_count || 0) > 0;
                         const finishBonus = (!isRejoinFinish && currentTier) ? getFinishBonus(currentTier, difficulty) : 0;
                         if (finishBonus > 0) {
-                            const { data: memberProfile } = await supabaseAdmin
-                                .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                            const memberProfile = await findProfile(completion.member_id, 'ID, wallet');
                             if (memberProfile) {
                                 await supabaseAdmin.from('profiles')
                                     .update({ wallet: (memberProfile.wallet || 0) + finishBonus })
-                                    .ilike('member_id', completion.member_id);
+                                    .eq('ID', memberProfile.ID);
                             }
                             finishBonusAwarded = finishBonus;
                         }
@@ -287,12 +285,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                             const dailyKey = difficulty === 'easy' ? 'daily_soft' : difficulty === 'hard' ? 'daily_brutal' : 'daily_strict';
                             const cashback = isRejoin ? 0 : (dp[dailyKey] ?? 0);
                             if (cashback > 0) {
-                                const { data: memberProfile } = await supabaseAdmin
-                                    .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                                const memberProfile = await findProfile(completion.member_id, 'ID, wallet');
                                 if (memberProfile) {
                                     await supabaseAdmin.from('profiles')
                                         .update({ wallet: (memberProfile.wallet || 0) + cashback })
-                                        .ilike('member_id', completion.member_id);
+                                        .eq('ID', memberProfile.ID);
                                 }
                                 dailyCashbackAwarded = cashback;
                             }
@@ -310,12 +307,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                         const isRejoinFinish = (part.rejoin_count || 0) > 0;
                         const finishBonus = isRejoinFinish ? 0 : (dp[finishKey] ?? 0);
                         if (finishBonus > 0) {
-                            const { data: memberProfile } = await supabaseAdmin
-                                .from('profiles').select('wallet').ilike('member_id', completion.member_id).maybeSingle();
+                            const memberProfile = await findProfile(completion.member_id, 'ID, wallet');
                             if (memberProfile) {
                                 await supabaseAdmin.from('profiles')
                                     .update({ wallet: (memberProfile.wallet || 0) + finishBonus })
-                                    .ilike('member_id', completion.member_id);
+                                    .eq('ID', memberProfile.ID);
                             }
                             finishBonusAwarded = finishBonus;
                         }
@@ -350,8 +346,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
                 }).eq('challenge_id', id).eq('member_id', completion.member_id).eq('status', 'active');
 
                 // Fetch profile for reject cards
-                const { data: profR } = await supabaseAdmin
-                    .from('profiles').select('name, avatar_url').ilike('member_id', completion.member_id).maybeSingle();
+                const profR = await findProfile(completion.member_id, 'name, avatar_url');
 
                 const rejectPayload = {
                     senderName: (profR as any)?.name || completion.member_id.split('@')[0],

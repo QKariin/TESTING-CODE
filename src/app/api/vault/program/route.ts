@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,11 +38,7 @@ export async function GET(req: NextRequest) {
                 .maybeSingle();
 
             // Get profile name + kinks/limits
-            const { data: prof } = await supabaseAdmin
-                .from('profiles')
-                .select('name, title, avatar_url, profile_picture_url, kinks, limits')
-                .ilike('member_id', s.member_id)
-                .maybeSingle();
+            const prof = await findProfile(s.member_id, 'name, title, avatar_url, profile_picture_url, kinks, limits');
 
             const orders = todayRec?.orders ? (typeof todayRec.orders === 'string' ? JSON.parse(todayRec.orders) : todayRec.orders) : [];
             const completed = orders.filter((o: any) => o.done >= o.target).length;
@@ -129,11 +126,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch profile kinks/limits for the member
-    const { data: memberProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('kinks, limits')
-        .ilike('member_id', email)
-        .maybeSingle();
+    const memberProfile = await findProfile(email, 'kinks, limits');
 
     return NextResponse.json({ program: prog, profile: { kinks: memberProfile?.kinks || '', limits: memberProfile?.limits || '' } });
 }

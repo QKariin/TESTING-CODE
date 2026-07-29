@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordWishlistPurchase } from '@/lib/discord';
+import { findProfile } from '@/lib/lookup';
 
 export async function POST(request: Request) {
     try {
@@ -12,13 +13,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Missing required parameters' }, { status: 400 });
         }
 
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(memberEmail);
-        const profileQuery = isUUID
-            ? supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').eq('ID', memberEmail).single()
-            : supabase.from('profiles').select('wallet, score, parameters, member_id, ID, name, avatar_url').ilike('member_id', memberEmail).single();
-        const { data: profile, error: profileErr } = await profileQuery;
-
-        if (profileErr || !profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
+        const profile = await findProfile(memberEmail, 'wallet, score, parameters, member_id, ID, name, avatar_url');
+        if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
 
         const currentWallet = profile.wallet || 0;
         const currentScore = profile.score || 0;

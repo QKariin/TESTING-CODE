@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,12 +85,11 @@ export async function POST(req: Request) {
 
         // Store pending order metadata in profile if exists
         try {
-            const { data: profile } = await supabaseAdmin
-                .from('profiles').select('parameters').ilike('member_id', identifier).single();
+            const profile = await findProfile(identifier, 'ID, parameters');
             if (profile) {
                 await supabaseAdmin.from('profiles').update({
                     parameters: { ...(profile.parameters || {}), pendingKeyholderPay: { orderId, tierId, days, created: new Date().toISOString() } },
-                }).ilike('member_id', identifier);
+                }).eq('ID', profile.ID);
             }
         } catch {}
 

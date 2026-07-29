@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +36,7 @@ export async function POST(req: Request) {
         }
 
         // Get sender name for notification title
-        const { data: senderProfile } = await supabaseAdmin
-            .from('profiles')
-            .select('name')
-            .ilike('member_id', senderEmail)
-            .maybeSingle();
+        const senderProfile = await findProfile(senderEmail, 'name');
         const senderName = senderProfile?.name || senderEmail.split('@')[0] || 'Subject';
 
         const msgPreview = typeof content === 'string'

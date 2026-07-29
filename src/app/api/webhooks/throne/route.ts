@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createVerify } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,11 +62,7 @@ export async function POST(req: Request) {
         const email = emailMatch[0].toLowerCase();
 
         // Fetch profile
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('member_id, name, parameters')
-            .ilike('member_id', email)
-            .maybeSingle();
+        const profile = await findProfile(email, 'member_id, name, parameters');
 
         if (!profile) {
             console.warn('[throne webhook] no profile found for email:', email);
@@ -116,7 +113,7 @@ export async function POST(req: Request) {
                     ],
                 },
             })
-            .ilike('member_id', email);
+            .ilike('member_id', email); // email always lowercase string from regex match
 
         console.log('[throne webhook] paywall cleared for:', email, 'amount:', amountEur, currency);
         return NextResponse.json({ ok: true });

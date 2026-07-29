@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { autoVerifyOldCompletions } from '@/lib/auto-verify';
+import { findProfile } from '@/lib/lookup';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -69,8 +70,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
                     p.eliminated_on_window_id = w.id;
                     // Post elimination card
                     try {
-                        const { data: elimProf } = await supabaseAdmin.from('profiles')
-                            .select('name, avatar_url').ilike('member_id', p.member_id).maybeSingle();
+                        const elimProf = await findProfile(p.member_id, 'name, avatar_url');
                         const remaining = (participants || []).filter((x: any) => x.member_id !== p.member_id && x.status === 'active').length;
                         await supabaseAdmin.from('global_messages').insert({
                             sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null,

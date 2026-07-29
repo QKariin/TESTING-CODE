@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,11 +71,11 @@ export async function POST(req: Request) {
         if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet address returned' }, { status: 500 });
 
         // Store orderId so webhook can find this member
-        const { data: profile } = await supabaseAdmin.from('profiles').select('parameters').ilike('member_id', memberId).single();
+        const profile = await findProfile(memberId, 'ID, parameters');
         if (profile) {
             await supabaseAdmin.from('profiles').update({
                 parameters: { ...(profile.parameters || {}), pendingCryptoPay: { orderId, created: new Date().toISOString() } },
-            }).ilike('member_id', memberId);
+            }).eq('ID', profile.ID);
         }
 
         try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: null, amount: Number(amount), currency_id: String(currencyId), payment_type: 'paywall' }); } catch {}

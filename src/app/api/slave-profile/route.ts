@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
 import { mapUserProfile } from '@/lib/mapUserProfile';
+import { findProfile, identifierFilter } from '@/lib/lookup';
 
 const ADMIN_EMAILS = ['ceo@qkarin.com'];
 
@@ -46,16 +47,9 @@ function stripSensitive(response: any, isAdmin: boolean): any {
 }
 
 async function buildFullProfile(emailOrUuid: string, authUuidHint?: string | null) {
-    // Step 1: fetch profile - by UUID (profiles.id) if UUID, else by email (profiles.member_id)
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(emailOrUuid);
-    const { data: profileData, error: profileError } = isUuid
-        ? await supabaseAdmin.from('profiles').select('*').eq('ID', emailOrUuid).maybeSingle()
-        : await supabaseAdmin.from('profiles').select('*').ilike('member_id', emailOrUuid).maybeSingle();
-
-    if (profileError) {
-        console.error('[slave-profile] buildFullProfile profileError:', profileError.message, profileError.code);
-        throw profileError;
-    }
+    // Step 1: fetch profile - by UUID (profiles.ID) if UUID, else by email (profiles.member_id)
+    const profileData = await findProfile(emailOrUuid, '*');
+    // findProfile returns null on error or not found — no separate error object
 
     // Step 2: fetch tasks — collect ALL matching rows and pick the richest one.
     // Users may have both an email-keyed row (historical data) and a UUID-keyed row (newer/empty).
@@ -153,8 +147,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        const data = await findProfile(email, '*');
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
         console.error('[slave-profile] GET catch:', err?.message, err?.code);
@@ -178,14 +171,13 @@ export async function POST(request: NextRequest) {
 
     if (!isAdmin && !isSelf) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const isUuidEmail = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
-
     // Update mode
     if (Object.keys(updates).length > 0) {
+        const f = identifierFilter(email);
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
-            .eq(isUuidEmail ? 'ID' : 'member_id', email)
+            [f.method](f.column, f.value)
             .select()
             .single();
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -199,10 +191,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(stripSensitive(data, isAdmin));
         }
 
-        const { data, error } = isUuidEmail
-            ? await supabaseAdmin.from('profiles').select('*').eq('ID', email).maybeSingle()
-            : await supabaseAdmin.from('profiles').select('*').ilike('member_id', email).maybeSingle();
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        const data = await findProfile(email, '*');
         return NextResponse.json(stripSensitive(data, isAdmin));
     } catch (err: any) {
         console.error('[slave-profile] POST catch:', err?.message, err?.code);

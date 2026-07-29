@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,8 +30,7 @@ export async function POST(req: Request) {
         const paid = data.result === 1 && data.status === 'paid';
 
         if (paid) {
-            const { data: profile } = await supabaseAdmin
-                .from('profiles').select('name, parameters').ilike('member_id', memberId).single();
+            const profile = await findProfile(memberId, 'ID, name, parameters');
             if (profile) {
                 const params = profile.parameters || {};
                 await supabaseAdmin.from('profiles').update({
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
                             },
                         ],
                     },
-                }).ilike('member_id', memberId);
+                }).eq('ID', profile.ID);
             }
         }
 

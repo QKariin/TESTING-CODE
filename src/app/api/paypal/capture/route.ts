@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPayPalToken } from '@/lib/paypal';
 import { supabaseAdmin } from '@/lib/supabase';
 import { discordNewMember } from '@/lib/discord';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -170,8 +171,7 @@ async function fulfillKeyholder(orderId: string, userId: string, memberId: strin
 
 async function fulfillCoins(orderId: string, memberId: string, coins: number) {
     if (!coins) return;
-    const { data: profile } = await supabaseAdmin
-        .from('profiles').select('ID, wallet, parameters').ilike('member_id', memberId).maybeSingle();
+    const profile = await findProfile(memberId, 'ID, wallet, parameters');
     if (!profile) return;
 
     const profileParams = profile.parameters || {};
@@ -196,8 +196,7 @@ async function fulfillCoins(orderId: string, memberId: string, coins: number) {
 }
 
 async function fulfillPaywall(orderId: string, memberId: string) {
-    const { data: profile } = await supabaseAdmin
-        .from('profiles').select('ID, name, parameters').ilike('member_id', memberId).maybeSingle();
+    const profile = await findProfile(memberId, 'ID, name, parameters');
     if (!profile) return;
 
     const params = profile.parameters || {};

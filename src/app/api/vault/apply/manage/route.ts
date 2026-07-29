@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
 import { DbService } from '@/lib/supabase-service';
 import { generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,11 +54,7 @@ export async function POST(req: Request) {
             }
 
             // Update profile — set vault_request to awaiting_video (no active_overlay yet)
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', memberId)
-                .maybeSingle();
+            const profile = await findProfile(memberId, 'ID, parameters');
 
             if (profile) {
                 const params = profile.parameters || {};
@@ -86,11 +83,7 @@ export async function POST(req: Request) {
             }).eq('id', sessionId);
 
             // Update profile
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', memberId)
-                .maybeSingle();
+            const profile = await findProfile(memberId, 'ID, parameters');
 
             if (profile) {
                 const params = profile.parameters || {};
@@ -117,11 +110,7 @@ export async function POST(req: Request) {
 
             // Refund coins if paid with coins
             if (session.coins_paid > 0) {
-                const { data: profile } = await supabaseAdmin
-                    .from('profiles')
-                    .select('ID, wallet, parameters')
-                    .ilike('member_id', memberId)
-                    .maybeSingle();
+                const profile = await findProfile(memberId, 'ID, wallet, parameters');
 
                 if (profile) {
                     const newWallet = Number(profile.wallet || 0) + session.coins_paid;
@@ -162,11 +151,7 @@ export async function POST(req: Request) {
             }
 
             // Clear vault_request from profile
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', memberId)
-                .maybeSingle();
+            const profile = await findProfile(memberId, 'ID, parameters');
 
             if (profile) {
                 const params = profile.parameters || {};

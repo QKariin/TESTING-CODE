@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { checkAndPromote } from '@/lib/promote';
 import { cacheDelete } from '@/lib/api-cache';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,11 +95,7 @@ export async function GET(req: Request) {
 
         // Update profiles.parameters for backward compat + notify member
         try {
-            const { data: prof } = await supabaseAdmin
-                .from('profiles')
-                .select('ID, parameters')
-                .ilike('member_id', ur.member_id)
-                .maybeSingle();
+            const prof = await findProfile(ur.member_id, 'ID, parameters');
             if (prof) {
                 const params = prof.parameters || {};
                 params.consistency = newStreak;
@@ -238,8 +235,7 @@ export async function GET(req: Request) {
 
         for (const sess of (activeSessions || [])) {
             try {
-                const { data: prof } = await supabaseAdmin.from('profiles')
-                    .select('timezone').ilike('member_id', sess.member_id).maybeSingle();
+                const prof = await findProfile(sess.member_id, 'timezone');
                 const tz = prof?.timezone || 'UTC';
 
                 // Get current hour in member's timezone
