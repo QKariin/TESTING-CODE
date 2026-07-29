@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
@@ -14,8 +15,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         if (!challenge) return NextResponse.json({ success: false, error: 'Challenge not found' }, { status: 404 });
 
         // Resolve profile
-        const { data: profile } = await supabaseAdmin
-            .from('profiles').select('ID, member_id, name, avatar_url').ilike('member_id', memberEmail).maybeSingle();
+        const profile = await findProfile(memberEmail, 'ID, member_id, name, avatar_url');
         if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
         const memberId = profile.member_id;
 

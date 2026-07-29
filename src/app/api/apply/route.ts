@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,11 +29,7 @@ export async function POST(request: Request) {
         }
 
         // Resolve member_id from profiles if email matches
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('id')
-            .ilike('member_id', data.email)
-            .maybeSingle();
+        const profile = await findProfile(data.email, 'id');
 
         const payload: any = {
             email: data.email.toLowerCase().trim(),

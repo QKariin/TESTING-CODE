@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { findProfile, identifierFilter } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,11 +15,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1. Look up profile id to use as anonymous filename (never store email in filename)
-        const { data: profileRef } = await supabaseAdmin
-            .from('profiles')
-            .select('ID')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
+        const profileRef = await findProfile(memberEmail, 'ID');
         const fileId = profileRef?.ID || Date.now();
 
         // Upload to Supabase Storage (avatars bucket)
@@ -46,11 +43,12 @@ export async function POST(req: NextRequest) {
 
         console.log('[upload-avatar] Uploaded to:', publicUrl);
 
-        // 2. Update profiles table - write to both columns so either lookup works
+        // 2. Update profiles table
+        const f = identifierFilter(memberEmail);
         const { error: dbError } = await supabaseAdmin
             .from('profiles')
             .update({ avatar_url: publicUrl })
-            .ilike('member_id', memberEmail);
+            [f.method](f.column, f.value);
 
         if (dbError) {
             console.error('[upload-avatar] DB error:', dbError.message);

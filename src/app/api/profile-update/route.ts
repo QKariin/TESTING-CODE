@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
+import { findProfile, identifierFilter } from '@/lib/lookup';
 
 export const dynamic = "force-dynamic";
 
@@ -39,13 +40,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Field not allowed' }, { status: 403 });
         }
 
+        const f = identifierFilter(memberEmail);
+
         // If there's a coin cost, check and deduct wallet first
         if (cost && cost > 0) {
-            const { data: profile } = await supabaseAdmin
-                .from('profiles')
-                .select('wallet')
-                .ilike('member_id', memberEmail)
-                .maybeSingle();
+            const profile = await findProfile(memberEmail, 'wallet');
 
             if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
             if ((profile.wallet || 0) < cost) {
@@ -56,30 +55,22 @@ export async function POST(req: Request) {
             await supabaseAdmin
                 .from('profiles')
                 .update({ wallet: (profile.wallet || 0) - cost })
-                .ilike('member_id', memberEmail);
+                [f.method](f.column, f.value);
         }
 
         // _deductOnly: just deduct coins, no field update
         if (field === '_deductOnly') {
-            const { data } = await supabaseAdmin
-                .from('profiles')
-                .select('*')
-                .ilike('member_id', memberEmail)
-                .maybeSingle();
+            const data = await findProfile(memberEmail);
             return NextResponse.json({ success: true, profile: data });
         }
 
         const { error } = await supabaseAdmin
             .from('profiles')
             .update({ [field]: value })
-            .ilike('member_id', memberEmail);
+            [f.method](f.column, f.value);
 
         // Fetch updated profile separately
-        const { data } = await supabaseAdmin
-            .from('profiles')
-            .select('*')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
+        const data = await findProfile(memberEmail);
 
         if (error) {
             console.error('[profile-update] error:', error);

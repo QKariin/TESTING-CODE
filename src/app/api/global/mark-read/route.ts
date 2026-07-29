@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { findProfile } from '@/lib/lookup'
 
 export async function POST(request: NextRequest) {
     try {
         const { messageId, userEmail } = await request.json()
         if (!messageId || !userEmail) return NextResponse.json({ ok: false })
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID, name, avatar_url, profile_picture_url')
-            .ilike('member_id', userEmail)
-            .maybeSingle()
+        const profile = await findProfile(userEmail, 'ID, name, avatar_url')
 
         if (!profile) return NextResponse.json({ ok: false })
 

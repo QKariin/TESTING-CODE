@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO } from '@/lib/api-auth';
+import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,11 +46,7 @@ export async function POST(req: Request) {
 
         // 4. global_message_reads.user_name (denormalized)
         // Need the user's UUID from profiles first
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('ID')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
+        const profile = await findProfile(memberEmail, 'ID');
         if (profile?.ID) {
             const { error: e4 } = await supabaseAdmin
                 .from('global_message_reads')
