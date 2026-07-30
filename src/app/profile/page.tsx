@@ -1933,10 +1933,6 @@ export default function ProfilePage() {
                                     <div className="coin-amount">2,000</div>
                                     <div className="coin-price">€20.00</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(1000)}>
-                                    <div className="coin-amount">1,000</div>
-                                    <div className="coin-price">€10.00</div>
-                                </div>
                                 <div className="coin-tile" onClick={() => (window as any).buyRealCoins(5500)}>
                                     <div className="coin-amount">5,500</div>
                                     <div className="coin-price">€50.00</div>
