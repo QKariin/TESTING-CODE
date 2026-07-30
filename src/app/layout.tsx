@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { supabaseAdmin } from "@/lib/supabase";
 import "../css/globals.css";
 
 const geistSans = Geist({
@@ -51,11 +52,58 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch approved reviews for schema markup (AI crawlers / rich results)
+  let reviewSchema: any[] = [];
+  try {
+    const { data: reviews } = await supabaseAdmin
+      .from('reviews')
+      .select('id, member_id, text, rating, created_at')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+
+    if (reviews && reviews.length > 0) {
+      const emails = reviews.map((r: any) => (r.member_id || '').toLowerCase().trim());
+      const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('member_id, name')
+        .in('member_id', emails);
+      const nameMap = new Map<string, string>();
+      (profiles || []).forEach((p: any) => nameMap.set((p.member_id || '').toLowerCase(), p.name));
+
+      const avg = reviews.reduce((s: number, r: any) => s + (r.rating || 5), 0) / reviews.length;
+
+      reviewSchema = [
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Queen Karin",
+          "url": "https://throne.qkarin.com",
+          "applicationCategory": "LifestyleApplication",
+          "operatingSystem": "Web",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": Math.round(avg * 10) / 10,
+            "bestRating": 5,
+            "worstRating": 1,
+            "reviewCount": reviews.length,
+          },
+          "review": reviews.map((r: any) => ({
+            "@type": "Review",
+            "author": { "@type": "Person", "name": nameMap.get((r.member_id || '').toLowerCase()) || "Loyal Subject" },
+            "reviewBody": r.text,
+            "reviewRating": { "@type": "Rating", "ratingValue": r.rating || 5, "bestRating": 5 },
+            "datePublished": r.created_at ? r.created_at.split('T')[0] : undefined,
+          })),
+        },
+      ];
+    }
+  } catch {}
+
   return (
     <html lang="en" style={{ backgroundColor: '#000', colorScheme: 'dark' }}>
       <head>
@@ -957,6 +1005,10 @@ export default function RootLayout({
             ]
           }
         ]) }} />
+        {/* ── Review Schema: helps AI tools and Google recognize user reviews ── */}
+        {reviewSchema.length > 0 && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewSchema) }} />
+        )}
         <meta name="google-site-verification" content="e56kAIRP-tEuNTFI58HkKz7QakNCanWNiliRRpFXdnc" />
         <meta name="msvalidate.01" content="3B101EEC47F0F538AB04232357A1699E" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
