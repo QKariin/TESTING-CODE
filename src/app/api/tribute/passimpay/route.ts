@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
+import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { findProfile } from '@/lib/lookup';
 
@@ -21,6 +22,10 @@ function ppRequest(endpoint: string, params: Record<string, string>, apiKey: str
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || null;
+
         const { memberId, currencyId, amount: reqAmount, tierId } = await req.json();
         if (!currencyId) return NextResponse.json({ error: 'Missing currencyId' }, { status: 400 });
 
@@ -81,7 +86,7 @@ export async function POST(req: Request) {
             } catch {}
         }
 
-        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: tierId || null, amount, currency_id: String(currencyId), payment_type: 'tribute' }); } catch {}
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: tierId || null, amount, currency_id: String(currencyId), payment_type: 'tribute', user_id: userId }); } catch {}
         return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: amount });
     } catch (err: any) {
         console.error('[tribute/passimpay] error:', err);

@@ -158,6 +158,8 @@ export async function POST(req: Request) {
         const params = profile.parameters || {};
 
         // ── Step 3: Process based on payment type ──
+        let pushTitle = '';
+        let pushMessage = '';
         switch (paymentType) {
             case 'paywall': {
                 await supabaseAdmin.from('profiles').update({
@@ -179,6 +181,8 @@ export async function POST(req: Request) {
                     },
                 }).eq('ID', profile.ID);
                 console.log('[passimpay webhook] paywall cleared for:', memberId);
+                pushTitle = 'Paywall Payment (Crypto)';
+                pushMessage = `${profile.name || memberId} paid paywall — ${params.paywall?.amount || pendingMeta?.amount || '?'}`;
                 break;
             }
 
@@ -217,6 +221,8 @@ export async function POST(req: Request) {
                     },
                 }).eq('ID', profile.ID);
                 console.log('[passimpay webhook] credited', coins, 'coins to:', memberId, 'new wallet:', newWallet);
+                pushTitle = 'Coin Purchase (Crypto)';
+                pushMessage = `${profile.name || memberId} bought ${coins} coins via PassimPay`;
                 break;
             }
 
@@ -238,20 +244,8 @@ export async function POST(req: Request) {
                     },
                 }).eq('ID', profile.ID);
                 console.log('[passimpay webhook] keyholder activated for:', memberId, 'tier:', tierId);
-
-                // Send notification
-                try {
-                    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
-                    await fetch(`${baseUrl}/api/push`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            externalId: 'ceo@qkarin.com',
-                            title: 'New Keyholder Sub (Crypto Webhook)',
-                            message: `${profile.name || memberId} surrendered their key — ${tierId} paid with PassimPay`,
-                        }),
-                    });
-                } catch {}
+                pushTitle = 'New Keyholder Sub (Crypto)';
+                pushMessage = `${profile.name || memberId} surrendered their key — ${tierId} paid with PassimPay`;
                 break;
             }
 
@@ -278,6 +272,8 @@ export async function POST(req: Request) {
                     },
                 }).eq('ID', profile.ID);
                 console.log('[passimpay webhook] tribute recorded for:', memberId, 'amount:', amount);
+                pushTitle = 'Tribute Payment (Crypto)';
+                pushMessage = `${profile.name || memberId} sent ${amount} tribute via PassimPay`;
                 break;
             }
 
@@ -303,6 +299,22 @@ export async function POST(req: Request) {
                     },
                 }).eq('ID', profile.ID);
             }
+        }
+
+        // ── Step 4: Send push notification ──
+        if (pushTitle) {
+            try {
+                const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+                await fetch(`${baseUrl}/api/push`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        externalId: 'ceo@qkarin.com',
+                        title: pushTitle,
+                        message: pushMessage,
+                    }),
+                });
+            } catch {}
         }
 
         // Update payment_logs status if the table has that column
