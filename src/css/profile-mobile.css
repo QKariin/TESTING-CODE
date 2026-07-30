@@ -2616,9 +2616,9 @@
 
     /* ── EXCHEQUER MODAL ───────────────────────────────────────────────── */
 
-    /* Force it above everything - inline zIndex:2147483640 is overridden by !important */
+    /* High but below PaymentModal (2147483647) so payment overlay renders on top */
     #mobExchequer {
-        z-index: 2147483647 !important;
+        z-index: 2147483645 !important;
     }
 
     .lobby-card {

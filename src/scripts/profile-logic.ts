@@ -6570,9 +6570,11 @@ if (typeof window !== 'undefined') {
 }
 
 export async function buyRealCoins(amount: number) {
-    const COIN_EUR: Record<number, number> = { 2000: 20, 5500: 50, 12000: 100, 30000: 250, 70000: 500, 150000: 1000 };
+    const COIN_EUR: Record<number, number> = { 1000: 10, 2000: 20, 5500: 50, 12000: 100, 30000: 250, 70000: 500, 150000: 1000 };
     const eurAmount = COIN_EUR[amount] || 0;
     const memberId = getState().email || '';
+    // Close exchequer overlay so PaymentModal renders on top without z-index conflict
+    closeExchequer();
     (window as any).__showCoinPaymentModal?.({ coins: amount, eur: eurAmount, memberId });
 }
 
