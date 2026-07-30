@@ -26,6 +26,7 @@ interface PaymentModalProps {
     confirmMessage?: string;
     throneUrl?: string;
     paypalBody?: { type: string; memberId: string; tierId?: string };
+    paypalMeUrl?: string;
     onSuccess?: () => void;
     onClose: () => void;
 }
@@ -41,6 +42,7 @@ export default function PaymentModal({
     confirmMessage = '✓ PAYMENT CONFIRMED',
     throneUrl,
     paypalBody,
+    paypalMeUrl,
     onSuccess,
     onClose,
 }: PaymentModalProps) {
@@ -690,6 +692,13 @@ export default function PaymentModal({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
+                    {paypalMeUrl && (
+                        <a href={`${paypalMeUrl}/${Number(amountEur).toFixed(2)}EUR`} target="_blank" rel="noopener noreferrer"
+                            style={{ width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none', boxSizing: 'border-box' as const }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7.5 21H3L5 9h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H7l-0.5 4z" stroke="rgba(0,112,186,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10.5 17H6L8 5h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H10.5z" stroke="rgba(0,150,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            PAY WITH PAYPAL
+                        </a>
+                    )}
                     {throneUrl && (
                         <button onClick={() => setCardStep('throne')}
                             style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
