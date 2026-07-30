@@ -131,8 +131,10 @@ export async function GET(req: NextRequest) {
     // Sync today's orders with the current program (handles program edits after daily row was created)
     if (todayRecord && session) {
         const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
-        const daysIn3 = getSessionDay(session, tz);
-        const programOrders = await _getOrdersForDay(session.id, daysIn3);
+        // Use the day_number from the vault_daily record, NOT session.current_day
+        // (current_day advances when chastity check is submitted, but today's orders are still for the original day)
+        const syncDayNum = todayRecord.day_number || getSessionDay(session, tz);
+        const programOrders = await _getOrdersForDay(session.id, syncDayNum);
 
         // Compare types + targets + labels to catch any program edits
         const programSig = programOrders.map((o: any) => `${o.type}:${o.target}:${o.label || ''}`).sort().join('|');
@@ -236,7 +238,8 @@ export async function GET(req: NextRequest) {
     // Read program directly (same source as dashboard's /api/vault/program)
     let programTasks: any[] | null = null;
     try {
-        const dayNum = getSessionDay(session, tz);
+        // Use vault_daily day_number (stable) not session.current_day (advances on chastity check)
+        const dayNum = todayRecord?.day_number || getSessionDay(session, tz);
         const { data: progRow } = await supabaseAdmin
             .from('vault_member_program')
             .select('id, program')
@@ -959,7 +962,7 @@ export async function POST(req: NextRequest) {
 
         // Update order done count in vault_daily
         const { data: daily } = await supabaseAdmin.from('vault_daily')
-            .select('id, orders, orders_completed, orders_total').eq('session_id', session.id).eq('date', date).maybeSingle();
+            .select('id, orders, orders_completed, orders_total, perfect').eq('session_id', session.id).eq('date', date).maybeSingle();
         if (daily) {
             const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
             const oIdx = sub?.order_idx;
@@ -977,7 +980,8 @@ export async function POST(req: NextRequest) {
                 perfect,
             }).eq('id', daily.id);
 
-            if (perfect) {
+            // Only increment streak when day FIRST becomes perfect
+            if (perfect && !daily.perfect) {
                 const { data: sess } = await supabaseAdmin.from('vault_sessions')
                     .select('current_streak, best_streak, total_perfect_days').eq('id', session.id).single();
                 if (sess) {
@@ -1371,8 +1375,8 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
         perfect,
     }).eq('id', daily.id);
 
-    // Update session streak if day just became perfect
-    if (perfect) {
+    // Update session streak only if day JUST became perfect (wasn't perfect before)
+    if (perfect && !daily.perfect) {
         const { data: session } = await supabaseAdmin
             .from('vault_sessions')
             .select('current_streak, best_streak, total_perfect_days')
