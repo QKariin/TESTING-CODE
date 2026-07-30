@@ -2677,16 +2677,25 @@ function ControlsView({ user, onUserUpdated }: { user: DashUser; onUserUpdated?:
                         {vaultSession?.today?.orders && (() => {
                             const orders = typeof vaultSession.today.orders === 'string' ? JSON.parse(vaultSession.today.orders) : vaultSession.today.orders;
                             const labels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
+                            const isPerfect = (vaultSession.today.perfect) || (orders.length > 0 && orders.every((o: any) => (o.done || 0) >= (o.target || 1)));
                             return (
-                                <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
-                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.6rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3, marginBottom: 8 }}>TODAY&apos;S ORDERS</div>
-                                    {orders.map((o: any, i: number) => (
-                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                                            <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
-                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{labels[o.type] || o.type.toUpperCase()}</span>
-                                            <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                <div style={{ background: isPerfect ? 'rgba(80,200,120,0.04)' : 'rgba(139,0,0,0.04)', border: `1px solid ${isPerfect ? 'rgba(80,200,120,0.15)' : 'rgba(139,0,0,0.12)'}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+                                    {isPerfect ? (
+                                        <div style={{ textAlign: 'center', padding: '6px 0' }}>
+                                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 4 }}><path d="M20 6L9 17l-5-5" /></svg>
+                                            <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(80,200,120,0.7)', letterSpacing: 3, fontWeight: 700 }}>PERFECT OBEDIENCE</div>
+                                            <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginTop: 3 }}>All orders fulfilled today</div>
                                         </div>
-                                    ))}
+                                    ) : (<>
+                                        <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.6rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3, marginBottom: 8 }}>TODAY&apos;S ORDERS</div>
+                                        {orders.map((o: any, i: number) => (
+                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                                                <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{labels[o.type] || o.type.toUpperCase()}</span>
+                                                <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                            </div>
+                                        ))}
+                                    </>)}
                                     {/* Chastity check from vault_check_log table */}
                                     {vaultSession.chastityCheck?.proof_url && (
                                         <a href={vaultSession.chastityCheck.proof_url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 8, borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.2)' }}>

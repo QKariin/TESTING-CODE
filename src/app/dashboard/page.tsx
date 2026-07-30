@@ -2130,7 +2130,8 @@ export default function DashboardPage() {
                                     const failedDays = s?.total_failed_days || 0;
                                     const sealEarned = s?.seal_earned || null;
                                     const todayOrders: any[] = vs?.today?.orders ? (typeof vs.today.orders === 'string' ? JSON.parse(vs.today.orders) : vs.today.orders) : [];
-                                    const todayPerfect = vs?.today?.perfect || false;
+                                    const todayPerfectDb = vs?.today?.perfect || false;
+                                    const todayPerfect = todayPerfectDb || (todayOrders.length > 0 && todayOrders.every((o: any) => (o.done || 0) >= (o.target || 1)));
                                     const dailyRecords: any[] = vs?.dailyRecords || [];
                                     const begs: any[] = vs?.begs || [];
                                     const orderLabels: Record<string, string> = { kneel: 'KNEEL', chastity_check: 'CHASTITY CHECK', trial: 'TRIAL', spin: 'SPIN', tribute: 'TRIBUTE' };
@@ -2196,20 +2197,27 @@ export default function DashboardPage() {
                                         </div>
 
                                         {/* ── TODAY'S ORDERS ── */}
-                                        <div style={{ background: 'rgba(139,0,0,0.04)', border: '1px solid rgba(139,0,0,0.12)', borderRadius: 8, margin: '0 4px 12px', padding: '12px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                                <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3 }}>TODAY&apos;S ORDERS</span>
-                                                {todayPerfect && <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.45rem', color: 'rgba(80,200,80,0.8)', letterSpacing: 2 }}>✓ PERFECT</span>}
-                                            </div>
-                                            {todayOrders.length > 0 ? todayOrders.map((o: any, i: number) => (
-                                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                                    <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
-                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.7)', letterSpacing: 2, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{orderLabels[o.type] || o.type.toUpperCase()}</span>
-                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                        <div style={{ background: todayPerfect ? 'rgba(80,200,120,0.04)' : 'rgba(139,0,0,0.04)', border: `1px solid ${todayPerfect ? 'rgba(80,200,120,0.15)' : 'rgba(139,0,0,0.12)'}`, borderRadius: 8, margin: '0 4px 12px', padding: '12px' }}>
+                                            {todayPerfect ? (
+                                                <div style={{ textAlign: 'center', padding: '8px 0' }}>
+                                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 6 }}><path d="M20 6L9 17l-5-5" /></svg>
+                                                    <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.55rem', color: 'rgba(80,200,120,0.7)', letterSpacing: 3, fontWeight: 700 }}>PERFECT OBEDIENCE</div>
+                                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.5rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2, marginTop: 4 }}>All orders fulfilled today</div>
                                                 </div>
-                                            )) : (
-                                                <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center' }}>{vaultSessionLoading ? 'Loading...' : 'No orders yet'}</div>
-                                            )}
+                                            ) : (<>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                                    <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.5rem', color: 'rgba(180,40,40,0.7)', letterSpacing: 3 }}>TODAY&apos;S ORDERS</span>
+                                                </div>
+                                                {todayOrders.length > 0 ? todayOrders.map((o: any, i: number) => (
+                                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                        <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1.5px solid ${o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.3)'}`, background: o.done >= o.target ? 'rgba(80,200,80,0.1)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.4rem', color: o.done >= o.target ? 'rgba(80,200,80,0.8)' : 'transparent' }}>✓</div>
+                                                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.7)', letterSpacing: 2, flex: 1, textDecoration: o.done >= o.target ? 'line-through' : 'none', opacity: o.done >= o.target ? 0.5 : 1 }}>{orderLabels[o.type] || o.type.toUpperCase()}</span>
+                                                        <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.5rem', color: o.done >= o.target ? 'rgba(80,200,80,0.6)' : 'rgba(139,0,0,0.6)' }}>{o.done}/{o.target}</span>
+                                                    </div>
+                                                )) : (
+                                                    <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.55rem', color: 'rgba(255,255,255,0.15)', textAlign: 'center' }}>{vaultSessionLoading ? 'Loading...' : 'No orders yet'}</div>
+                                                )}
+                                            </>)}
                                         </div>
 
                                         {/* ── VIEW FULL PROGRAM + OPEN CHAT BUTTONS ── */}
