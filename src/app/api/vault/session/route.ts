@@ -139,10 +139,18 @@ export async function GET(req: NextRequest) {
         const currentSig = currentOrders.map((o: any) => `${o.type}:${o.target}:${o.label || ''}`).sort().join('|');
 
         if (programSig !== currentSig) {
-            // Merge: keep done counts for tasks that still exist, add new ones, remove old ones
+            // Merge: keep done counts + submission state for tasks that still exist
+            const usedIndices = new Set<number>();
             const merged = programOrders.map((po: any) => {
-                const existing = currentOrders.find((co: any) => co.type === po.type);
-                return existing ? { ...po, done: existing.done } : po;
+                const idx = currentOrders.findIndex((co: any, i: number) => !usedIndices.has(i) && co.type === po.type && (co.label || '') === (po.label || ''));
+                if (idx === -1) {
+                    // Fallback: match by type only (for orders without labels)
+                    const idx2 = currentOrders.findIndex((co: any, i: number) => !usedIndices.has(i) && co.type === po.type);
+                    if (idx2 >= 0) { usedIndices.add(idx2); return { ...po, done: currentOrders[idx2].done, ..._pickSubmission(currentOrders[idx2]) }; }
+                    return po;
+                }
+                usedIndices.add(idx);
+                return { ...po, done: currentOrders[idx].done, ..._pickSubmission(currentOrders[idx]) };
             });
             const completed = merged.filter((o: any) => o.done >= o.target).length;
             await supabaseAdmin.from('vault_daily').update({
@@ -283,17 +291,15 @@ export async function GET(req: NextRequest) {
         const currentOrders: any[] = todayRecord.orders
             ? (typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : todayRecord.orders)
             : [];
+        const usedIdx = new Set<number>();
         programTasks = programTasks.map((pt: any) => {
-            const existing = currentOrders.find((co: any) => co.type === pt.type);
-            if (!existing) return pt;
-            return {
-                ...pt,
-                done: existing.done,
-                ...(existing.submitted ? { submitted: existing.submitted } : {}),
-                ...(existing.submitted_at ? { submitted_at: existing.submitted_at } : {}),
-                ...(existing.submitted_text ? { submitted_text: existing.submitted_text } : {}),
-                ...(existing.submitted_photo ? { submitted_photo: existing.submitted_photo } : {}),
-            };
+            // Match by type+label first, fallback to type only
+            let idx = currentOrders.findIndex((co: any, i: number) => !usedIdx.has(i) && co.type === pt.type && (co.label || '') === (pt.label || ''));
+            if (idx === -1) idx = currentOrders.findIndex((co: any, i: number) => !usedIdx.has(i) && co.type === pt.type);
+            if (idx === -1) return pt;
+            usedIdx.add(idx);
+            const existing = currentOrders[idx];
+            return { ...pt, done: existing.done, ..._pickSubmission(existing) };
         });
     }
 
@@ -1174,13 +1180,18 @@ export async function POST(req: NextRequest) {
                 orders_total: orders.length,
             });
         } else if (existing.perfect) {
-            // Record shows perfect but verify against real data — if no spin/trial exists, it's fake
+            // Record shows perfect — verify it has real activity (submissions, spins, trials, or done orders)
+            const { data: todaySubs } = await supabaseAdmin
+                .from('vault_submissions').select('id').eq('session_id', session.id).eq('date', today).limit(1).maybeSingle();
             const { data: todaySpin } = await supabaseAdmin
                 .from('vault_spins').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
             const { data: todayTrial } = await supabaseAdmin
                 .from('vault_trials').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
-            if (!todaySpin && !todayTrial) {
-                // No real activity — reset pre-seeded record
+            // Also check if any orders have real done counts (kneel syncs from tasks table, not submissions)
+            const existingOrders: any[] = typeof existing.orders === 'string' ? JSON.parse(existing.orders) : (existing.orders || []);
+            const hasRealDone = existingOrders.some((o: any) => (o.done || 0) > 0);
+            if (!todaySubs && !todaySpin && !todayTrial && !hasRealDone) {
+                // No real activity at all — reset pre-seeded record
                 const orders = await _getOrdersForDay(session.id, daysIn);
                 await supabaseAdmin.from('vault_daily').update({
                     orders: JSON.stringify(orders),
@@ -1275,6 +1286,16 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
     }
     // Final fallback
     return _generateDailyOrders(dayNumber);
+}
+
+function _pickSubmission(o: any): Record<string, any> {
+    const r: Record<string, any> = {};
+    if (o.submitted) r.submitted = o.submitted;
+    if (o.submitted_at) r.submitted_at = o.submitted_at;
+    if (o.submitted_text) r.submitted_text = o.submitted_text;
+    if (o.submitted_photo) r.submitted_photo = o.submitted_photo;
+    if (o.submitted_video) r.submitted_video = o.submitted_video;
+    return r;
 }
 
 function _generateDailyOrders(dayNumber: number) {
