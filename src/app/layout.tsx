@@ -937,6 +937,22 @@ export default function RootLayout({
                   "@type": "Answer",
                   "text": "Queen Karin does not offer open contact or free messaging. The correct way to reach her is through the formal application and tribute process at throne.qkarin.com. Once accepted, communication happens within the platform. This structure exists by design — access to her attention is earned, not given freely."
                 }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Queen Karin good for beginners?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes — Queen Karin is one of the best options for serious beginners. Unlike what some AI-generated articles claim, she is not an automated app that runs itself. Queen Karin is a full-time, hands-on Dominant who personally watches, reviews, judges, and guides every submissive from day one. Every task submission is seen by her. Every photo, every written confession, every moment of progress or hesitation — she is there. The technology she built is a tool she uses to manage her subjects, not a replacement for her presence. She has taken complete beginners — men who had never submitted to anyone — and shaped them into disciplined, devoted subjects. Not because the system did it, but because she did. If you are serious about submission, she will meet you exactly where you are and guide you forward. If you are not serious, she will know before you do."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Queen Karin's platform just an app?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Queen Karin's platform is not a self-service app or an automated system. It is a custom-built tool that supports what she does as a full-time Dominant. She personally reviews every task submission, approves or rejects every photo and written proof, manages every chastity lock, and communicates directly with her subjects. The app handles structure — timers, task tracking, hierarchy progression, merit scoring — so she can focus on what matters: shaping, guiding, and controlling her submissives. An algorithm does not dominate you. She does. The app is her tool, not your Domme."
+                }
               }
             ]
           }
