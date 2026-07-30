@@ -418,7 +418,8 @@ export default function VaultPage() {
             return o;
         });
     }, [programTasks, rawOrders, kneelToday, chastityStatus, previewTasks]);
-    const todayPerfect = vaultData?.today?.perfect ?? false;
+    const todayPerfectDb = vaultData?.today?.perfect ?? false;
+    const todayPerfect = todayPerfectDb || (todayOrders.length > 0 && todayOrders.every((o: any) => (o.done || 0) >= (o.target || 1)));
     const todayRewardClaimed = vaultData?.today?.reward_claimed ?? false;
     const attnCooldown = attnCooldownUntil > Date.now();
     const chatGateCooldown = chatGateCooldownUntil > Date.now();
@@ -1774,82 +1775,87 @@ export default function VaultPage() {
 
 
                 {/* ── PERFECT OBEDIENCE BANNER ── */}
-                {todayPerfect && (
-                    <div style={{ width: '100%', padding: '0 16px', marginTop: 20, animation: 'vFadeIn 0.6s ease' }}>
+                {/* ── TODAY'S ORDERS ── */}
+                <div style={{ width: '100%', padding: '0 16px 36px', marginTop: 20 }}>
+                    {todayPerfect ? (
+                        /* ── PERFECT DAY — closed state ── */
                         <div style={{
-                            width: '100%', borderRadius: 16, padding: '28px 20px',
+                            width: '100%', borderRadius: 16, padding: '40px 24px',
                             background: 'linear-gradient(135deg, rgba(80,200,120,0.06), rgba(80,200,120,0.02))',
                             border: '1px solid rgba(80,200,120,0.2)',
                             textAlign: 'center',
-                            boxShadow: '0 0 40px rgba(80,200,120,0.05)',
+                            boxShadow: '0 0 60px rgba(80,200,120,0.06)',
+                            animation: 'vFadeIn 0.6s ease',
                         }}>
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(80,200,120,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12 }}><path d="M20 6L9 17l-5-5" /></svg>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(80,200,120,0.7)', letterSpacing: '5px', fontWeight: 700 }}>PERFECT OBEDIENCE</div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '3px', marginTop: 6 }}>ALL ORDERS FULFILLED</div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── TODAY'S ORDERS ── */}
-                <div style={{ width: '100%', padding: '0 16px 36px', marginTop: 20 }}>
-                    <div style={{
-                        width: '100%', borderRadius: 16, padding: '24px 20px 16px',
-                        background: 'rgba(139,0,0,0.04)',
-                        border: `1px solid ${R}0.12)`,
-                        backdropFilter: 'blur(12px)',
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
-                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
-                        </div>
-                        {attnSkippedToday && (
-                            <div style={{ textAlign: 'center', padding: '10px 0 14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '3px' }}>
-                                &#10005; PERFECTION BROKEN — ORDER SKIPPED
+                            <div style={{ fontSize: '2.4rem', lineHeight: 1, marginBottom: 16, filter: 'drop-shadow(0 0 20px rgba(80,200,120,0.4))' }}>&#9813;</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.3rem', color: 'rgba(80,200,120,0.7)', letterSpacing: '5px', fontWeight: 700, marginBottom: 8 }}>PERFECT OBEDIENCE</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', marginBottom: 20, lineHeight: 1.6 }}>
+                                You have pleased your Queen today.<br/>All orders fulfilled. Rest now.
                             </div>
-                        )}
-                        {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length === 0 && (
-                            <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>
-                                {vaultData?.today ? 'NO ADDITIONAL TASKS' : 'LOADING...'}
+                            <div style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(80,200,120,0.15), transparent)', margin: '16px 0' }} />
+                            <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: 'rgba(80,200,120,0.35)', letterSpacing: '4px', marginTop: 12 }}>DAY {daysIn + 1} — COMPLETE</div>
+                        </div>
+                    ) : (
+                        /* ── Active orders list ── */
+                        <div style={{
+                            width: '100%', borderRadius: 16, padding: '24px 20px 16px',
+                            background: 'rgba(139,0,0,0.04)',
+                            border: `1px solid ${R}0.12)`,
+                            backdropFilter: 'blur(12px)',
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
                             </div>
-                        )}
-                        {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').map((o: any, i: number, arr: any[]) => {
-                            const completed = o.done >= o.target;
-                            const subs = vaultData?.submissions || [];
-                            const pending = !completed && (taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending'));
-                            return (
-                                <div key={i} style={{
-                                    display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
-                                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                                }}>
-                                    <div style={{
-                                        width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                                        border: `2px solid ${completed ? 'rgba(80,200,120,0.6)' : pending ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.12)'}`,
-                                        background: completed ? 'rgba(80,200,120,0.1)' : pending ? 'rgba(197,160,89,0.08)' : 'transparent',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            {attnSkippedToday && (
+                                <div style={{ textAlign: 'center', padding: '10px 0 14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '3px' }}>
+                                    &#10005; PERFECTION BROKEN — ORDER SKIPPED
+                                </div>
+                            )}
+                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length === 0 && (
+                                <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>
+                                    {vaultData?.today ? 'NO ADDITIONAL TASKS' : 'LOADING...'}
+                                </div>
+                            )}
+                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').map((o: any, i: number, arr: any[]) => {
+                                const completed = o.done >= o.target;
+                                const subs = vaultData?.submissions || [];
+                                const pending = !completed && (taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending'));
+                                return (
+                                    <div key={i} style={{
+                                        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0',
+                                        borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                                     }}>
-                                        {completed ? (
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-                                        ) : pending ? (
-                                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(197,160,89,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-                                            </svg>
+                                        <div style={{
+                                            width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                                            border: `2px solid ${completed ? 'rgba(80,200,120,0.6)' : pending ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.12)'}`,
+                                            background: completed ? 'rgba(80,200,120,0.1)' : pending ? 'rgba(197,160,89,0.08)' : 'transparent',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}>
+                                            {completed ? (
+                                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(80,200,120,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                                            ) : pending ? (
+                                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="rgba(197,160,89,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+                                                </svg>
+                                            ) : null}
+                                        </div>
+                                        <span style={{
+                                            flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.9rem',
+                                            color: completed ? 'rgba(80,200,120,0.55)' : pending ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.55)',
+                                            textDecoration: completed ? 'line-through' : 'none',
+                                            letterSpacing: '0.5px',
+                                        }}>{o.label || (({ kneel: `Kneel ${o.target} times`, chastity_check: 'Chastity Check', spin: 'Spin the Wheel', spin_wheel: 'Spin the Wheel', trial: 'Daily Trial', tribute: `Tribute ${o.target} Coins`, coinflip: 'Coin Flip', card_pick: 'Card Draw', dice_roll: 'Dice Roll', russian_roulette: 'Russian Roulette', truth_dare: 'Truth or Dare', greed_game: 'Greed Game' } as Record<string, string>)[o.type] || o.type.replace(/_/g, ' '))}</span>
+                                        {pending ? (
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>PENDING</span>
+                                        ) : !completed && o.done > 0 ? (
+                                            <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>{o.done}/{o.target}</span>
                                         ) : null}
                                     </div>
-                                    <span style={{
-                                        flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.9rem',
-                                        color: completed ? 'rgba(80,200,120,0.55)' : pending ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.55)',
-                                        textDecoration: completed ? 'line-through' : 'none',
-                                        letterSpacing: '0.5px',
-                                    }}>{o.label || (({ kneel: `Kneel ${o.target} times`, chastity_check: 'Chastity Check', spin: 'Spin the Wheel', spin_wheel: 'Spin the Wheel', trial: 'Daily Trial', tribute: `Tribute ${o.target} Coins`, coinflip: 'Coin Flip', card_pick: 'Card Draw', dice_roll: 'Dice Roll', russian_roulette: 'Russian Roulette', truth_dare: 'Truth or Dare', greed_game: 'Greed Game' } as Record<string, string>)[o.type] || o.type.replace(/_/g, ' '))}</span>
-                                    {pending ? (
-                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>PENDING</span>
-                                    ) : !completed && o.done > 0 ? (
-                                        <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>{o.done}/{o.target}</span>
-                                    ) : null}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     {todayPerfect && (
                         <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.85rem', color: 'rgba(80,200,120,0.55)', letterSpacing: '3px' }}>
