@@ -11,8 +11,12 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const [paywallReason, setPaywallReason] = useState('');
     const [paywallAmount, setPaywallAmount] = useState(0);
     const [email, setEmail] = useState('');
+    const [hierarchy, setHierarchy] = useState('Hall Boy');
     const [paid, setPaid] = useState(false);
     const [showPayment, setShowPayment] = useState(false);
+
+    const PAYPAL_RANKS = ['silverman', 'butler', 'chamberlain', 'secretary', "queen's champion"];
+    const showPaypal = PAYPAL_RANKS.includes(hierarchy.toLowerCase());
 
     useEffect(() => {
         const onPaywall = (e: Event) => {
@@ -131,6 +135,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                             setSilenced(false);
                         }
 
+                        if (data.hierarchy) setHierarchy(data.hierarchy);
+
                         if (data.paywall === true) {
                             sessionStorage.setItem('__paywalled', '1');
                             sessionStorage.setItem('__paywallReason', data.paywallReason || '');
@@ -241,6 +247,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 cryptoPayBody={{ memberId: email, amount: paywallAmount }}
                 cryptoStatusBody={{ memberId: email }}
                 confirmMessage="✓ PAYMENT CONFIRMED — UNLOCKING..."
+                paypalMeUrl={showPaypal ? 'https://paypal.me/QKarin' : undefined}
                 throneUrl="https://throne.com/queenkarin"
                 onSuccess={handleSuccess}
                 onClose={() => setShowPayment(false)}

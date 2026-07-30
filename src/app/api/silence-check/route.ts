@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
         const { memberId } = await req.json();
         if (!memberId) return NextResponse.json({ silence: false, reason: '' });
 
-        const data = await findProfile(memberId, 'silence, paywall, parameters');
+        const data = await findProfile(memberId, 'silence, paywall, hierarchy, parameters');
 
         // If paywalled, stamp last_seen — fire and forget, no await
         if (data?.paywall === true) {
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
             paywall: data?.paywall === true,
             paywallReason: data?.parameters?.paywall?.reason || '',
             paywallAmount: data?.parameters?.paywall?.amount || 0,
+            hierarchy: data?.hierarchy || 'Hall Boy',
         }, { headers: { 'Cache-Control': 'no-store' } });
     } catch {
         return NextResponse.json({ silence: false, reason: '' });
