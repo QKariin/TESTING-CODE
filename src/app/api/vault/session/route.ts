@@ -1175,7 +1175,7 @@ export async function POST(req: NextRequest) {
             }
 
             const orders = await _getOrdersForDay(session.id, daysIn);
-            await supabaseAdmin.from('vault_daily').insert({
+            const { error: ensureInsertErr } = await supabaseAdmin.from('vault_daily').insert({
                 session_id: session.id,
                 member_id: email,
                 day_number: daysIn,
@@ -1183,6 +1183,10 @@ export async function POST(req: NextRequest) {
                 orders: JSON.stringify(orders),
                 orders_total: orders.length,
             });
+            if (ensureInsertErr) {
+                // Duplicate — row was created by a concurrent request, ignore
+                console.log('[vault/session] ensure_today insert race (ok):', ensureInsertErr.message);
+            }
         } else if (existing.perfect) {
             // Record shows perfect — verify it has real activity (submissions, spins, trials, or done orders)
             const { data: todaySubs } = await supabaseAdmin

@@ -72,7 +72,7 @@ export async function updateSession(request: NextRequest) {
                 const { data: legacyProfile } = await adminSupabase
                     .from('profiles')
                     .select('ID')
-                    .or(`member_id.ilike.${userEmailNormalized},memberId.ilike.${userEmailNormalized}`)
+                    .ilike('member_id', userEmailNormalized)
                     .maybeSingle();
 
                 if (legacyProfile) {
