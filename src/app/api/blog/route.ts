@@ -51,13 +51,16 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Title and content are required' }, { status: 400 });
         }
 
-        // Auto-generate slug from title if not provided
-        const slug = body.slug || title
+        // Always generate slug from title (ignore user-provided slug if it looks like content)
+        const rawSlug = (body.slug && body.slug.length < 100) ? body.slug : title;
+        const slug = rawSlug
             .toLowerCase()
             .replace(/\s+/g, '-')
             .replace(/[^a-z0-9-]/g, '')
             .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '');
+            .replace(/^-|-$/g, '')
+            .slice(0, 80)
+            .replace(/-$/, '');
 
         const now = new Date().toISOString();
 
