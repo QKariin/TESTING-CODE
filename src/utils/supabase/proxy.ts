@@ -171,7 +171,8 @@ export async function updateSession(request: NextRequest) {
         const isApplyPage = pathname.startsWith('/apply');
         const isKeyholderPage = pathname.startsWith('/keyholder');
         const isHomePage = pathname.startsWith('/home');
-        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage) {
+        const isBlogPage = pathname.startsWith('/blog');
+        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
