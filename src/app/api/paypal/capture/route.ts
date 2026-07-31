@@ -123,28 +123,20 @@ async function fulfillKeyholder(orderId: string, userId: string, memberId: strin
 
     if (existing) {
         const p = existing.parameters || {};
-        p.source = 'chastity';
-        p.chastity_tier = tierId;
-        p.chastity_days = tier.days;
-        p.chastity_started = new Date().toISOString();
-        p.chastity_expires = expiresAt;
-        p.paypal_keyholder_order = orderId;
+        p.keyholder_tier = tierId;
+        p.keyholder_order = orderId;
         await supabaseAdmin.from('profiles').update({ parameters: p }).eq('ID', existing.ID);
     } else {
         await supabaseAdmin.from('profiles').insert({
             ID: uid,
             member_id: memberId,
             name: displayName,
-            hierarchy: 'Chastity Sub',
+            hierarchy: 'Hall Boy',
             score: 0,
             wallet: 0,
             parameters: {
-                source: 'chastity',
-                chastity_tier: tierId,
-                chastity_days: tier.days,
-                chastity_started: new Date().toISOString(),
-                chastity_expires: expiresAt,
-                paypal_keyholder_order: orderId,
+                keyholder_tier: tierId,
+                keyholder_order: orderId,
             },
         });
         await supabaseAdmin.from('tasks').insert({

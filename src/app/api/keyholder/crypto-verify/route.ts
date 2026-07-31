@@ -28,14 +28,11 @@ export async function POST(req: Request) {
         // Format: keyholder:tierId:days:displayName
         const parts = (order.pay_url || '').split(':');
         const tierId = parts[1] || 'weekly';
-        const days = parseInt(parts[2] || '7', 10);
         const displayName = parts[3] || 'Subject';
 
         const identifier = user.email
             || order.user_email
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
-
-        const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
 
         // Check if profile exists
         const { data: existing } = await supabaseAdmin
@@ -45,14 +42,10 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (existing) {
-            // Update existing profile with keyholder info
+            // Update existing profile with keyholder reference
             const params = existing.parameters || {};
-            params.source = 'chastity';
-            params.chastity_tier = tierId;
-            params.chastity_days = days;
-            params.chastity_started = new Date().toISOString();
-            params.chastity_expires = expiresAt;
-            params.crypto_keyholder_order = orderId;
+            params.keyholder_tier = tierId;
+            params.keyholder_order = orderId;
             await supabaseAdmin
                 .from('profiles')
                 .update({ parameters: params })
@@ -65,16 +58,12 @@ export async function POST(req: Request) {
                     ID: user.id,
                     member_id: identifier,
                     name: displayName,
-                    hierarchy: 'Chastity Sub',
+                    hierarchy: 'Hall Boy',
                     score: 0,
                     wallet: 0,
                     parameters: {
-                        source: 'chastity',
-                        chastity_tier: tierId,
-                        chastity_days: days,
-                        chastity_started: new Date().toISOString(),
-                        chastity_expires: expiresAt,
-                        crypto_keyholder_order: orderId,
+                        keyholder_tier: tierId,
+                        keyholder_order: orderId,
                     }
                 });
 
@@ -104,7 +93,7 @@ export async function POST(req: Request) {
                 body: JSON.stringify({
                     externalId: 'ceo@qkarin.com',
                     title: 'New Keyholder Sub (Crypto)',
-                    message: `${displayName} surrendered their key — ${tierId} (${days} days) paid with crypto`,
+                    message: `${displayName} joined as keyholder — ${tierId} paid with crypto`,
                 }),
             });
         } catch {}

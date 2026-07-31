@@ -86,8 +86,9 @@ export async function POST(req: Request) {
         // ── KEYHOLDER FLOW (already paid EUR) ──
         if (action === 'apply-keyholder') {
             const params = profile.parameters || {};
-            // Verify they have a valid chastity purchase
-            if (!params.chastity_tier) {
+            // Verify they have a valid keyholder purchase
+            const khTier = params.keyholder_tier || params.chastity_tier;
+            if (!khTier) {
                 return NextResponse.json({ error: 'No keyholder purchase found' }, { status: 400 });
             }
 
@@ -98,7 +99,7 @@ export async function POST(req: Request) {
                 .from('vault_sessions')
                 .insert({
                     member_id: memberId,
-                    tier: params.chastity_tier,
+                    tier: khTier,
                     lock_days: chastityDays,
                     status: 'pending',
                 })
@@ -110,7 +111,9 @@ export async function POST(req: Request) {
             // Clone template into member's program IMMEDIATELY at payment
             try { await _generateMemberProgram(session.id, memberId); } catch (e: any) { console.error('[vault apply] Program generation failed:', e?.message); }
 
-            // Clear the chastity purchase marker
+            // Clear the keyholder purchase marker
+            delete params.keyholder_tier;
+            delete params.keyholder_order;
             delete params.chastity_tier;
             delete params.chastity_days;
             delete params.chastity_started;

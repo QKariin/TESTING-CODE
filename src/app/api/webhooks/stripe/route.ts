@@ -204,13 +204,9 @@ export async function POST(req: Request) {
                     .maybeSingle();
 
                 if (existing) {
-                    // Update existing profile with keyholder info + give 1000 coins
+                    // Update existing profile with keyholder reference + give 1000 coins
                     const params = existing.parameters || {};
-                    params.source = 'chastity';
-                    params.chastity_tier = tierId;
-                    params.chastity_days = days;
-                    params.chastity_started = new Date().toISOString();
-                    params.chastity_expires = expiresAt;
+                    params.keyholder_tier = tierId;
                     const newWallet = Number(existing.wallet || 0) + 1000;
                     await supabaseAdmin
                         .from('profiles')
@@ -225,15 +221,11 @@ export async function POST(req: Request) {
                             ID: userId,
                             member_id: userEmail,
                             name: userName,
-                            hierarchy: 'Chastity Sub',
+                            hierarchy: 'Hall Boy',
                             score: 0,
                             wallet: 1000,
                             parameters: {
-                                source: 'chastity',
-                                chastity_tier: tierId,
-                                chastity_days: days,
-                                chastity_started: new Date().toISOString(),
-                                chastity_expires: expiresAt,
+                                keyholder_tier: tierId,
                             }
                         });
 

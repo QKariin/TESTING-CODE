@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             || (user.email ? user.email.split('@')[0] : identifier);
         const displayName = rawName.split(' ')[0];
 
-        // Mark profile as chastity source immediately
+        // Mark profile with keyholder tier for reference
         try {
             const profile = await findProfile(identifier, 'ID, parameters');
 
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
                 await supabaseAdmin
                     .from('profiles')
                     .update({
-                        parameters: { ...params, source: 'chastity', chastity_tier: tierId },
+                        parameters: { ...params, keyholder_tier: tierId },
                     })
                     .eq('ID', profile.ID);
             }

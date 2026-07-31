@@ -6,9 +6,6 @@ import { discordNewMember } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
-const TIERS: Record<string, { days: number }> = {
-    weekly: { days: 7 }, monthly: { days: 30 }, quarterly: { days: 90 },
-};
 
 export async function POST(req: Request) {
     try {
@@ -36,15 +33,13 @@ export async function POST(req: Request) {
         const paid = data.result === 1 && data.status === 'paid';
         if (!paid) return NextResponse.json({ paid: false });
 
-        // Payment confirmed — activate subscription
-        const tier = TIERS[tierId] || { days: 7 };
+        // Payment confirmed — create/update profile
         const identifier = user.email ||
             (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
         const rawName = user.user_metadata?.full_name ||
             user.user_metadata?.user_name ||
             (user.email ? user.email.split('@')[0] : 'Subject');
         const displayName = rawName.split(' ')[0];
-        const expiresAt = new Date(Date.now() + tier.days * 86400000).toISOString();
 
         const { data: existing } = await supabaseAdmin
             .from('profiles')
@@ -54,28 +49,20 @@ export async function POST(req: Request) {
 
         if (existing) {
             const p = existing.parameters || {};
-            p.source = 'chastity';
-            p.chastity_tier = tierId;
-            p.chastity_days = tier.days;
-            p.chastity_started = new Date().toISOString();
-            p.chastity_expires = expiresAt;
-            p.pp_keyholder_order = orderId;
+            p.keyholder_tier = tierId;
+            p.keyholder_order = orderId;
             await supabaseAdmin.from('profiles').update({ parameters: p }).eq('ID', existing.ID);
         } else {
             await supabaseAdmin.from('profiles').insert({
                 ID: user.id,
                 member_id: identifier,
                 name: displayName,
-                hierarchy: 'Chastity Sub',
+                hierarchy: 'Hall Boy',
                 score: 0,
                 wallet: 0,
                 parameters: {
-                    source: 'chastity',
-                    chastity_tier: tierId,
-                    chastity_days: tier.days,
-                    chastity_started: new Date().toISOString(),
-                    chastity_expires: expiresAt,
-                    pp_keyholder_order: orderId,
+                    keyholder_tier: tierId,
+                    keyholder_order: orderId,
                 },
             });
             await supabaseAdmin.from('tasks').insert({

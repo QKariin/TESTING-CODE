@@ -10,10 +10,6 @@ const COIN_PACKAGES: Record<number, number> = {
     2000: 20, 5500: 50, 12000: 100, 30000: 250, 70000: 500, 150000: 1000,
 };
 
-// Keyholder tiers (mirror of keyholder/passimpay-status route)
-const KH_TIERS: Record<string, { days: number }> = {
-    weekly: { days: 7 }, monthly: { days: 30 }, quarterly: { days: 90 },
-};
 
 export async function POST(req: Request) {
     try {
@@ -117,7 +113,7 @@ export async function POST(req: Request) {
                                 ID: authUser.id,
                                 member_id: logRow.member_id,
                                 name: displayName,
-                                hierarchy: paymentType === 'keyholder' ? 'Chastity Sub' : 'Hall Boy',
+                                hierarchy: 'Hall Boy',
                                 score: 0,
                                 wallet: 0,
                                 parameters: {},
@@ -228,22 +224,16 @@ export async function POST(req: Request) {
 
             case 'keyholder': {
                 const tierId = pendingMeta?.tierId || 'weekly';
-                const tier = KH_TIERS[tierId] || { days: 7 };
-                const expiresAt = new Date(Date.now() + tier.days * 86400000).toISOString();
 
                 await supabaseAdmin.from('profiles').update({
                     parameters: {
                         ...params,
-                        source: 'chastity',
-                        chastity_tier: tierId,
-                        chastity_days: tier.days,
-                        chastity_started: new Date().toISOString(),
-                        chastity_expires: expiresAt,
-                        pp_keyholder_order: orderId,
+                        keyholder_tier: tierId,
+                        keyholder_order: orderId,
                         pendingKeyholderPay: null,
                     },
                 }).eq('ID', profile.ID);
-                console.log('[passimpay webhook] keyholder activated for:', memberId, 'tier:', tierId);
+                console.log('[passimpay webhook] keyholder paid for:', memberId, 'tier:', tierId);
                 pushTitle = 'New Keyholder Sub (Crypto)';
                 pushMessage = `${profile.name || memberId} surrendered their key — ${tierId} paid with PassimPay`;
                 break;
