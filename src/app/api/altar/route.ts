@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     try {
         const [data, userRoutineRow] = await Promise.all([
             findTaskRow(memberId, 'Taskdom_History'),
-            findRow('user_routines', memberId, 'history'),
+            findRow('user_routines', memberId, 'history', { idColumn: 'id' }),
         ]);
 
         let history: any[] = [];

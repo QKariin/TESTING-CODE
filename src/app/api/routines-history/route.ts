@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const email = searchParams.get('email');
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
 
-    const data = await findRow('user_routines', email.toLowerCase(), 'history');
+    const data = await findRow('user_routines', email.toLowerCase(), 'history', { idColumn: 'id' });
 
     const history: any[] = data?.history || [];
     // Return in descending order, matching the old format
