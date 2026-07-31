@@ -12,6 +12,7 @@ import { ChallengesContent } from './challenges/page';
 import { VideoChallengesContent } from './video-challenges/page';
 import { GlobalContent } from './GlobalContent';
 import { KeyholderProgramContent } from './KeyholderProgram';
+import BlogEditor from './BlogEditor';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -769,6 +770,7 @@ export default function DashboardPage() {
     const [showPaymentLogs, setShowPaymentLogs] = useState(false);
     const [paymentLogs, setPaymentLogs] = useState<any[]>([]);
     const [paymentLogsLoading, setPaymentLogsLoading] = useState(false);
+    const [showBlog, setShowBlog] = useState(false);
 
     useEffect(() => {
         if (!showPaymentLogs) return;
@@ -1550,6 +1552,12 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {showBlog && !isMobile && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#08080c' }}>
+                        <BlogEditor onClose={() => setShowBlog(false)} />
+                    </div>
+                )}
+
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
                     <div className="v-header">
@@ -1572,36 +1580,42 @@ export default function DashboardPage() {
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>✦</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
                             {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showVideoChallenges ? '#a855f7' : '#a855f799' }}>VIDEO</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.12)', fontSize: '1.1rem' }}>▶</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowPaymentLogs(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(180,40,40,0.6)' }}>KEYHOLDER</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(139,0,0,0.12)', fontSize: '1.1rem' }}>&#9919;</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowPaymentLogs(true); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowPaymentLogs(true); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showPaymentLogs ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>PAYMENTS</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>💳</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowPaymentLogs(false); setShowBlog(true); }} style={{ cursor: 'pointer', border: `1px solid ${showBlog ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.15)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showBlog ? '#a855f7' : 'rgba(168,85,247,0.5)' }}>BLOG</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.08)', fontSize: '1.1rem' }}>&#9998;</div>
                         </div>
                     </div>
 
