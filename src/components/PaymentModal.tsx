@@ -355,22 +355,20 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 700, lineHeight: 1.45, marginBottom: 20, textAlign: 'center' }}>
                     Stripe and I broke up.
                 </div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 24, textAlign: 'center' }}>
-                    You had this chance for 3 years.<br/>It is gone now.
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 12, textAlign: 'center' }}>
+                    I'm now using a new provider for card payments.
                 </div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 2, marginBottom: 24, textAlign: 'center', padding: '0 16px' }}>
-                    Setting up a new processor means adding a <span style={{ color: '#fff', fontWeight: 700 }}>50% lazy tax to your bill.</span><br/>I'd rather not do that to you.<br/>Especially when you can use that exact same card to grab crypto in under 5 minutes.
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, lineHeight: 2, marginBottom: 8, textAlign: 'center', padding: '0 16px' }}>
+                    Use the same email you registered with<br/>so I can identify your payment.
                 </div>
-                <style>{`@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');`}</style>
-                <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.1rem', color: '#c5a059', fontWeight: 600, textAlign: 'center', marginBottom: 28 }}>
-                    Let's call it the first step of submission.
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(197,160,89,0.6)', lineHeight: 1.6, marginBottom: 28, textAlign: 'center' }}>
+                    Amount due: <span style={{ color: '#c5a059', fontWeight: 700 }}>€{Number(amountEur).toFixed(2)}</span>
                 </div>
-                <button className="coin-flip-btn" onClick={() => setCardStep('options')} style={{ width: '100%', marginBottom: 12 }}>
-                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>HOW TO GET CRYPTO</span>
-                </button>
-                <button onClick={() => { setCardStep(null); setScreen('crypto-picker'); }}
-                    style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>
-                    I ALREADY HAVE CRYPTO
+                <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer" className="coin-flip-btn" style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>PAY WITH CARD</span>
+                </a>
+                <button onClick={() => setCardStep('options')} style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>
+                    I'D RATHER USE CRYPTO
                 </button>
                 <button onClick={() => setCardStep(null)}
                     style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer', marginTop: 4 }}>
