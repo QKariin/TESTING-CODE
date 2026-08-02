@@ -489,16 +489,19 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                 opacity: showStickyHeader ? 1 : 0,
                 pointerEvents: showStickyHeader ? 'auto' : 'none',
             }}>
-                <div>
-                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>PRESENTED BY</div>
-                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)' }}>QUEEN KARIN</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, width: '100%', justifyContent: 'space-between' }}>
+                    <div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>PRESENTED BY</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)' }}>QUEEN KARIN</div>
+                    </div>
+                    <a href="/tribute" style={{
+                        fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 600,
+                        color: 'rgba(197,160,89,0.7)', letterSpacing: '4px', textDecoration: 'none',
+                        padding: '6px 18px',
+                        borderBottom: '1px solid rgba(197,160,89,0.25)',
+                        transition: 'color 0.3s, border-color 0.3s',
+                    }}>START NOW</a>
                 </div>
-                <a href="/tribute" style={{
-                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', fontWeight: 700,
-                    color: '#c5a059', letterSpacing: '3px', textDecoration: 'none',
-                    padding: '8px 20px', border: '1px solid rgba(197,160,89,0.3)',
-                    borderRadius: 4, background: 'rgba(197,160,89,0.05)',
-                }}>START NOW</a>
             </div>
 
             {/* ─── TOAST NOTIFICATIONS ─── */}
