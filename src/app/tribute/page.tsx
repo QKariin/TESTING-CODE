@@ -190,7 +190,7 @@ export default function TributePage() {
             entries.forEach(e => {
                 if (e.isIntersecting) {
                     (e.target as HTMLElement).style.opacity = '1';
-                    (e.target as HTMLElement).style.transform = 'scale(1)';
+                    (e.target as HTMLElement).style.transform = 'scale(1) translateY(0) rotate(0deg)';
                     obs.unobserve(e.target);
                 }
             });
@@ -198,6 +198,48 @@ export default function TributePage() {
         document.querySelectorAll('.trib-grow').forEach(el => obs.observe(el));
         return () => obs.disconnect();
     }, [reviews, showAllReviews]);
+
+    /* ── Leaderboard entries stagger in ── */
+    useEffect(() => {
+        const entries = document.querySelectorAll('.lb-entry');
+        if (!entries.length) return;
+        const obs = new IntersectionObserver((observed) => {
+            observed.forEach(e => {
+                if (e.isIntersecting) {
+                    const idx = Array.from(entries).indexOf(e.target as HTMLElement);
+                    setTimeout(() => {
+                        (e.target as HTMLElement).classList.add('lb-visible');
+                    }, idx * 60);
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        entries.forEach(el => obs.observe(el));
+        return () => obs.disconnect();
+    }, [leaderboard, lbPeriod]);
+
+    /* ── Scroll-linked parallax for decorative elements ── */
+    useEffect(() => {
+        if (!mounted) return;
+        let ticking = false;
+        const handleScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            requestAnimationFrame(() => {
+                const scrollY = window.scrollY;
+                document.querySelectorAll('[data-drift]').forEach((el) => {
+                    const htmlEl = el as HTMLElement;
+                    const speed = parseFloat(htmlEl.dataset.drift || '0.03');
+                    const rect = htmlEl.getBoundingClientRect();
+                    const center = rect.top + rect.height / 2 - window.innerHeight / 2;
+                    htmlEl.style.transform = `translateY(${center * speed}px)`;
+                });
+                ticking = false;
+            });
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [mounted]);
 
     /* ── Footer iframe message listener (same approach as home page) ── */
     useEffect(() => {
@@ -261,7 +303,7 @@ export default function TributePage() {
     ));
 
     return (<>
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)', transform: 'scale(1.03)' }} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.5) 60%, rgba(2,2,2,0.75) 100%)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden', zIndex: 1, color: '#fff' }}>
@@ -427,14 +469,50 @@ export default function TributePage() {
                     to { width: 100%; }
                 }
 
+                @keyframes gentleFloat {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-6px); }
+                }
+                @keyframes softPulse {
+                    0%, 100% { opacity: 0.85; }
+                    50% { opacity: 1; }
+                }
+
                 .trib-section {
                     opacity: 0;
-                    transform: translateY(40px);
-                    transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+                    transform: translateY(100px) scale(0.96);
+                    transition: opacity 1.4s cubic-bezier(0.16,1,0.3,1), transform 1.4s cubic-bezier(0.16,1,0.3,1);
                 }
                 .trib-section.visible {
                     opacity: 1;
-                    transform: translateY(0);
+                    transform: translateY(0) scale(1);
+                }
+                .trib-section:nth-child(even) {
+                    transform: translateY(100px) scale(0.93);
+                }
+                .trib-section:nth-child(even).visible {
+                    transform: translateY(0) scale(1);
+                }
+
+                /* Section header gold lines draw in */
+                .trib-line-left {
+                    transform: scaleX(0); transform-origin: right center;
+                    transition: transform 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s;
+                }
+                .trib-line-right {
+                    transform: scaleX(0); transform-origin: left center;
+                    transition: transform 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s;
+                }
+                .trib-section.visible .trib-line-left,
+                .trib-section.visible .trib-line-right {
+                    transform: scaleX(1);
+                }
+                .trib-section-label {
+                    opacity: 0; transform: translateY(12px);
+                    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+                }
+                .trib-section.visible .trib-section-label {
+                    opacity: 1; transform: translateY(0);
                 }
 
                 .trib-cta {
@@ -446,7 +524,13 @@ export default function TributePage() {
                 .lb-tab { transition: all 0.3s ease; cursor: pointer; }
                 .lb-tab:hover { color: #c5a059 !important; }
 
-                .trib-grow { opacity: 0; transform: scale(0.92); transform-origin: center center; transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+                .trib-grow {
+                    opacity: 0; transform: scale(0.8) translateY(50px) rotate(-0.5deg);
+                    transform-origin: center center;
+                    transition: opacity 1.2s ease-out, transform 1.2s cubic-bezier(0.16,1,0.3,1);
+                }
+                .trib-grow:nth-child(2) { transition-delay: 0.15s; }
+                .trib-grow:nth-child(3) { transition-delay: 0.3s; }
 
                 .review-card {
                     transition: transform 0.4s ease, box-shadow 0.4s ease;
@@ -478,11 +562,28 @@ export default function TributePage() {
 
                 .feature-item {
                     opacity: 0;
-                    transition: opacity 0.55s ease-out, transform 0.55s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, border-color 0.3s ease;
+                    transition: opacity 0.9s ease-out, transform 0.9s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, border-color 0.3s ease;
                 }
-                .feature-item.from-left { transform: translateX(-40px); }
-                .feature-item.from-right { transform: translateX(40px); }
-                .feature-item.slide-in { opacity: 1; transform: translateX(0); }
+                .feature-item.from-left { transform: translateX(-120px) rotate(-2deg) scale(0.95); }
+                .feature-item.from-right { transform: translateX(120px) rotate(2deg) scale(0.95); }
+                .feature-item.slide-in { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
+                .feature-item:nth-child(1) { transition-delay: 0s; }
+                .feature-item:nth-child(2) { transition-delay: 0.12s; }
+                .feature-item:nth-child(3) { transition-delay: 0.24s; }
+                .feature-item:nth-child(4) { transition-delay: 0.36s; }
+                .feature-item:nth-child(5) { transition-delay: 0.48s; }
+                .feature-item:nth-child(6) { transition-delay: 0.6s; }
+
+                /* Leaderboard entries slide in from right */
+                .lb-entry {
+                    opacity: 0;
+                    transform: translateX(60px);
+                    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+                }
+                .lb-entry.lb-visible {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
 
                 @keyframes toastIn {
                     from { opacity: 0; transform: translateX(-50%) translateY(20px); }
@@ -690,10 +791,17 @@ export default function TributePage() {
             </div>
 
             {/* ─── CONTENT ─── */}
-            <div className="trib-container" style={{ position: 'relative', zIndex: 1, maxWidth: 560, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
+            <div className="trib-container" style={{ position: 'relative', zIndex: 1, maxWidth: 560, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px', overflow: 'hidden' }}>
 
                 {/* spacer for the fixed header height */}
                 <div style={{ paddingTop: 72 }} />
+
+                {/* Decorative drift particles */}
+                <div data-drift="-0.04" style={{ position: 'absolute', right: 20, top: 300, width: 3, height: 3, borderRadius: '50%', background: 'rgba(197,160,89,0.08)', pointerEvents: 'none' }} />
+                <div data-drift="0.07" style={{ position: 'absolute', left: 10, top: 600, width: 5, height: 5, transform: 'rotate(45deg)', background: 'rgba(197,160,89,0.06)', pointerEvents: 'none' }} />
+                <div data-drift="-0.05" style={{ position: 'absolute', right: -10, top: 1200, width: 8, height: 1, background: 'rgba(197,160,89,0.08)', pointerEvents: 'none' }} />
+                <div data-drift="0.09" style={{ position: 'absolute', left: -15, top: 1800, width: 4, height: 4, borderRadius: '50%', background: 'rgba(197,160,89,0.05)', pointerEvents: 'none' }} />
+                <div data-drift="-0.06" style={{ position: 'absolute', right: 30, top: 2400, width: 6, height: 6, transform: 'rotate(45deg)', background: 'rgba(197,160,89,0.07)', pointerEvents: 'none' }} />
 
                 {/* ════════════════════════════════════════════
                     SECTION 1b: HERO — VIDEO + TEXT
@@ -782,14 +890,17 @@ export default function TributePage() {
                     id="sec-features"
                     ref={setRef('sec-features')}
                     className={`trib-section ${isVisible('sec-features') ? 'visible' : ''}`}
-                    style={{ marginTop: 160 }}
+                    style={{ marginTop: 160, position: 'relative' }}
                 >
                     {/* Section header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>THE EXPERIENCE</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
+                        <div className="trib-line-left" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span className="trib-section-label" style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>THE EXPERIENCE</span>
+                        <div className="trib-line-right" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
+
+                    {/* Decorative drift element */}
+                    <div data-drift="-0.06" style={{ position: 'absolute', right: -30, top: 80, width: 6, height: 6, transform: 'rotate(45deg)', background: 'rgba(197,160,89,0.12)', pointerEvents: 'none' }} />
 
                     <div className="trib-two-col" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {[
@@ -897,9 +1008,9 @@ export default function TributePage() {
                 >
                     {/* Section header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>LEADERBOARD</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
+                        <div className="trib-line-left" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span className="trib-section-label" style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>LEADERBOARD</span>
+                        <div className="trib-line-right" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
                     {/* Period tabs */}
@@ -934,7 +1045,7 @@ export default function TributePage() {
                             </div>
                         )}
                         {leaderboard.slice(0, 10).map((entry, i) => (
-                            <div key={i} style={{
+                            <div key={i} className="lb-entry" style={{
                                 display: 'flex', alignItems: 'center', gap: 14,
                                 padding: '14px 16px', borderRadius: 8,
                                 background: i === 0 ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)',
@@ -1001,14 +1112,17 @@ export default function TributePage() {
                     id="sec-reviews"
                     ref={setRef('sec-reviews')}
                     className={`trib-section ${isVisible('sec-reviews') ? 'visible' : ''}`}
-                    style={{ marginTop: 80 }}
+                    style={{ marginTop: 80, position: 'relative' }}
                 >
                     {/* Section header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, marginTop: 40 }}>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
-                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
+                        <div className="trib-line-left" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span className="trib-section-label" style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
+                        <div className="trib-line-right" style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
+
+                    {/* Decorative drift element */}
+                    <div data-drift="0.08" style={{ position: 'absolute', left: -20, top: 60, width: 4, height: 4, borderRadius: '50%', background: 'rgba(197,160,89,0.1)', pointerEvents: 'none' }} />
 
                     {/* Review cards — keyholder style: 3 visible, clamped, grow animation */}
                     {reviews.length === 0 && (
