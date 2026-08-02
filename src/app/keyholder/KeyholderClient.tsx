@@ -122,11 +122,9 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
 
     /* ── Sticky header on scroll ── */
     useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        const onScroll = () => setShowStickyHeader(el.scrollTop > window.innerHeight * 0.8);
-        el.addEventListener('scroll', onScroll, { passive: true });
-        return () => el.removeEventListener('scroll', onScroll);
+        const onScroll = () => setShowStickyHeader(window.scrollY > window.innerHeight * 0.8);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
     useEffect(() => {
@@ -479,26 +477,29 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
             `}</style>
 
             {/* ─── STICKY HEADER ─── */}
-            {showStickyHeader && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
-                    background: 'rgba(2,2,2,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-                    borderBottom: '1px solid rgba(139,0,0,0.2)',
-                    padding: '10px 20px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    animation: 'stickySlide 0.3s ease-out',
-                }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', letterSpacing: 2, fontWeight: 600 }}>SURRENDER YOUR KEY</div>
-                    <button className="cta-main" onClick={() => setShowTierModal(true)}
-                        style={{
-                            padding: '8px 24px', background: 'linear-gradient(135deg, #8b0000, #5a0000)', color: '#fff',
-                            border: 'none', borderRadius: 2, cursor: 'pointer',
-                            fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', letterSpacing: 3,
-                        }}>
-                        START NOW
-                    </button>
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 20px',
+                background: 'rgba(4,4,6,0.65)',
+                backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(197,160,89,0.08)',
+                transition: 'transform 0.35s ease, opacity 0.35s ease',
+                transform: showStickyHeader ? 'translateY(0)' : 'translateY(-100%)',
+                opacity: showStickyHeader ? 1 : 0,
+                pointerEvents: showStickyHeader ? 'auto' : 'none',
+            }}>
+                <div>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>PRESENTED BY</div>
+                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)' }}>QUEEN KARIN</div>
                 </div>
-            )}
+                <a href="/tribute" style={{
+                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', fontWeight: 700,
+                    color: '#c5a059', letterSpacing: '3px', textDecoration: 'none',
+                    padding: '8px 20px', border: '1px solid rgba(197,160,89,0.3)',
+                    borderRadius: 4, background: 'rgba(197,160,89,0.05)',
+                }}>START NOW</a>
+            </div>
 
             {/* ─── TOAST NOTIFICATIONS ─── */}
             {toasts.map((t: any) => {

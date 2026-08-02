@@ -568,7 +568,7 @@ export default function TributePage() {
                 .review-body p { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.9rem; line-height: 1.8; color: rgba(255,255,255,0.6); font-weight: 300; }
                 .review-body img, .review-body video { max-width: 100%; height: auto; border-radius: 8px; display: block; }
 
-                .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+                .review-body.clamped p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
                 .review-read-more { display: block; width: 100%; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.04); cursor: pointer; font-family: Orbitron, sans-serif; letter-spacing: 3px; text-align: left; }
 
                 .feature-item {

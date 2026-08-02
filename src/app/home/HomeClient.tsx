@@ -496,7 +496,8 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             {/* Fixed header — tribute style, appears on scroll */}
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-                textAlign: 'center', padding: '10px 20px 8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 20px',
                 background: 'rgba(4,4,6,0.65)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
@@ -506,20 +507,31 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 opacity: isScrolled ? 1 : 0,
                 pointerEvents: isScrolled ? 'auto' : 'none',
             }}>
-                <div style={{
-                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 500,
-                    color: 'rgba(197,160,89,0.4)', letterSpacing: '8px', textTransform: 'uppercase',
-                    marginBottom: 2,
-                }}>
-                    PRESENTED BY
+                <div>
+                    <div style={{
+                        fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500,
+                        color: 'rgba(197,160,89,0.4)', letterSpacing: '6px', textTransform: 'uppercase',
+                        marginBottom: 1,
+                    }}>
+                        PRESENTED BY
+                    </div>
+                    <div style={{
+                        fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)',
+                        color: '#fff', letterSpacing: '4px', textTransform: 'uppercase',
+                        fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap',
+                    }}>
+                        QUEEN KARIN
+                    </div>
                 </div>
-                <h2 style={{
-                    fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 5vw, 1.8rem)',
-                    color: '#fff', letterSpacing: '4px', textTransform: 'uppercase',
-                    margin: 0, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap',
+                <a href="/tribute" style={{
+                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.55rem', fontWeight: 700,
+                    color: '#c5a059', letterSpacing: '3px', textDecoration: 'none',
+                    padding: '8px 20px', border: '1px solid rgba(197,160,89,0.3)',
+                    borderRadius: 4, transition: 'all 0.3s',
+                    background: 'rgba(197,160,89,0.05)',
                 }}>
-                    QUEEN KARIN
-                </h2>
+                    START NOW
+                </a>
             </div>
 
             {/* Main Content */}
