@@ -21,6 +21,7 @@ interface ReviewData {
         hierarchy?: string;
         merit?: number;
         tasksCompleted?: number;
+        kneelCount?: number;
         servingText?: string;
     };
 }
@@ -678,47 +679,72 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     </div>
                 </div>
 
-                {/* REVIEWS — keyholder-style: 3 visible, clamped, grow animation */}
+                {/* REVIEWS — tribute-style profile cards */}
                 <div id="reviews" style={{ paddingTop: 40, paddingBottom: 60, position: 'relative', zIndex: 2 }}>
-                    <h2 className="grow-card" style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.2rem,3.5vw,1.8rem)', color: 'rgba(255,255,255,0.7)', fontWeight: 400, letterSpacing: 2, margin: '0 0 40px', textAlign: 'center' }}>You are not the first. You won&rsquo;t be the last.</h2>
+                    {/* Section header — tribute style */}
+                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
+                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 600, margin: '0 auto' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 40, maxWidth: 600, margin: '0 auto' }}>
                         {(showAllReviews ? reviews : reviews.slice(0, 3)).map((r, i) => {
                             const rev = r.reviewer || {};
-                            const name = rev.name || 'Loyal Subject';
-                            const avatar = rev.avatar || null;
-                            const hierarchy = rev.hierarchy || 'Hall Boy';
-                            const merit = rev.merit || 0;
-                            const tasks = rev.tasksCompleted || 0;
-                            const serving = rev.servingText || '';
-                            const rating = r.rating || 5;
-                            const initial = name.charAt(0).toUpperCase();
-                            const servingHtml = serving ? ` \u00B7 SERVING ${serving.toUpperCase()}` : '';
+                            const rName = rev.name || 'Loyal Subject';
+                            const rAvatar = rev.avatar || null;
+                            const rHierarchy = rev.hierarchy || 'Hall Boy';
+                            const rMerit = rev.merit || 0;
+                            const rTasks = rev.tasksCompleted || 0;
+                            const rKneels = rev.kneelCount || 0;
+                            const rServing = rev.servingText || '';
+                            const rRating = r.rating || 5;
+                            const initial = rName.charAt(0).toUpperCase();
 
                             return (
                                 <div key={i} className="grow-card">
-                                    <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-                                        <div className="review-header" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                            {avatar ? (
-                                                <img className="review-avatar" src={avatar} style={{ borderColor: 'rgba(255,255,255,0.1)' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                            ) : (
-                                                <div className="review-avatar-placeholder" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)' }}>{initial}</div>
-                                            )}
-                                            <div className="review-meta">
-                                                <div className="review-stars">
-                                                    {Array.from({ length: 5 }, (_, s) => (
-                                                        <span key={s} className={s < rating ? 'star-on' : 'star-off'} style={s < rating ? { color: '#8b0000' } : {}}>&#9733;</span>
-                                                    ))}
+                                    <div style={{ borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+                                        {/* Profile card header */}
+                                        <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(255,255,255,0.04) 100%)', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
+                                            <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                <div style={{ flexShrink: 0 }}>
+                                                    {rAvatar ? (
+                                                        <img src={rAvatar} style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                    ) : (
+                                                        <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(197,160,89,0.05)', border: '1.5px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: 'rgba(197,160,89,0.4)' }}>{initial}</div>
+                                                    )}
                                                 </div>
-                                                <div className="review-name" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>{name}</div>
-                                                <div className="review-merit" style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.25)' }}>{merit.toLocaleString()} MERIT &middot; {tasks} TASKS</div>
-                                                <div className="review-hierarchy" style={{ fontSize: '0.42rem', color: 'rgba(255,255,255,0.15)' }}>{hierarchy.toUpperCase()}{servingHtml}</div>
+                                                <div style={{ flex: 1, textAlign: 'center' }}>
+                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 8, marginBottom: 4 }}>{rName}</div>
+                                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(197,160,89,0.45)', textTransform: 'uppercase', marginBottom: 3 }}>{rHierarchy}</div>
+                                                    {rServing && (
+                                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1.5, textTransform: 'uppercase' }}>SERVING {rServing.toUpperCase()}</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                                {[
+                                                    { label: 'MERIT', value: rMerit.toLocaleString() },
+                                                    { label: 'TASKS', value: rTasks },
+                                                    { label: 'KNEELING', value: rKneels.toLocaleString() },
+                                                ].map((stat, si) => (
+                                                    <div key={stat.label} style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderLeft: si > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{stat.value}</div>
+                                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.44rem', color: 'rgba(255,255,255,0.18)', letterSpacing: 2, textTransform: 'uppercase' }}>{stat.label}</div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                        <div className="review-body clamped" id={`review-body-${i}`} style={{ padding: '14px 16px 16px', background: 'rgba(255,255,255,0.01)' }}>
-                                            <p style={{ fontSize: '0.95rem', lineHeight: 1.8, color: 'rgba(255,255,255,0.55)' }}>&ldquo;{r.text || ''}&rdquo;</p>
+                                        {/* Review body */}
+                                        <div className="review-body clamped" id={`review-body-${i}`} style={{ padding: '14px 18px 16px' }}>
+                                            <div style={{ display: 'flex', gap: 1, marginBottom: 8 }}>
+                                                {Array.from({ length: 5 }, (_, s) => (
+                                                    <span key={s} style={{ fontSize: '0.65rem', color: s < rRating ? '#8b0000' : 'rgba(255,255,255,0.08)' }}>&#9733;</span>
+                                                ))}
+                                            </div>
+                                            <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.8rem', lineHeight: 1.8, color: 'rgba(255,255,255,0.5)', fontWeight: 300, margin: 0 }}>&ldquo;{r.text || ''}&rdquo;</p>
                                         </div>
-                                        <button className="review-read-more" style={{ fontSize: '0.5rem', padding: '6px 16px 10px', color: 'rgba(255,255,255,0.2)' }} onClick={(e) => {
+                                        <button className="review-read-more" style={{ display: 'block', width: '100%', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', fontFamily: 'Orbitron, sans-serif', letterSpacing: 3, textAlign: 'left', fontSize: '0.6rem', padding: '8px 18px 12px', color: 'rgba(255,255,255,0.4)' }} onClick={(e) => {
                                             const body = document.getElementById(`review-body-${i}`);
                                             if (body) {
                                                 const isClamped = body.classList.toggle('clamped');
