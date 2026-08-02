@@ -132,6 +132,9 @@ export default function TributePage() {
 
     /* FOMO notifications disabled on /tribute */
 
+    /* Scroll to top on load */
+    useEffect(() => { window.scrollTo(0, 0); }, []);
+
     /* Hero text fade in */
     useEffect(() => {
         if (!mounted) return;
@@ -147,7 +150,7 @@ export default function TributePage() {
             .catch(() => {});
     }, []);
 
-    /* intersection observer for scroll animations */
+    /* intersection observer for scroll animations — toggles both ways */
     useEffect(() => {
         if (typeof IntersectionObserver === 'undefined') return;
         const observer = new IntersectionObserver(
@@ -155,28 +158,35 @@ export default function TributePage() {
                 entries.forEach(e => {
                     if (e.isIntersecting) {
                         setVisibleSections(prev => new Set([...prev, e.target.id]));
+                    } else {
+                        setVisibleSections(prev => {
+                            const next = new Set(prev);
+                            next.delete(e.target.id);
+                            return next;
+                        });
                     }
                 });
             },
-            { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+            { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
         );
         Object.values(sectionRefs.current).forEach(el => { if (el) observer.observe(el); });
         return () => observer.disconnect();
     }, [mounted]);
 
-    /* ── Slide-in from sides for feature items ── */
+    /* ── Slide-in from sides for feature items — toggles both ways ── */
     useEffect(() => {
         const items = document.querySelectorAll('.feature-item');
         items.forEach((el, i) => {
-            el.classList.add(i % 2 === 0 ? 'from-left' : 'from-right');
+            if (!el.classList.contains('from-left') && !el.classList.contains('from-right')) {
+                el.classList.add(i % 2 === 0 ? 'from-left' : 'from-right');
+            }
         });
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
-                    setTimeout(() => {
-                        (e.target as HTMLElement).classList.add('slide-in');
-                    }, (Array.from(document.querySelectorAll('.feature-item')).indexOf(e.target as HTMLElement) % 3) * 80);
-                    obs.unobserve(e.target);
+                    (e.target as HTMLElement).classList.add('slide-in');
+                } else {
+                    (e.target as HTMLElement).classList.remove('slide-in');
                 }
             });
         }, { threshold: 0.1 });
@@ -184,33 +194,33 @@ export default function TributePage() {
         return () => obs.disconnect();
     }, [mounted]);
 
-    /* ── Grow-on-scroll for review cards ── */
+    /* ── Grow-on-scroll for review cards — toggles both ways ── */
     useEffect(() => {
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
                     (e.target as HTMLElement).style.opacity = '1';
                     (e.target as HTMLElement).style.transform = 'scale(1) translateY(0) rotate(0deg)';
-                    obs.unobserve(e.target);
+                } else {
+                    (e.target as HTMLElement).style.opacity = '';
+                    (e.target as HTMLElement).style.transform = '';
                 }
             });
-        }, { threshold: 0.1 });
+        }, { threshold: 0.08 });
         document.querySelectorAll('.trib-grow').forEach(el => obs.observe(el));
         return () => obs.disconnect();
     }, [reviews, showAllReviews]);
 
-    /* ── Leaderboard entries stagger in ── */
+    /* ── Leaderboard entries stagger in — toggles both ways ── */
     useEffect(() => {
         const entries = document.querySelectorAll('.lb-entry');
         if (!entries.length) return;
         const obs = new IntersectionObserver((observed) => {
             observed.forEach(e => {
                 if (e.isIntersecting) {
-                    const idx = Array.from(entries).indexOf(e.target as HTMLElement);
-                    setTimeout(() => {
-                        (e.target as HTMLElement).classList.add('lb-visible');
-                    }, idx * 60);
-                    obs.unobserve(e.target);
+                    (e.target as HTMLElement).classList.add('lb-visible');
+                } else {
+                    (e.target as HTMLElement).classList.remove('lb-visible');
                 }
             });
         }, { threshold: 0.1 });
@@ -480,15 +490,15 @@ export default function TributePage() {
 
                 .trib-section {
                     opacity: 0;
-                    transform: translateY(100px) scale(0.96);
-                    transition: opacity 1.4s cubic-bezier(0.16,1,0.3,1), transform 1.4s cubic-bezier(0.16,1,0.3,1);
+                    transform: translateY(35px) scale(0.99);
+                    transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
                 }
                 .trib-section.visible {
                     opacity: 1;
                     transform: translateY(0) scale(1);
                 }
                 .trib-section:nth-child(even) {
-                    transform: translateY(100px) scale(0.93);
+                    transform: translateY(35px) scale(0.98);
                 }
                 .trib-section:nth-child(even).visible {
                     transform: translateY(0) scale(1);
@@ -497,19 +507,19 @@ export default function TributePage() {
                 /* Section header gold lines draw in */
                 .trib-line-left {
                     transform: scaleX(0); transform-origin: right center;
-                    transition: transform 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s;
+                    transition: transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s;
                 }
                 .trib-line-right {
                     transform: scaleX(0); transform-origin: left center;
-                    transition: transform 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s;
+                    transition: transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.15s;
                 }
                 .trib-section.visible .trib-line-left,
                 .trib-section.visible .trib-line-right {
                     transform: scaleX(1);
                 }
                 .trib-section-label {
-                    opacity: 0; transform: translateY(12px);
-                    transition: opacity 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+                    opacity: 0; transform: translateY(8px);
+                    transition: opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s;
                 }
                 .trib-section.visible .trib-section-label {
                     opacity: 1; transform: translateY(0);
@@ -525,12 +535,10 @@ export default function TributePage() {
                 .lb-tab:hover { color: #c5a059 !important; }
 
                 .trib-grow {
-                    opacity: 0; transform: scale(0.8) translateY(50px) rotate(-0.5deg);
+                    opacity: 0; transform: scale(0.95) translateY(20px);
                     transform-origin: center center;
-                    transition: opacity 1.2s ease-out, transform 1.2s cubic-bezier(0.16,1,0.3,1);
+                    transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.16,1,0.3,1);
                 }
-                .trib-grow:nth-child(2) { transition-delay: 0.15s; }
-                .trib-grow:nth-child(3) { transition-delay: 0.3s; }
 
                 .review-card {
                     transition: transform 0.4s ease, box-shadow 0.4s ease;
@@ -562,23 +570,17 @@ export default function TributePage() {
 
                 .feature-item {
                     opacity: 0;
-                    transition: opacity 0.9s ease-out, transform 0.9s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, border-color 0.3s ease;
+                    transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, border-color 0.3s ease;
                 }
-                .feature-item.from-left { transform: translateX(-120px) rotate(-2deg) scale(0.95); }
-                .feature-item.from-right { transform: translateX(120px) rotate(2deg) scale(0.95); }
-                .feature-item.slide-in { opacity: 1; transform: translateX(0) rotate(0deg) scale(1); }
-                .feature-item:nth-child(1) { transition-delay: 0s; }
-                .feature-item:nth-child(2) { transition-delay: 0.12s; }
-                .feature-item:nth-child(3) { transition-delay: 0.24s; }
-                .feature-item:nth-child(4) { transition-delay: 0.36s; }
-                .feature-item:nth-child(5) { transition-delay: 0.48s; }
-                .feature-item:nth-child(6) { transition-delay: 0.6s; }
+                .feature-item.from-left { transform: translateX(-40px); }
+                .feature-item.from-right { transform: translateX(40px); }
+                .feature-item.slide-in { opacity: 1; transform: translateX(0); }
 
-                /* Leaderboard entries slide in from right */
+                /* Leaderboard entries fade in from right */
                 .lb-entry {
                     opacity: 0;
-                    transform: translateX(60px);
-                    transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+                    transform: translateX(25px);
+                    transition: opacity 0.5s ease-out, transform 0.5s cubic-bezier(0.22,1,0.36,1);
                 }
                 .lb-entry.lb-visible {
                     opacity: 1;
