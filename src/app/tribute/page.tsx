@@ -313,8 +313,8 @@ export default function TributePage() {
     ));
 
     return (<>
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
-        <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.5) 60%, rgba(2,2,2,0.75) 100%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100lvh', zIndex: 0, backgroundImage: "url('/queen-payment-bg.png')", backgroundSize: 'cover', backgroundPosition: 'center top', opacity: 0.75, filter: 'saturate(0.7) brightness(0.9) blur(3px)' }} />
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100lvh', zIndex: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.2) 0%, rgba(2,2,2,0.5) 60%, rgba(2,2,2,0.75) 100%)', pointerEvents: 'none' }} />
 
         <div style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden', zIndex: 1, color: '#fff' }}>
             <style>{`
