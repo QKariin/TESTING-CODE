@@ -489,17 +489,13 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                 opacity: showStickyHeader ? 1 : 0,
                 pointerEvents: showStickyHeader ? 'auto' : 'none',
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, width: '100%', justifyContent: 'space-between' }}>
-                    <div>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>PRESENTED BY</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)' }}>QUEEN KARIN</div>
-                    </div>
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase', marginBottom: 1 }}>PRESENTED BY</div>
+                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>QUEEN KARIN</div>
                     <a href="/tribute" style={{
-                        fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 600,
-                        color: 'rgba(197,160,89,0.7)', letterSpacing: '4px', textDecoration: 'none',
-                        padding: '6px 18px',
-                        borderBottom: '1px solid rgba(197,160,89,0.25)',
-                        transition: 'color 0.3s, border-color 0.3s',
+                        fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 600,
+                        color: 'rgba(197,160,89,0.55)', letterSpacing: '5px', textDecoration: 'none',
+                        transition: 'color 0.3s',
                     }}>START NOW</a>
                 </div>
             </div>
