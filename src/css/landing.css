@@ -57,7 +57,7 @@ html, body {
 .landing-page {
     position: relative;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow: visible;
     background: transparent !important;
     color: #fff;
     font-family: 'Cinzel', serif;
