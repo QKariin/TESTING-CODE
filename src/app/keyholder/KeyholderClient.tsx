@@ -494,8 +494,11 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                     <div style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1rem, 4vw, 1.4rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>QUEEN KARIN</div>
                     <a href="/tribute" style={{
                         fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 600,
-                        color: 'rgba(197,160,89,0.55)', letterSpacing: '5px', textDecoration: 'none',
-                        transition: 'color 0.3s',
+                        color: 'rgba(197,160,89,0.8)', letterSpacing: '5px', textDecoration: 'none',
+                        padding: '6px 22px',
+                        border: '1px solid rgba(197,160,89,0.3)',
+                        transition: 'all 0.3s',
+                        display: 'inline-block',
                     }}>START NOW</a>
                 </div>
             </div>
