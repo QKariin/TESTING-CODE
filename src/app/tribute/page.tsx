@@ -1188,13 +1188,13 @@ export default function TributePage() {
                                     </div>
 
                                     {/* ── REVIEW BODY ── */}
-                                    <div className="review-body clamped" id={`trib-review-body-${i}`} style={{ padding: '14px 18px 16px' }}>
-                                        <div style={{ display: 'flex', gap: 1, marginBottom: 8 }}>
+                                    <div className="review-body clamped" id={`trib-review-body-${i}`} style={{ padding: '16px 20px 18px', textAlign: 'left' }}>
+                                        <div style={{ display: 'flex', gap: 1, marginBottom: 10 }}>
                                             {Array.from({ length: 5 }, (_, s) => (
-                                                <span key={s} style={{ fontSize: '0.65rem', color: s < rRating ? '#8b0000' : 'rgba(255,255,255,0.08)' }}>&#9733;</span>
+                                                <span key={s} style={{ fontSize: '0.7rem', color: s < rRating ? '#8b0000' : 'rgba(255,255,255,0.08)' }}>&#9733;</span>
                                             ))}
                                         </div>
-                                        <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.8rem', lineHeight: 1.8, color: 'rgba(255,255,255,0.5)', fontWeight: 300, margin: 0 }}>&ldquo;{review.text}&rdquo;</p>
+                                        <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.9rem', lineHeight: 1.9, color: 'rgba(255,255,255,0.55)', fontWeight: 300, margin: 0 }}>&ldquo;{review.text}&rdquo;</p>
                                     </div>
                                     <button className="review-read-more" style={{ fontSize: '0.6rem', padding: '8px 18px 12px', color: 'rgba(255,255,255,0.4)' }} onClick={(e) => {
                                         const body = document.getElementById(`trib-review-body-${i}`);
