@@ -525,7 +525,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                     {isRisky ? (
                         <div style={{ display: 'flex', minHeight: 130 }}>
                             <div style={{ flex: '0 0 28%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: '16px 12px', gap: 8 }}>
-                                <img src={t.cardIcon} style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={t.cardIcon} alt="" style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                 {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>{t.cardName}</div>}
                             </div>
                             <div style={{ flex: 1, padding: '16px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
@@ -535,7 +535,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     {avatar ? (
-                                        <img src={avatar} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                        <img src={avatar} alt="" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                     ) : (
                                         <div style={{ width: 38, height: 38, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
                                     )}
@@ -568,7 +568,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                             {avatar ? (
-                                <img src={avatar} style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={avatar} alt="" style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             ) : (
                                 <div style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
                             )}
@@ -746,7 +746,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                                     <div className="review-card" style={{ margin: 0, borderRadius: 14, border: '1px solid rgba(139,0,0,0.25)', boxShadow: '0 0 20px rgba(139,0,0,0.06)' }}>
                                         <div className="review-header">
                                             {avatar ? (
-                                                <img className="review-avatar" src={avatar} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                <img className="review-avatar" src={avatar} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                             ) : (
                                                 <div className="review-avatar-placeholder">{initial}</div>
                                             )}

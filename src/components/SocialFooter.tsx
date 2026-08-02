@@ -69,6 +69,7 @@ export default function SocialFooter() {
                         target="_blank"
                         rel="noopener noreferrer"
                         title={s.title}
+                        aria-label={s.title}
                         style={{
                             display: 'flex',
                             alignItems: 'center',

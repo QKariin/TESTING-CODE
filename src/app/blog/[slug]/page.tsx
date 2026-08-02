@@ -47,12 +47,19 @@ export async function generateMetadata({
     title: `${post.title} | Queen Karin`,
     description: post.meta_description || post.excerpt || '',
     keywords,
+    alternates: { canonical: `https://throne.qkarin.com/blog/${slug}` },
     openGraph: {
       title: post.title,
       description: post.meta_description || post.excerpt || '',
       images: post.cover_image ? [{ url: post.cover_image }] : [],
       url: `https://throne.qkarin.com/blog/${slug}`,
       type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.meta_description || post.excerpt || '',
+      images: post.cover_image ? [post.cover_image] : [],
     },
   };
 }

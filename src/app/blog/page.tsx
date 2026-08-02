@@ -5,6 +5,13 @@ export const metadata: Metadata = {
   title: 'Blog | Queen Karin',
   description:
     'Thoughts, lessons, and provocations from Queen Karin — on femdom, power dynamics, discipline, and the art of submission.',
+  alternates: { canonical: 'https://throne.qkarin.com/blog' },
+  openGraph: {
+    title: 'Blog | Queen Karin',
+    description: 'Thoughts, lessons, and provocations from Queen Karin — on femdom, power dynamics, discipline, and the art of submission.',
+    url: 'https://throne.qkarin.com/blog',
+    images: [{ url: '/og-cover.png', width: 1200, height: 630, alt: 'Queen Karin Blog' }],
+  },
 };
 
 export const revalidate = 600;

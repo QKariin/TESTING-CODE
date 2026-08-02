@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Privacy Policy',
     description: 'Privacy Policy for Queen Karin — how I collect, use, and protect your personal data.',
+    alternates: { canonical: 'https://throne.qkarin.com/privacy' },
 };
 
 const S = {

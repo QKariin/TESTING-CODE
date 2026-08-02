@@ -703,7 +703,7 @@ export default function TributePage() {
                                 background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)',
                                 padding: '16px 12px', gap: 8,
                             }}>
-                                <img src={t.cardIcon} style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={t.cardIcon} alt="" style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                 {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>{t.cardName}</div>}
                             </div>
                             {/* Info — right */}
@@ -711,7 +711,7 @@ export default function TributePage() {
                                 {/* Avatar + Name + Hierarchy */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     {avatar ? (
-                                        <img src={avatar} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                        <img src={avatar} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                     ) : (
                                         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
                                     )}
@@ -744,7 +744,7 @@ export default function TributePage() {
                         <>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                             {avatar ? (
-                                <img src={avatar} style={{ flexShrink: 0, width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                <img src={avatar} alt="" style={{ flexShrink: 0, width: 46, height: 46, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             ) : (
                                 <div style={{ flexShrink: 0, width: 46, height: 46, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
                             )}
@@ -1158,7 +1158,7 @@ export default function TributePage() {
                                             {/* Avatar — left side, bigger */}
                                             <div style={{ flexShrink: 0 }}>
                                                 {rAvatar ? (
-                                                    <img src={rAvatar} style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                    <img src={rAvatar} alt="" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                 ) : (
                                                     <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(197,160,89,0.05)', border: '1.5px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: 'rgba(197,160,89,0.4)' }}>{initial}</div>
                                                 )}

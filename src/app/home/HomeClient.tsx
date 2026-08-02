@@ -423,7 +423,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
 
         const renderAvatar = (size: number, borderColor: string) => {
             if (item.sender_avatar) {
-                return <img src={item.sender_avatar} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${borderColor}`, flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
+                return <img src={item.sender_avatar} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${borderColor}`, flexShrink: 0 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
             }
             return (
                 <div style={{ width: size, height: size, borderRadius: '50%', border: `1.5px solid rgba(197,160,89,0.35)`, background: 'linear-gradient(135deg,rgba(197,160,89,0.15),rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>
@@ -437,7 +437,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 <div className={`home-toast ${toastClass}`} onClick={() => { setActiveToast(null); setToastClass(''); }} style={{ padding: 0 }}>
                     <div style={{ display: 'flex', minHeight: 120 }}>
                         <div style={{ flex: '0 0 28%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: 12 }}>
-                            <img src={item.cardImage!} style={{ width: '80%', maxWidth: 70, height: 'auto', borderRadius: 6, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <img src={item.cardImage!} alt="" style={{ width: '80%', maxWidth: 70, height: 'auto', borderRadius: 6, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         </div>
                         <div style={{ flex: 1, padding: '12px 14px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -465,7 +465,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 <div className={`home-toast ${toastClass}`} onClick={() => { setActiveToast(null); setToastClass(''); }} style={{ padding: 0 }}>
                     <div style={{ display: 'flex', minHeight: 130 }}>
                         <div style={{ flex: '0 0 28%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: '16px 12px', gap: 8 }}>
-                            <img src={item.cardIcon!} style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <img src={item.cardIcon!} alt="" style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                             {item.cardName && <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>{item.cardName}</div>}
                         </div>
                         <div style={{ flex: 1, padding: '12px 14px 10px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
@@ -599,7 +599,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 <section ref={aboutSectionRef} id="about" style={{ position: 'relative', minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: 0 }}>
                     {/* Photo */}
                     <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-                        <img ref={aboutImgRef} src="/queen-about.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.4)', willChange: 'transform', transition: 'none' }} />
+                        <img ref={aboutImgRef} src="/queen-about.jpeg" alt="Queen Karin - Femdom and Online Dominatrix" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.4)', willChange: 'transform', transition: 'none' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.1) 40%, rgba(2,2,2,0.7) 80%, #020202 100%)' }} />
                     </div>
                     {/* Text overlay */}
@@ -630,7 +630,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 <div id="leaderboard-section" className="scroll-section" style={{ marginTop: 180, padding: '40px 16px 50px', position: 'relative', zIndex: 2, overflow: 'hidden', opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}>
                     {/* Background photo */}
                     <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-                        <img src="/queen-hierarchy.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.25)' }} />
+                        <img src="/queen-hierarchy.jpeg" alt="Queen Karin - Hierarchy and Leaderboard" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.25)' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #020202 0%, rgba(2,2,2,0.3) 15%, rgba(2,2,2,0.3) 85%, #020202 100%)' }} />
                     </div>
                     {/* Content over background */}
@@ -638,7 +638,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     {/* Section header */}
                     <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>HIERARCHY</span>
+                        <h2 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px', margin: 0 }}>HIERARCHY</h2>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
@@ -771,7 +771,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     {/* Section header */}
                     <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>SERVICES</span>
+                        <h2 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px', margin: 0 }}>SERVICES</h2>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600, margin: '0 auto' }}>
@@ -791,7 +791,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                                 transition: 'opacity 0.7s ease, transform 0.7s ease',
                             }}>
                                 <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: 5, marginBottom: 10 }}>{s.title}</div>
+                                <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: 5, marginBottom: 10, margin: '0 0 10px' }}>{s.title}</h3>
                                 <div style={{ width: 24, height: 1, background: 'rgba(197,160,89,0.25)', margin: '0 auto 12px' }} />
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, maxWidth: 420, margin: '0 auto' }}>{s.desc}</div>
                             </a>
@@ -804,7 +804,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     {/* Section header — tribute style */}
                     <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, padding: '0 16px' }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
-                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
+                        <h2 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px', margin: 0 }}>TESTIMONIALS</h2>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
@@ -829,7 +829,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                                             <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
                                                 <div style={{ flexShrink: 0 }}>
                                                     {rAvatar ? (
-                                                        <img src={rAvatar} style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                        <img src={rAvatar} alt="" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.25)', display: 'block' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                                                     ) : (
                                                         <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'rgba(197,160,89,0.05)', border: '1.5px solid rgba(197,160,89,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '1.4rem', color: 'rgba(197,160,89,0.4)' }}>{initial}</div>
                                                     )}
@@ -918,7 +918,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             </div>
 
             {/* SEO content -- invisible to users, crawlable by Google */}
-            <main aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            <aside style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 <header>
                     <h1>Queen Karin -- Femdom, Findom &amp; Female Domination</h1>
                     <p>No agencies. No bots. No fakes.</p>
@@ -967,7 +967,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     <a href="/login">Sign In</a>
                     <a href="/keyholder">Keyholder Sessions</a>
                 </footer>
-            </main>
+            </aside>
         </div>
 
         {/* FAQ BUBBLE + OVERLAY */}

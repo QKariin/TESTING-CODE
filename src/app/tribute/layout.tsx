@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
     title: 'Queen Karin - Exclusive Access',
     description: 'Not for everyone. For those who know what they are and what they want. Queen Karin\'s private world awaits.',
+    alternates: { canonical: 'https://throne.qkarin.com/tribute' },
     openGraph: {
         title: 'Queen Karin - Exclusive Access',
         description: 'Not for everyone. For those who know what they are and what they want.',
