@@ -163,7 +163,8 @@ export async function updateSession(request: NextRequest) {
         const isHomePage = pathname.startsWith('/home');
         const isBlogPage = pathname.startsWith('/blog');
         const isPrivacyPage = pathname.startsWith('/privacy');
-        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage && !isPrivacyPage) {
+        const isRootPage = pathname === '/';
+        if (!isRootPage && !isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage && !isPrivacyPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
