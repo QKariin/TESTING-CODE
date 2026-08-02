@@ -144,6 +144,11 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.redirect(new URL('/profile', request.url));
             }
 
+            // 2a. Authenticated user on root -> go to Profile (or Dashboard for CEO)
+            if (pathname === '/') {
+                return NextResponse.redirect(new URL(isCEO ? '/dashboard' : '/profile', request.url));
+            }
+
             // 2. If CEO lands on Tribute -> go to Dashboard
             if (isCEO && isTributePage) {
                 return NextResponse.redirect(new URL('/dashboard', request.url));
