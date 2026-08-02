@@ -49,7 +49,7 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(new URL('/home', request.url));
     }
 
-    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && !pathname.startsWith('/blog') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
+    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && !pathname.startsWith('/blog') && !pathname.startsWith('/privacy') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
         return NextResponse.redirect(new URL('/home', request.url))
     }
 
@@ -172,7 +172,8 @@ export async function updateSession(request: NextRequest) {
         const isKeyholderPage = pathname.startsWith('/keyholder');
         const isHomePage = pathname.startsWith('/home');
         const isBlogPage = pathname.startsWith('/blog');
-        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage) {
+        const isPrivacyPage = pathname.startsWith('/privacy');
+        if (!isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage && !isPrivacyPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }

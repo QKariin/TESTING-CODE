@@ -59,8 +59,8 @@ export default function SocialFooter() {
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: 20,
-                marginBottom: 20,
+                gap: 10,
+                marginBottom: 18,
             }}>
                 {SOCIALS.map(s => (
                     <a
@@ -73,12 +73,9 @@ export default function SocialFooter() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            width: 42,
-                            height: 42,
-                            borderRadius: '50%',
-                            border: '1px solid rgba(197,160,89,0.15)',
-                            background: 'rgba(255,255,255,0.02)',
-                            transition: 'border-color 0.3s, background 0.3s',
+                            padding: 6,
+                            opacity: 0.5,
+                            transition: 'opacity 0.3s',
                         }}
                     >
                         {s.svg}
@@ -101,16 +98,16 @@ export default function SocialFooter() {
                 href="/privacy"
                 style={{
                     display: 'inline-block',
-                    marginTop: 10,
+                    marginTop: 14,
                     fontFamily: "'Rajdhani', sans-serif",
-                    fontSize: '0.6rem',
-                    color: 'rgba(255,255,255,0.15)',
-                    letterSpacing: '0.12em',
+                    fontSize: '0.8rem',
+                    color: 'rgba(255,255,255,0.35)',
+                    letterSpacing: '0.15em',
                     textTransform: 'uppercase',
                     textDecoration: 'none',
                 }}
             >
-                Privacy
+                Privacy Policy
             </a>
         </footer>
     );
