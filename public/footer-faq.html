@@ -20,7 +20,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .faq-chat-overlay {
     position: fixed; top: 0; left: 0; right: 0;
     bottom: calc(60px + env(safe-area-inset-bottom));
-    z-index: 99999; background: #020512;
+    z-index: 99999; background: #020202;
     display: flex; flex-direction: column;
     transform: translateY(100%);
     visibility: hidden;
@@ -32,7 +32,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     padding: calc(env(safe-area-inset-top) + 20px) 20px 20px;
     border-bottom: 1px solid rgba(197,160,89,0.25);
     border-top: 3px solid rgba(197,160,89,0.55);
-    background: #020512; z-index: 2;
+    background: #020202; z-index: 2;
 }
 .faq-chat-header-left { display: flex; align-items: center; gap: 10px; }
 .faq-chat-header-av-wrap { position: relative; width: 52px; height: 52px; }
@@ -42,7 +42,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 }
 .faq-chat-online-dot {
     position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px;
-    background: #4ade80; border-radius: 50%; border: 2px solid #020512;
+    background: #4ade80; border-radius: 50%; border: 2px solid #020202;
     box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74,222,128,0.4);
     animation: neonPulse 2s ease-in-out infinite;
 }
@@ -76,28 +76,15 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 }
 .faq-cb-row-queen { justify-content: flex-start; }
 .faq-cb-row-user { justify-content: flex-end; }
-.faq-cb-av-wrap {
-    position: relative; width: 38px; height: 38px; flex-shrink: 0;
-    align-self: flex-end; margin-bottom: 20px;
+.faq-cb-av-wrap { display: none; }
+.faq-cb-name {
+    font-family: 'Cinzel', serif; font-size: 0.55rem; letter-spacing: 3px;
+    color: rgba(197,160,89,0.6); margin-bottom: 4px;
 }
-.faq-cb-av {
-    width: 38px; height: 38px; border-radius: 50%; object-fit: cover;
-    border: 1.5px solid rgba(197,160,89,0.35);
-}
-.faq-cb-dot {
-    position: absolute; bottom: 0; right: 0; width: 8px; height: 8px;
-    background: #4ade80; border-radius: 50%; border: 1.5px solid #020512;
-    box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74,222,128,0.4);
-    animation: neonPulse 2s ease-in-out infinite;
-}
-@keyframes neonPulse {
-    0%, 100% { box-shadow: 0 0 6px #4ade80, 0 0 12px rgba(74,222,128,0.4); }
-    50% { box-shadow: 0 0 10px #4ade80, 0 0 20px rgba(74,222,128,0.6), 0 0 30px rgba(74,222,128,0.2); }
-}
-.faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 80%; }
+.faq-cb-wrap-queen { display: flex; flex-direction: column; align-items: flex-start; max-width: 90%; }
 .faq-cb-wrap-user { display: flex; flex-direction: column; align-items: flex-end; max-width: 80%; }
 .faq-cb-queen {
-    background: #000; border: 1px solid rgba(255,0,199,0.3);
+    background: #000; border: 1px solid rgba(197,160,89,0.2);
     color: #fff; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; line-height: 1.55;
     letter-spacing: 0.2px; padding: 12px 16px; border-radius: 16px 16px 16px 3px;
     word-break: break-word; white-space: pre-wrap;
@@ -114,13 +101,13 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     gap: 0; padding: 4px 0;
 }
 .faq-cat-chip {
-    background: linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3)); border: 1px solid rgba(255,0,199,0.3);
-    color: #ff00c7; font-family: 'Cormorant Garamond', serif;
+    background: linear-gradient(135deg,rgba(197,160,89,0.08),rgba(0,0,0,0.3)); border: 1px solid rgba(197,160,89,0.2);
+    color: #c5a059; font-family: 'Cormorant Garamond', serif;
     font-size: 0.95rem; padding: 16px 24px; border-radius: 20px; width: 80%; box-sizing: border-box; text-align: center;
     cursor: pointer; transition: all 0.2s; letter-spacing: 1px;
     opacity: 0; animation: faqQFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
 }
-.faq-cat-chip:active { background: rgba(255,0,199,0.25); border-color: rgba(255,0,199,0.5); }
+.faq-cat-chip:active { background: rgba(197,160,89,0.15); border-color: rgba(197,160,89,0.35); }
 .faq-q-wrap {
     display: flex; flex-direction: column; align-items: center;
     gap: 0; padding: 4px 0;
@@ -135,7 +122,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 }
 .faq-q-bubble:active { background: rgba(197,160,89,0.1); border-color: rgba(197,160,89,0.3); }
 .faq-a-bubble {
-    background: #000; border: 1px solid rgba(255,0,199,0.3);
+    background: #000; border: 1px solid rgba(197,160,89,0.2);
     color: rgba(255,255,255,0.92); font-family: 'Cormorant Garamond', serif;
     font-size: 1.1rem; line-height: 1.8; padding: 12px 14px;
     border-radius: 16px 16px 16px 3px; word-break: break-word;
@@ -146,7 +133,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     animation: faqSlideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 .faq-typing-bubble {
-    background: #000; border: 1px solid rgba(255,0,199,0.3);
+    background: #000; border: 1px solid rgba(197,160,89,0.2);
     padding: 12px 18px; border-radius: 16px 16px 16px 3px;
     display: flex; gap: 5px; align-items: center;
     animation: faqBubbleIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
@@ -211,7 +198,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999999;
     height: calc(60px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
-    background: linear-gradient(135deg, #ff00ed, #000aff);
+    background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(2,2,2,0.95));
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-top: none;
     display: flex; align-items: stretch; justify-content: space-around;
@@ -308,7 +295,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .menu-overlay {
     position: fixed; top: 0; left: 0; right: 0;
     bottom: calc(60px + env(safe-area-inset-bottom));
-    z-index: 99999; background: #020512;
+    z-index: 99999; background: #020202;
     display: flex; flex-direction: column;
     transform: translateY(100%);
     visibility: hidden;
@@ -328,7 +315,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     text-transform: uppercase;
     text-decoration: none;
     padding: 16px 28px;
-    background: linear-gradient(135deg, #ff00ed, #000aff);
+    background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(2,2,2,0.95));
     border: none;
     border-radius: 999px;
     cursor: pointer;
@@ -358,7 +345,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
 .global-overlay {
     position: fixed; top: 0; left: 0; right: 0;
     bottom: calc(60px + env(safe-area-inset-bottom));
-    z-index: 99999; background: linear-gradient(135deg, #ff00ed, #000aff);
+    z-index: 99999; background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(2,2,2,0.95));
     display: flex; flex-direction: column;
     transform: translateY(100%);
     visibility: hidden;
@@ -370,7 +357,7 @@ html, body { background: transparent; overflow: hidden; height: 100%; }
     padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
     border-bottom: 1px solid rgba(197,160,89,0.15);
     border-top: 3px solid rgba(197,160,89,0.55);
-    background: #020512; z-index: 2;
+    background: #020202; z-index: 2;
 }
 .global-header-title {
     font-family: 'Cormorant Garamond', serif; font-size: 0.7rem;
@@ -633,24 +620,24 @@ var faqData = [
         title: 'About Queen Karin',
         icon: '&#9819;',
         questions: [
-            { q: 'Who is Queen Karin?', a: '<p>I have been building my FemDom brand since 2022, mastering the dynamics of every type of submissive along the way.</p><p style="margin-top:10px">Currently based in Greece with my lovely dog and crazy cat. I balance a love for fine food and hard work with a passion for global travel (nearly 100 countries visited).</p><p style="margin-top:10px">I have zero tolerance for laziness, dishonesty, or fake personalities. If you are honest, we will get along; if you lie, I will call you out instantly.</p><p style="margin-top:10px">My life goal is simple: own a boat, keep my Starlink active, and manage my subs from every corner of the world.</p><p style="margin-top:10px">You can learn more about me on my other platforms:</p><div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin-left:auto;margin-right:auto"><a href="https://x.com/qkarin_com?s=21" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">TWITTER/X</a><a href="https://fetlife.com/QKarin" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">FETLIFE</a><a href="https://discord.gg/RMJqt7uvNc" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">DISCORD</a><a href="https://www.qkarin.com/blog" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(255,0,199,0.15),rgba(0,0,0,0.3));border:1px solid rgba(255,0,199,0.3);border-radius:8px;color:#ff00c7;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">BLOG</a></div>' },
+            { q: 'Who is Queen Karin?', a: '<p>I have been building my FemDom brand since 2022, mastering the dynamics of every type of submissive along the way.</p><p style="margin-top:10px">Currently based in Greece with my lovely dog and crazy cat. I balance a love for fine food and hard work with a passion for global travel (nearly 100 countries visited).</p><p style="margin-top:10px">I have zero tolerance for laziness, dishonesty, or fake personalities. If you are honest, we will get along; if you lie, I\'ll call you out instantly.</p><p style="margin-top:10px">My life goal is simple: own a boat, keep my Starlink active, and manage my subs from every corner of the world.</p><p style="margin-top:10px">You can learn more about me on my other platforms:</p><div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin-left:auto;margin-right:auto"><a href="https://x.com/qkarin_com?s=21" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(0,0,0,0.3));border:1px solid rgba(197,160,89,0.2);border-radius:8px;color:#c5a059;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">TWITTER/X</a><a href="https://fetlife.com/QKarin" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(0,0,0,0.3));border:1px solid rgba(197,160,89,0.2);border-radius:8px;color:#c5a059;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">FETLIFE</a><a href="https://discord.gg/RMJqt7uvNc" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(0,0,0,0.3));border:1px solid rgba(197,160,89,0.2);border-radius:8px;color:#c5a059;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">DISCORD</a><a href="https://www.qkarin.com/blog" target="_blank" style="display:block;padding:12px 10px;background:linear-gradient(135deg,rgba(197,160,89,0.08),rgba(0,0,0,0.3));border:1px solid rgba(197,160,89,0.2);border-radius:8px;color:#c5a059;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;text-align:center;transition:all 0.3s ease">BLOG</a></div>' },
             { q: 'Is this website run by AI?', a: '<p>No. Everything here is me. I personally review tasks, I read every message, I decide who rises and who doesn\'t. But I built this platform with serious technology so the kingdom can run around the clock. When you kneel at 3am, I don\'t need to be awake for it to count. When you finish a task, you don\'t wait for me to notice. The system remembers everything you do, tracks your dedication, and makes sure nothing gets lost.</p><p style="margin-top:10px">That\'s the whole point. The tech handles the bookkeeping so I can focus on what matters. Reading your words. Watching how you behave. Deciding what you deserve next. The system tracks you. I lead you. Don\'t confuse the two.</p>' },
             { q: 'How does it work?', a: '<p>Once you\'re inside, you get your own profile where I can see everything about you: Your rank, your merit, what tasks you completed, what you skipped. Nothing disappears here.</p><p style="margin-top:10px">You get access to over 1,000 tasks the moment you walk in. Every single one is free. I built them for those who genuinely want to serve. The ones who show up and do the work? They earn. They rise. But the ones who get lazy, who skip what I gave them, who think they can cut corners? Those ones pay.</p><p style="margin-top:10px">That\'s how this kingdom works.</p><p style="margin-top:10px">Devotion is rewarded.</p><p style="margin-top:10px">Disobedience has a price.</p><p style="margin-top:10px">On top of that you get challenges, a leaderboards, a real hierarchy you climb through, and for those who earn it, total ownership programs.</p><p style="margin-top:10px">This isn\'t a website you visit. It\'s a kingdom you belong to.</p>' },
             { q: 'Can I trust the testimonials?', a: '<p>Every single one. Each review comes from a member with a real profile, a real rank, and a real history inside this kingdom. You can see their merit points, how long they\'ve served, where they stand. I don\'t need to fabricate proof. My subjects speak for themselves.</p><p style="margin-top:10px">If you still need more, there are reviews outside of this platform that I have no control over. I was always the person who wanted to make sure my subjects feel safe and protected under my control. See for yourself.</p><p style="margin-top:14px;text-align:center"><a href="https://disboard.org/server/reviews/1167379948173000704" target="_blank" style="display:inline-block;padding:10px 20px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.25);border-radius:6px;color:#c5a059;text-decoration:none;font-family:Cormorant Garamond,serif;font-size:0.55rem;letter-spacing:2px;transition:all 0.3s ease">DISBOARD REVIEWS</a></p>' },
-            { q: 'What makes this different from other Femdom sites?', a: '<p>I\'d love to answer this question but I can\'t.</p><p style="margin-top:10px">You will not find another app like this because it doesn\'t exist. No domme has ever built her own platform from the ground up. This isn\'t a page I put together on Wix with a wishlist and a cash app link.</p><p style="margin-top:10px">This is a living, breathing kingdom that runs 24 hours a day whether I\'m online or not. Most people are used to settling for mediocre, lazy garbage. I am shooting for the moon and I don\'t settle for hitting stars.</p>' },
+            { q: 'What makes this different from other Femdom sites?', a: '<p>I\'d love to answer this question but I can\'t.</p><p style="margin-top:10px">You won\'t find another app like this because it doesn\'t exist. No domme has ever built her own platform from the ground up. This isn\'t a page I put together on Wix with a wishlist and a cash app link.</p><p style="margin-top:10px">This is a living, breathing kingdom that runs 24 hours a day whether I\'m online or not. Most people are used to settling for mediocre, lazy garbage. I\'m shooting for the moon and I don\'t settle for hitting stars.</p>' },
         ]
     },
     {
         title: 'Keyholder',
         icon: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
         questions: [
-            { q: 'What is the Keyholder program?', a: '<p>This is my personal chastity management program. You choose how long you want to be locked, I build a custom program around your kinks and limits, and you serve your sentence under my direct supervision.</p><p style="margin-top:10px">This is not generated by AI. Every single task, every challenge, every order is created by me personally based on what I learn about you. Your kinks, your limits, your behavior. The longer you serve, the better I know you, and the more precise your program becomes.</p>' },
+            { q: 'What is the Keyholder program?', a: '<p>This is my personal chastity management program. You choose how long you want to be locked, I build a custom program around your kinks and limits, and you serve your sentence under my direct supervision.</p><p style="margin-top:10px">This isn\'t generated by AI. Every single task, every challenge, every order is created by me personally based on what I learn about you. Your kinks, your limits, your behavior. The longer you serve, the better I know you, and the more precise your program becomes.</p>' },
             { q: 'How does the daily chastity check work?', a: '<p>Every morning between 6:00 and 10:00 AM in your local timezone, you must submit a photo proving you are still locked. The window is the same every day, no exceptions.</p><p style="margin-top:10px">You will receive a notification when the window opens. Missing a check means immediate termination of your program. No warnings, no second chances.</p>' },
             { q: 'What are daily orders?', a: '<p>Each day you receive tasks designed specifically for you. Writing assignments, photo proofs, challenges, obedience exercises. These are not random. They are built around your kinks, your limits, and what I observe about your behavior over time.</p><p style="margin-top:10px">Complete all tasks to maintain your obedience streak. Your streak matters. It tells me everything I need to know about how seriously you take this.</p>' },
             { q: 'What happens if I disobey?', a: '<p>Skipping orders costs you coins and breaks your streak. Disobedience may result in penalty days added to your sentence. Your behavior directly shapes how I treat you.</p><p style="margin-top:10px">Perfect obedience is rewarded. Laziness is punished. I notice everything.</p>' },
-            { q: 'Can I get early release?', a: '<p>You serve your full sentence. There is no undo, no refund, no escape button. Once you are locked, that is your reality until your time is served.</p><p style="margin-top:10px">You may beg me for mercy, but I decide. Early release is earned through perfect obedience, never demanded. If you are not ready for that level of commitment, do not start.</p>' },
+            { q: 'Can I get early release?', a: '<p>You serve your full sentence. There is no undo, no refund, no escape button. Once you are locked, that is your reality until your time is served.</p><p style="margin-top:10px">You may beg me for mercy, but I decide. Early release is earned through perfect obedience, never demanded. If you are not ready for that level of commitment, don\'t start.</p>' },
             { q: 'How do I start?', a: '<p>Once you are inside the app, you request your lock period. I review and approve it. Before you upload your verification video, you go through an onboarding where you select your kinks, your hard limits, and read through every rule so there are no surprises.</p><p style="margin-top:10px">After that, you record a short verification video, and your sentence begins. From that moment, you belong to me until your time is served.</p>' },
-            { q: 'Is my program the same as everyone else\'s?', a: '<p>No. Every program is unique. I build yours from scratch based on your kinks, your limits, and what you tell me about yourself during onboarding. Two subjects locked for the same number of days will receive completely different orders.</p><p style="margin-top:10px">This is not a template. This is not a bot. This is me, personally designing your experience.</p>' },
+            { q: 'Is my program the same as everyone else\'s?', a: '<p>No. Every program is unique. I build yours from scratch based on your kinks, your limits, and what you tell me about yourself during onboarding. Two subjects locked for the same number of days will receive completely different orders.</p><p style="margin-top:10px">This isn\'t a template. This isn\'t a bot. This is me, personally designing your experience.</p>' },
         ]
     },
     {
@@ -661,14 +648,14 @@ var faqData = [
             { q: 'Do I need experience?', a: '<p>None. Most of my subjects started with nothing but curiosity. You don\'t need to know the terminology, the protocols, or the "right way" to submit. I\'ll teach you. The only thing I need from you is honesty about where you are and willingness to learn.</p>' },
             { q: 'What do you expect from me?', a: '<p>Honesty and consistency. That\'s all. I don\'t care how experienced you are, how much money you have, or how submissive you think you are. I care if you show up when you say you will. I care if you do what I assign you. I care if you tell me the truth even when it\'s uncomfortable. Everything else I can work with. But if you lie to me or waste my time, you won\'t last here.</p>' },
             { q: 'What if I fail?', a: '<p>You will. Everyone does. I don\'t expect perfection, I expect you to get back up. Missing a task, slipping on your routine, falling behind on kneeling. That happens. What matters is what you do after. The subjects who grow here aren\'t the ones who never fail. They\'re the ones who fail and come back the next day anyway.</p>' },
-            { q: "I don't know what kind of submissive I am.", a: '<p>That\'s fine. Most don\'t when they start. You don\'t need to show up with a label. Some discover they\'re into keyholding. Some find out they need total ownership. Some just want structure and accountability. You\'ll figure it out here. I\'ve seen every type and I know how to read what you need before you do. Just walk in honest and the rest will come.</p>' },
+            { q: "I don't know what kind of submissive I\'m.", a: '<p>That\'s fine. Most don\'t when they start. You don\'t need to show up with a label. Some discover they\'re into keyholding. Some find out they need total ownership. Some just want structure and accountability. You\'ll figure it out here. I\'ve seen every type and I know how to read what you need before you do. Just walk in honest and the rest will come.</p>' },
         ]
     },
     {
         title: 'Payments & Costs',
         icon: '$',
         questions: [
-            { q: 'Entry Tribute', a: '<p>\u20AC55 gets you full access to the kingdom. Your profile, over 1,000 tasks, kneeling hours, global chat, the hierarchy, and Vlad \u2014 your personal guardian AI. This is more than any Domme has ever offered. Everything built from scratch, no third-party platforms, no data selling. One tribute, full access. Every price range will find something inside. I\'m not here to ruin your bank account. But I\'m not here to be used for free either. Serving costs something. How much is between you and your devotion.</p>' },
+            { q: 'Entry Tribute', a: '<p>\u20AC55 gets you full access to the kingdom. Your profile, over 1,000 tasks, kneeling hours, global chat, the hierarchy, and Vlad , your personal guardian AI. This is more than any Domme has ever offered. Everything built from scratch, no third-party platforms, no data selling. One tribute, full access. Every price range will find something inside. I\'m not here to ruin your bank account. But I\'m not here to be used for free either. Serving costs something. How much is between you and your devotion.</p>' },
             { q: 'Who handles my payment?', a: '<p>Stripe. The same payment system used by Amazon, Google, and Shopify. I never see your card number, your bank details, or your billing address. Every transaction is encrypted. Your financial information never touches my servers.</p>' },
             { q: 'Do you accept crypto?', a: '<p>Yes. I accept cryptocurrency payments. If you prefer to pay with crypto, that option is available to you inside the app. Complete privacy, no bank statements, no traces. Just you and your devotion.</p>' },
             { q: 'Will my wife see this on our statement?', a: '<p>The charge shows up as a discreet description. Nothing that screams femdom, nothing that raises questions. Your privacy extends to your finances. And if even that feels like too much, crypto payments leave no trace on any bank statement at all.</p>' },
@@ -683,7 +670,7 @@ var faqData = [
             { q: 'Is my identity protected?', a: '<p>Your real name is never shown anywhere. You pick an alias when you sign up and that\'s all anyone ever sees. Other members don\'t know who you are, where you live, or what your real name is. Payments go through Stripe so I never see your card details. No one can look you up here and connect it to your real life. You\'re as invisible as you want to be.</p>' },
             { q: 'Where do we communicate?', a: '<p>Everything stays inside this app. I don\'t use Instagram DMs, Telegram, WhatsApp, or any third party platform to talk to my subjects. Your conversations never touch a server owned by Meta, Google, or anyone else. No algorithms scanning your messages, no data harvesting, no risk of your kink life showing up in an ad suggestion. What you say here stays here.</p>' },
             { q: 'What stops you from blackmailing me?', a: '<p>Nothing. That\'s the honest answer. If I wanted to, I could. But that\'s exactly why you need to pay attention to who you\'re giving power to. I\'ve been building this since 2022. My name, my face, my reputation is attached to everything here. I have subjects who have been with me for years. No one is locked in. You can walk away whenever you want. And the only guarantee I offer is the one that actually matters: years of consistency, a track record you can verify yourself, and a reputation I\'ve never had a reason to hide.</p>' },
-            { q: 'Convince me this is not a scam.', a: '<p>No.</p>' },
+            { q: 'Convince me this isn\'t a scam.', a: '<p>No.</p>' },
             { q: 'Can I disappear if I need to?', a: '<p>Leaving is free. Your account, your history, your data, gone. No questions asked. I genuinely encourage you to go out there and explore. This lifestyle has a lot to offer and you should see it all.</p><p style="margin-top:10px">Now, if one day you find yourself back at my door, that\'s a different conversation. One I\'ll enjoy very much.</p>' },
         ]
     }
@@ -727,8 +714,7 @@ function showTypingIndicator() {
     var row = document.createElement('div');
     row.className = 'faq-typing-row';
     row.id = 'faqTyping';
-    row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
-        '<div class="faq-typing-bubble"><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div></div>';
+    row.innerHTML = '<div class="faq-typing-bubble"><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div><div class="faq-typing-dot"></div></div>';
     body.appendChild(row);
     scrollFaqChat();
 }
@@ -744,8 +730,7 @@ function addQueenBubble(text) {
     if (!body) return;
     var row = document.createElement('div');
     row.className = 'faq-cb-row faq-cb-row-queen';
-    row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
-        '<div class="faq-cb-wrap-queen"><div class="faq-cb-queen">' + text + '</div>' +
+    row.innerHTML = '<div class="faq-cb-wrap-queen"><div class="faq-cb-name">QUEEN KARIN</div><div class="faq-cb-queen">' + text + '</div>' +
         '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
     body.appendChild(row);
     scrollFaqChat();
@@ -886,8 +871,7 @@ function selectQuestion(catIndex, qIndex) {
         if (!body) return;
         var row = document.createElement('div');
         row.className = 'faq-cb-row faq-cb-row-queen';
-        row.innerHTML = '<div class="faq-cb-av-wrap"><img src="/queen-nav.png" class="faq-cb-av"><div class="faq-cb-dot"></div></div>' +
-            '<div class="faq-cb-wrap-queen"><div class="faq-a-bubble">' + pickupHtml + item.a + '</div>' +
+        row.innerHTML = '<div class="faq-cb-wrap-queen"><div class="faq-cb-name">QUEEN KARIN</div><div class="faq-a-bubble">' + pickupHtml + item.a + '</div>' +
             '<div class="faq-chat-ts faq-chat-ts-queen">' + getFaqTime() + '</div></div>';
         body.appendChild(row);
         var asked = askedQuestions[catIndex] || [];
@@ -1393,6 +1377,16 @@ function toggleMenu() {
 function menuNavigate(hash) {
     closeMenu();
     parent.postMessage({ type: 'menuNavigate', hash: hash }, '*');
+}
+
+// Auto-open if ?autoOpen=1 (used by floating bubble)
+if (new URLSearchParams(window.location.search).get('autoOpen') === '1') {
+    // Hide bottom nav bar, go straight to FAQ chat
+    var navBar = document.querySelector('.fake-nav');
+    if (navBar) navBar.style.display = 'none';
+    var overlay = document.getElementById('faqChatOverlay');
+    if (overlay) overlay.style.bottom = '0';
+    setTimeout(function() { openFaqChat(); }, 300);
 }
 
 // Listen for parent messages (e.g. openFaq)

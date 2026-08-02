@@ -156,7 +156,7 @@ export async function POST(req: Request) {
             .select('sender_email, content, metadata')
             .ilike('member_id', memberEmail)
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(20);
 
         // Vault context — injected when user is chatting from the vault (keyholder) page
         let vaultSection = '';

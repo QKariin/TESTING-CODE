@@ -129,11 +129,12 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
     const [reviews, setReviews] = useState<ReviewData[]>(initialReviews);
     const [reviewsLoaded, setReviewsLoaded] = useState(initialReviews.length > 0);
     const [showAllReviews, setShowAllReviews] = useState(false);
+    const [showAllLb, setShowAllLb] = useState(false);
     const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
     const [toastClass, setToastClass] = useState('');
     const [accessDenied, setAccessDenied] = useState<{ section: string } | null>(null);
-    const [openAbout, setOpenAbout] = useState<string | null>(null);
     const [iframeFull, setIframeFull] = useState(false);
+    const [faqOpen, setFaqOpen] = useState(false);
 
     // Refs
     const faqIsOpenRef = useRef(false);
@@ -141,8 +142,10 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
     const landingPageRef = useRef<HTMLDivElement>(null);
     const lastSeenIdRef = useRef<string | number | null>(null);
     const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const footerFrameRef = useRef<HTMLIFrameElement>(null);
+    const footerFrameRef = useRef<HTMLIFrameElement>(null); // kept for message listener compatibility
     const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const aboutImgRef = useRef<HTMLImageElement>(null);
+    const aboutSectionRef = useRef<HTMLElement>(null);
 
     /* ── Show Toast ── */
     const showToast = useCallback((item: ToastItem) => {
@@ -196,6 +199,40 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    /* ── About section parallax zoom + fade out ── */
+    useEffect(() => {
+        const onScroll = () => {
+            const section = aboutSectionRef.current;
+            const img = aboutImgRef.current;
+            if (!section || !img) return;
+            const rect = section.getBoundingClientRect();
+            const vh = window.innerHeight;
+            // Only animate while section is in view
+            if (rect.bottom < 0 || rect.top > vh) return;
+            // Zoom
+            const progress = Math.min(1, Math.max(0, (vh - rect.top) / (vh + section.offsetHeight)));
+            const scale = 1 + progress * 0.35;
+            img.style.transform = `scale(${scale})`;
+            // Fade in: section top enters viewport bottom → fully visible at 70% mark
+            // Fade out: when section BOTTOM crosses viewport midpoint
+            const sectionBottom = rect.bottom;
+            const viewMid = vh / 2;
+            if (rect.top > vh * 0.7) {
+                // Section just entering — fade in
+                const fadeIn = Math.min(1, (vh - rect.top) / (vh * 0.3));
+                section.style.opacity = `${fadeIn}`;
+            } else if (sectionBottom < viewMid) {
+                // Section bottom has passed viewport mid — fade out
+                const fadeOut = Math.min(1, (viewMid - sectionBottom) / viewMid);
+                section.style.opacity = `${1 - fadeOut}`;
+            } else {
+                section.style.opacity = '1';
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
     /* ── Scroll reveal (uses window scroll) ── */
     const revealedRef = useRef(new Set<Element>());
     const runReveal = useCallback(() => {
@@ -227,6 +264,26 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
 
     // Re-check when reviews load (new .grow-card elements added to DOM)
     useEffect(() => { setTimeout(runReveal, 50); }, [reviews, runReveal]);
+
+    /* ── Two-way scroll animation for sections + service cards ── */
+    useEffect(() => {
+        const els = document.querySelectorAll('.svc-card, .scroll-section');
+        if (!els.length) return;
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                const el = e.target as HTMLElement;
+                if (e.isIntersecting) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                } else {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(30px)';
+                }
+            });
+        }, { threshold: 0.1 });
+        els.forEach(c => obs.observe(c));
+        return () => obs.disconnect();
+    }, []);
 
     /* ── Livestream blurred preview ── */
     useEffect(() => {
@@ -487,7 +544,6 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                         <a href="#leaderboard-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.0s' }}>Hierarchy</a>
                         <a href="#services" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.4s' }}>Service</a>
                         <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Feedback</a>
-                        <button className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }} onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
                     </nav>
                     {/* JOIN button only in sticky header */}
                 </div>
@@ -539,164 +595,214 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             {/* Main Content */}
             <main className="content-flow" style={{ position: 'relative', zIndex: 2 }}>
 
-                {/* ABOUT — Header + Accordion drawers */}
-                <section className="funnel-section funnel-section-glass" id="about">
-                    <div className="funnel-label" style={{ marginBottom: 10 }}>ABOUT ME</div>
-                    <h2 className="funnel-title">Queen Karin</h2>
-                    <div className="funnel-divider" />
-                    <p className="funnel-text">Three years building what no platform dared to create. Not a profile on someone else&apos;s site. Not a clip store. A private world with its own economy, its own hierarchy, and one absolute ruler.</p>
-                    <p className="funnel-text dim">I don&apos;t audition. I don&apos;t negotiate. I don&apos;t convince. I open doors, and I close them just as easily.</p>
-                    <div className="section-gallery" style={{ marginBottom: 30 }}>
-                        <div className="section-gallery-item"><img src="/queen-profile.png" alt="" /><div className="section-gallery-label">The Queen</div></div>
-                        <div className="section-gallery-item"><img src="/queen-bg-mobile.jpg" alt="" /><div className="section-gallery-label">My World</div></div>
+                {/* ABOUT — Cinematic intro */}
+                <section ref={aboutSectionRef} id="about" style={{ position: 'relative', minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', opacity: 0 }}>
+                    {/* Photo */}
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                        <img ref={aboutImgRef} src="/queen-about.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.4)', willChange: 'transform', transition: 'none' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(2,2,2,0.3) 0%, rgba(2,2,2,0.1) 40%, rgba(2,2,2,0.7) 80%, #020202 100%)' }} />
+                    </div>
+                    {/* Text overlay */}
+                    <div className="grow-card" style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: '0 24px', maxWidth: 700 }}>
+                        <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 5vw, 2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 400, letterSpacing: 3, lineHeight: 1.5, margin: '0 0 28px' }}>
+                            Three years building what no platform dared to create.
+                        </p>
+                        <div style={{ width: 40, height: 1, background: 'rgba(197,160,89,0.4)', margin: '0 auto 28px' }} />
+                        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.3rem, 4.5vw, 2rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.45)', lineHeight: 2.2, margin: 0, fontWeight: 300 }}>
+                            I don&apos;t convince.<br />
+                            I don&apos;t negotiate.<br />
+                            I don&apos;t audition.<br />
+                            I open doors, and I close them just as easily.
+                        </p>
+                        <a href="/login" style={{
+                            display: 'inline-block', marginTop: 36,
+                            fontFamily: 'Cinzel, serif', fontSize: '0.85rem', letterSpacing: 6,
+                            color: 'rgba(197,160,89,0.9)', textDecoration: 'none',
+                            padding: '18px 56px',
+                            background: 'rgba(6,6,10,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10,
+                            boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                        }}>START NOW</a>
+                    </div>
+                </section>
+
+                {/* LEADERBOARD — tribute style */}
+                <div id="leaderboard-section" className="scroll-section" style={{ marginTop: 180, padding: '40px 16px 50px', position: 'relative', zIndex: 2, overflow: 'hidden', opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}>
+                    {/* Background photo */}
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                        <img src="/queen-hierarchy.jpeg" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', filter: 'brightness(0.25)' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #020202 0%, rgba(2,2,2,0.3) 15%, rgba(2,2,2,0.3) 85%, #020202 100%)' }} />
+                    </div>
+                    {/* Content over background */}
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                    {/* Section header */}
+                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>HIERARCHY</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
 
-                    {[
-                        { key: 'femdom', title: 'Queen Karin', subtitle: 'The FemDom', content: (<>
-                            <p className="funnel-text">Control is not a roleplay I put on. It is who I am. Every interaction, every rule, every punishment exists because I designed it that way. Obedience is not requested. It is the price of entry.</p>
-                            <p className="funnel-text dim">I don&apos;t play Domme. I live it. The difference is everything.</p>
-                            <div className="section-gallery">
-                                <div className="section-gallery-item"><img src="/queen-karin.png" alt="" /><div className="section-gallery-label">Authority</div></div>
-                                <div className="section-gallery-item"><img src="/login-bg.png" alt="" /><div className="section-gallery-label">Discipline</div></div>
-                            </div>
-                        </>) },
-                        { key: 'kinks', title: "Queen Karin's", subtitle: 'Kinks', content: (<>
-                            <p className="funnel-text">Chastity. Financial domination. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
-                            <p className="funnel-text dim">You don&apos;t choose your kink here. I do.</p>
-                            <div className="section-gallery three-up">
-                                <div className="section-gallery-item"><img src="/collar-placeholder.png" alt="" /><div className="section-gallery-label">Chastity</div></div>
-                                <div className="section-gallery-item"><img src="/academy-obedience.png" alt="" /><div className="section-gallery-label">Training</div></div>
-                                <div className="section-gallery-item"><img src="/hero-bg.png" alt="" /><div className="section-gallery-label">Worship</div></div>
-                            </div>
-                        </>) },
-                        { key: 'vanilla', title: 'Queen Karin', subtitle: 'The Human', content: (<>
-                            <p className="funnel-text">Behind the protocol there is a real woman. I travel, I cook, I laugh too loud, I overthink everything. I build things obsessively and care deeply about the people in my world.</p>
-                            <p className="funnel-text dim">Kink without personality is just noise. You are not serving a character. You are serving a person.</p>
-                            <div className="section-gallery">
-                                <div className="section-gallery-item wide"><img src="/og-cover.png" alt="" /><div className="section-gallery-label">The Real Me</div></div>
-                            </div>
-                        </>) },
-                        { key: 'goals', title: "Queen Karin's", subtitle: 'Goals', content: (<>
-                            <p className="funnel-text">This app is only the beginning. A full ecosystem where devotion has real weight, real consequence, and real reward. A household that operates like a private empire, not a content page.</p>
-                            <p className="funnel-text dim">I am not building a following. I am building a legacy.</p>
-                            <div className="section-gallery">
-                                <div className="section-gallery-item"><img src="/queen-bg-desktop.png" alt="" /><div className="section-gallery-label">The Vision</div></div>
-                                <div className="section-gallery-item"><img src="/queen-nav.png" alt="" /><div className="section-gallery-label">The Empire</div></div>
-                            </div>
-                        </>) },
-                    ].map(s => (
-                        <div key={s.key} className={`about-drawer${openAbout === s.key ? ' open' : ''}`}>
-                            <button className="about-drawer-title" onClick={() => setOpenAbout(openAbout === s.key ? null : s.key)}>
-                                <div>
-                                    <span className="about-drawer-sub">{s.subtitle}</span>
-                                </div>
-                                <span className="about-drawer-arrow">{openAbout === s.key ? '▴' : '▾'}</span>
+                    {/* Period tabs */}
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 0, marginBottom: 24 }}>
+                        {(['today', 'weekly', 'monthly', 'alltime'] as const).map(p => (
+                            <button
+                                key={p}
+                                onClick={() => setLbPeriod(p)}
+                                style={{
+                                    background: 'none', border: 'none', padding: '8px 16px',
+                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', fontWeight: 600,
+                                    letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer',
+                                    color: lbPeriod === p ? '#c5a059' : 'rgba(255,255,255,0.2)',
+                                    borderBottom: lbPeriod === p ? '1.5px solid rgba(197,160,89,0.4)' : '1.5px solid transparent',
+                                    transition: 'all 0.3s ease',
+                                }}
+                            >
+                                {p === 'alltime' ? 'ALL' : p === 'today' ? 'TODAY' : p === 'weekly' ? 'WEEK' : 'MONTH'}
                             </button>
-                            <div className="about-drawer-body">
-                                {s.content}
-                            </div>
-                        </div>
-                    ))}
-                </section>
-
-                {/* LEADERBOARD */}
-                <section className="funnel-section" id="leaderboard-section" style={{ background: 'linear-gradient(135deg, #ff00ed, #000aff)', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }} />
-                    <div className="funnel-label">THE HIERARCHY</div>
-                    <div className="funnel-divider" />
-                    <div className="lb-tabs">
-                        {(['today', 'weekly', 'monthly', 'alltime'] as const).map(period => {
-                            const labels: Record<string, string> = { today: 'TODAY', weekly: 'WEEK', monthly: 'MONTH', alltime: 'ALL' };
-                            return (
-                                <button
-                                    key={period}
-                                    className={`lb-tab${lbPeriod === period ? ' active' : ''}`}
-                                    onClick={() => setLbPeriod(period)}
-                                >
-                                    {labels[period]}
-                                </button>
-                            );
-                        })}
+                        ))}
                     </div>
-                    <div id="lbEntries">
+
+                    {/* Entries */}
+                    <div style={{ maxWidth: 600, margin: '0 auto' }}>
                         {lbEntries.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '30px 0', fontFamily: 'Cinzel,serif', fontSize: 12, color: 'rgba(255,255,255,0.12)' }}>No scores yet</div>
-                        ) : (
-                            lbEntries.map((e, i) => {
-                                const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'minor';
-                                const av = e.avatar ? { backgroundImage: `url(${e.avatar})` } : {};
-                                return (
-                                    <div key={i} className={`lb-entry ${cls}`} style={i === 0 ? { position: 'relative', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' } : {}}>
-                                        {i === 0 && <>
-                                            <svg style={{ position: 'absolute', top: 3, left: 6, opacity: 0.15 }} width="12" height="12" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: 8, left: '22%', opacity: 0.08 }} width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: 2, left: '42%', opacity: 0.1 }} width="10" height="10" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: 14, left: '55%', opacity: 0.06 }} width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: 5, right: 40, opacity: 0.12 }} width="14" height="14" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: 2, right: 15, opacity: 0.09 }} width="9" height="9" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', bottom: 4, left: 12, opacity: 0.1 }} width="16" height="16" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', bottom: 8, left: '35%', opacity: 0.07 }} width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', bottom: 3, right: 30, opacity: 0.13 }} width="11" height="11" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', bottom: 6, right: 8, opacity: 0.08 }} width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: '50%', left: 3, opacity: 0.06, transform: 'translateY(-50%)' }} width="8" height="8" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                            <svg style={{ position: 'absolute', top: '50%', right: 60, opacity: 0.1, transform: 'translateY(-50%)' }} width="13" height="13" viewBox="0 0 24 24" fill="#c5a059"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
-                                        </>}
-                                        <div className="lb-rank" style={{ position: 'relative', zIndex: 1 }}>{i + 1}</div>
-                                        <div className="lb-avatar" style={{ ...av, position: 'relative', zIndex: 1 }} />
-                                        <div className="lb-info" style={{ position: 'relative', zIndex: 1 }}>
-                                            <div className="lb-name">{e.name || 'Anonymous'}</div>
-                                            <div className="lb-hier">{e.hierarchy || ''}</div>
+                            <div style={{ textAlign: 'center', padding: '30px 0', fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.12)' }}>No scores yet for this period</div>
+                        ) : (<>
+                            {/* Top 3 — larger with rank icons */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                {lbEntries.slice(0, 3).map((e, i) => {
+                                    const rankIcons = [
+                                        <svg key="crown" width="18" height="18" viewBox="0 0 24 24" fill="#c5a059"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2v2h14v-2H5z"/></svg>,
+                                        <svg key="star" width="16" height="16" viewBox="0 0 24 24" fill="rgba(197,160,89,0.5)"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>,
+                                        <svg key="shield" width="15" height="15" viewBox="0 0 24 24" fill="rgba(197,160,89,0.35)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>,
+                                    ];
+                                    return (
+                                        <div key={i} className="grow-card" style={{
+                                            display: 'flex', alignItems: 'center', gap: 16,
+                                            padding: i === 0 ? '18px 18px' : '14px 18px', borderRadius: 10,
+                                            background: i === 0 ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.025)',
+                                            border: i === 0 ? '1px solid rgba(197,160,89,0.15)' : '1px solid rgba(255,255,255,0.04)',
+                                        }}>
+                                            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30 }}>
+                                                {rankIcons[i]}
+                                            </div>
+                                            <div style={{
+                                                width: i === 0 ? 52 : 44, height: i === 0 ? 52 : 44, borderRadius: '50%', flexShrink: 0,
+                                                background: e.avatar
+                                                    ? `url(${e.avatar}) center/cover`
+                                                    : 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.04))',
+                                                border: i === 0 ? '1.5px solid rgba(197,160,89,0.3)' : '1px solid rgba(197,160,89,0.12)',
+                                            }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{
+                                                    fontFamily: 'Cinzel, serif', fontSize: i === 0 ? '1.05rem' : '0.92rem',
+                                                    color: i === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)',
+                                                    fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                                }}>
+                                                    {e.name || 'Anonymous'}
+                                                </div>
+                                                <div style={{
+                                                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 500,
+                                                    color: 'rgba(197,160,89,0.35)', letterSpacing: '1.5px',
+                                                }}>
+                                                    {e.hierarchy || ''}
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                fontFamily: 'Rajdhani, sans-serif', fontSize: i === 0 ? '1.1rem' : '1rem', fontWeight: 700,
+                                                color: i === 0 ? '#c5a059' : 'rgba(197,160,89,0.5)',
+                                                flexShrink: 0,
+                                            }}>
+                                                {e.score ? e.score.toLocaleString() : '0'}
+                                            </div>
                                         </div>
-                                        <div className="lb-score" style={{ position: 'relative', zIndex: 1 }}>{e.score ? e.score.toLocaleString() : '0'}</div>
-                                    </div>
-                                );
-                            })
-                        )}
+                                    );
+                                })}
+                            </div>
+                            {/* #4-5 compact */}
+                            {lbEntries.length > 3 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8 }}>
+                                    {lbEntries.slice(3, showAllLb ? 10 : 5).map((e, i) => (
+                                        <div key={i + 3} style={{
+                                            display: 'flex', alignItems: 'center', gap: 12,
+                                            padding: '10px 18px',
+                                        }}>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.15)', width: 30, textAlign: 'center', flexShrink: 0 }}>{i + 4}</div>
+                                            <div style={{
+                                                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                                                background: e.avatar ? `url(${e.avatar}) center/cover` : 'rgba(255,255,255,0.04)',
+                                                border: '1px solid rgba(255,255,255,0.06)',
+                                            }} />
+                                            <div style={{ flex: 1, fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {e.name || 'Anonymous'}
+                                            </div>
+                                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', fontWeight: 600, color: 'rgba(197,160,89,0.3)', flexShrink: 0 }}>
+                                                {e.score ? e.score.toLocaleString() : '0'}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {/* See all button */}
+                            {lbEntries.length > 5 && !showAllLb && (
+                                <div style={{ textAlign: 'center', marginTop: 16 }}>
+                                    <button onClick={() => setShowAllLb(true)} style={{
+                                        background: 'none', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 4,
+                                        padding: '10px 32px', cursor: 'pointer',
+                                        fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 600,
+                                        color: 'rgba(197,160,89,0.5)', letterSpacing: '4px', transition: 'all 0.25s',
+                                    }}>SEE ALL</button>
+                                </div>
+                            )}
+                            {showAllLb && (
+                                <div style={{ textAlign: 'center', marginTop: 12 }}>
+                                    <button onClick={() => setShowAllLb(false)} style={{
+                                        background: 'none', border: 'none', cursor: 'pointer',
+                                        fontFamily: 'Cinzel, serif', fontSize: '0.45rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '4px',
+                                    }}>SHOW LESS</button>
+                                </div>
+                            )}
+                        </>)}
                     </div>
-                </section>
+                    </div>{/* end content over background */}
+                </div>
 
-                {/* SERVICES — each card grows individually */}
-                <div id="services" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 100, padding: '0 16px', marginBottom: 120, position: 'relative', zIndex: 2 }}>
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9919;</div>
-                        <h3>KEYHOLDING</h3>
-                        <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.</p>
-                        <a href="/keyholder" className="service-cta">SURRENDER KEY</a>
+                {/* SERVICES */}
+                <div id="services" className="scroll-section" style={{ marginTop: 180, padding: '0 16px', position: 'relative', zIndex: 2, opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}>
+                    {/* Section header */}
+                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
+                        <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>SERVICES</span>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
                     </div>
-
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9830;</div>
-                        <h3>FINANCIAL DOMINATION</h3>
-                        <p>Tribute isn&apos;t a transaction. It&apos;s proof of devotion. An economy built on worship, not negotiation.</p>
-                        <a href="/login" className="service-cta">ENTER</a>
-                    </div>
-
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9878;</div>
-                        <h3>TASK TRAINING</h3>
-                        <p>Daily assignments. Photo proof. Deadlines. Real consequences. A structured system of obedience with merit and punishment.</p>
-                        <a href="/login" className="service-cta">ENTER</a>
-                    </div>
-
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9733;</div>
-                        <h3>SISSIFICATION</h3>
-                        <p>Guided transformation under absolute authority. Wardrobe. Behavior. Identity. Nothing is optional.</p>
-                        <a href="/login" className="service-cta">ENTER</a>
-                    </div>
-
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9764;</div>
-                        <h3>ONLINE DOMINATION</h3>
-                        <p>Real-time control from anywhere. Not a fantasy you browse, a lifestyle you live under Her command.</p>
-                        <a href="/login" className="service-cta">ENTER</a>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600, margin: '0 auto' }}>
+                        {[
+                            { title: 'KEYHOLDING', desc: 'Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.', href: '/keyholder', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> },
+                            { title: 'FINANCIAL DOMINATION', desc: 'Tribute is not a transaction. It is proof of devotion. An economy built on worship, not negotiation.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+                            { title: 'TASK TRAINING', desc: 'Daily assignments. Photo proof. Deadlines. Real consequences. A structured system of obedience with merit and punishment.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+                            { title: 'SISSIFICATION', desc: 'Guided transformation under absolute authority. Wardrobe. Behavior. Identity. Nothing is optional.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M12 2a5 5 0 0 1 5 5c0 4-5 7-5 7s-5-3-5-7a5 5 0 0 1 5-5z"/><path d="M12 14v8M8 18h8"/></svg> },
+                            { title: 'ONLINE DOMINATION', desc: 'Real-time control from anywhere. Not a fantasy you browse, a lifestyle you live under Her command.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
+                        ].map((s, i) => (
+                            <a key={i} href={s.href} className="svc-card" style={{
+                                display: 'block', textDecoration: 'none', textAlign: 'center',
+                                padding: '28px 24px', borderRadius: 14,
+                                background: 'rgba(12,11,16,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                                border: '1px solid rgba(197,160,89,0.08)',
+                                opacity: 0, transform: 'translateY(30px)',
+                                transition: 'opacity 0.7s ease, transform 0.7s ease',
+                            }}>
+                                <div style={{ marginBottom: 14, display: 'flex', justifyContent: 'center' }}>{s.icon}</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: 5, marginBottom: 10 }}>{s.title}</div>
+                                <div style={{ width: 24, height: 1, background: 'rgba(197,160,89,0.25)', margin: '0 auto 12px' }} />
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, maxWidth: 420, margin: '0 auto' }}>{s.desc}</div>
+                            </a>
+                        ))}
                     </div>
                 </div>
 
                 {/* REVIEWS — tribute-style profile cards */}
-                <div id="reviews" style={{ paddingTop: 40, paddingBottom: 60, position: 'relative', zIndex: 2 }}>
+                <div id="reviews" className="scroll-section" style={{ marginTop: 180, paddingTop: 40, paddingBottom: 60, position: 'relative', zIndex: 2, opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}>
                     {/* Section header — tribute style */}
-                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
+                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48, padding: '0 16px' }}>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6))' }} />
                         <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px' }}>TESTIMONIALS</span>
                         <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(197,160,89,0.6), transparent)' }} />
@@ -717,9 +823,9 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
 
                             return (
                                 <div key={i} className="grow-card">
-                                    <div style={{ borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(6,6,10,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden' }}>
+                                    <div style={{ borderRadius: 14, border: '1px solid rgba(197,160,89,0.1)', background: 'rgba(12,11,16,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', overflow: 'hidden' }}>
                                         {/* Profile card header */}
-                                        <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.12) 0%, rgba(255,255,255,0.04) 100%)', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
+                                        <div style={{ background: 'linear-gradient(135deg, rgba(197,160,89,0.08) 0%, rgba(20,18,24,0.6) 100%)', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
                                             <div style={{ padding: '18px 18px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
                                                 <div style={{ flexShrink: 0 }}>
                                                     {rAvatar ? (
@@ -743,8 +849,8 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                                                     { label: 'KNEELING', value: rKneels.toLocaleString() },
                                                 ].map((stat, si) => (
                                                     <div key={stat.label} style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderLeft: si > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{stat.value}</div>
-                                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.44rem', color: 'rgba(255,255,255,0.18)', letterSpacing: 2, textTransform: 'uppercase' }}>{stat.label}</div>
+                                                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{stat.value}</div>
+                                                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.44rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2, textTransform: 'uppercase' }}>{stat.label}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -756,7 +862,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                                                     <span key={s} style={{ fontSize: '0.7rem', color: s < rRating ? '#8b0000' : 'rgba(255,255,255,0.08)' }}>&#9733;</span>
                                                 ))}
                                             </div>
-                                            <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.9rem', lineHeight: 1.9, color: 'rgba(255,255,255,0.55)', fontWeight: 300, margin: 0 }}>&ldquo;{r.text || ''}&rdquo;</p>
+                                            <p style={{ fontFamily: 'Plus Jakarta Sans,sans-serif', fontSize: '0.9rem', lineHeight: 1.9, color: 'rgba(255,255,255,0.65)', fontWeight: 300, margin: 0 }}>&ldquo;{r.text || ''}&rdquo;</p>
                                         </div>
                                         <button className="review-read-more" style={{ display: 'block', width: '100%', background: 'none', border: 'none', borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', fontFamily: 'Orbitron, sans-serif', letterSpacing: 3, textAlign: 'left', fontSize: '0.6rem', padding: '8px 18px 12px', color: 'rgba(255,255,255,0.4)' }} onClick={(e) => {
                                             const body = document.getElementById(`review-body-${i}`);
@@ -798,11 +904,16 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 <div style={{ height: 40 }} />
             </main>
 
-            {/* FINAL CTA — outside main so scroll animation can't touch it */}
-            <div id="final-cta" style={{ textAlign: 'center', padding: '60px 20px', position: 'relative', zIndex: 2 }}>
-                <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', fontStyle: 'italic', color: 'rgba(255,255,255,0.5)', marginBottom: 24, lineHeight: 1.6 }}>You either feel it or you don&apos;t.</p>
-                <p style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.1rem, 4vw, 1.6rem)', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 48, lineHeight: 1.6 }}>I don&apos;t convince. I open doors.</p>
-                <a href="/login" className="btn-join" style={{ display: 'inline-block' }}>JOIN NOW</a>
+            {/* FINAL CTA */}
+            <div id="final-cta" style={{ textAlign: 'center', padding: '60px 20px 0', position: 'relative', zIndex: 2 }}>
+                <a href="/login" style={{
+                    display: 'inline-block', fontFamily: 'Cinzel, serif', fontSize: '0.85rem', letterSpacing: 6,
+                    color: 'rgba(197,160,89,0.9)', textDecoration: 'none',
+                    padding: '18px 56px',
+                    background: 'rgba(6,6,10,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                }}>START NOW</a>
                 <div style={{ height: 'calc(100px + env(safe-area-inset-bottom))' }} />
             </div>
 
@@ -859,24 +970,42 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             </main>
         </div>
 
-        {/* FOOTER IFRAME — outside landing-page so overflow:hidden can't clip it */}
-        <iframe
-            ref={footerFrameRef}
-            id="footerFrame"
-            src="/footer-faq.html?v=6"
-            style={{
-                position: 'fixed',
-                left: 0,
-                width: '100%',
-                border: 'none',
-                zIndex: 9999999,
-                background: 'transparent',
-                colorScheme: 'dark',
-                ...(iframeFull
-                    ? { top: 0, bottom: 0, height: '100%' }
-                    : { top: 'auto', bottom: 0, height: 'calc(140px + env(safe-area-inset-bottom))' }),
-            }}
-        />
+        {/* FAQ BUBBLE + OVERLAY */}
+        {!faqOpen && (
+            <button
+                onClick={() => setFaqOpen(true)}
+                style={{
+                    position: 'fixed', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 20,
+                    width: 72, height: 72, borderRadius: '50%', border: '2px solid rgba(197,160,89,0.4)',
+                    background: 'rgba(2,2,2,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                    cursor: 'pointer', zIndex: 99998, padding: 0, overflow: 'hidden',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+                <img src="/queen-nav.png" alt="FAQ" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+            </button>
+        )}
+        {faqOpen && (
+            <iframe
+                src="/footer-faq.html?v=7&autoOpen=1"
+                style={{
+                    position: 'fixed', inset: 0, width: '100%', height: '100%',
+                    border: 'none', zIndex: 99999, background: '#020202',
+                }}
+                onLoad={() => {
+                    const handler = (msg: MessageEvent) => {
+                        if (msg.data?.type === 'faqClose') {
+                            setFaqOpen(false);
+                            window.removeEventListener('message', handler);
+                        }
+                    };
+                    window.addEventListener('message', handler);
+                }}
+            />
+        )}
 
         {/* TOAST CONTAINER */}
         <div id="toastContainer" style={{ position: 'fixed', top: 0, left: 0, width: 0, height: 0, overflow: 'visible', zIndex: 99999, pointerEvents: 'none' }}>
