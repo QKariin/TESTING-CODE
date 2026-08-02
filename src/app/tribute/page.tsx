@@ -132,8 +132,11 @@ export default function TributePage() {
 
     /* FOMO notifications disabled on /tribute */
 
-    /* Scroll to top on load */
-    useEffect(() => { window.scrollTo(0, 0); }, []);
+    /* Scroll to top on load — disable browser scroll restoration */
+    useEffect(() => {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        window.scrollTo(0, 0);
+    }, []);
 
     /* Hero text fade in */
     useEffect(() => {
