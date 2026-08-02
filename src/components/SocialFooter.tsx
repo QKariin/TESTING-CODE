@@ -49,6 +49,8 @@ export default function SocialFooter() {
 
     return (
         <footer style={{
+            position: 'relative',
+            zIndex: 10,
             borderTop: '1px solid rgba(197,160,89,0.1)',
             padding: '40px 20px 32px',
             textAlign: 'center',
