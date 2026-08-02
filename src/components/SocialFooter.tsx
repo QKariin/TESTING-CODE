@@ -35,6 +35,11 @@ const SOCIALS = [
         title: 'Disboard',
         svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
     },
+    {
+        href: 'https://www.loyalfans.com/qkarin',
+        title: 'LoyalFans',
+        svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 14.93V17a1 1 0 01-2 0v-.07A7.06 7.06 0 015 10a1 1 0 012 0 5 5 0 005 5 5 5 0 005-5 1 1 0 012 0 7.06 7.06 0 01-6 6.93zM12 9a1 1 0 111-1 1 1 0 01-1 1z"/></svg>,
+    },
 ];
 
 export default function SocialFooter() {
