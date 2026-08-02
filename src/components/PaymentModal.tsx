@@ -361,8 +361,9 @@ export default function PaymentModal({
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, lineHeight: 2, marginBottom: 8, textAlign: 'center', padding: '0 16px' }}>
                     Use the same email you registered with<br/>so I can identify your payment.
                 </div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(197,160,89,0.6)', lineHeight: 1.6, marginBottom: 28, textAlign: 'center' }}>
-                    Amount due: <span style={{ color: '#c5a059', fontWeight: 700 }}>€{Number(amountEur).toFixed(2)}</span>
+                <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '14px 20px', marginBottom: 24, textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 3, marginBottom: 6 }}>ENTER THIS EXACT AMOUNT ON THE NEXT PAGE</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', fontWeight: 700 }}>€{Number(amountEur).toFixed(2)}</div>
                 </div>
                 <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer" className="coin-flip-btn" style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
                     <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>PAY WITH CARD</span>
