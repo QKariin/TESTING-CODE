@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { supabaseAdmin } from "@/lib/supabase";
 import SocialFooter from "@/components/SocialFooter";
+import AgeGate from "@/components/AgeGate";
 import "../css/globals.css";
 
 const geistSans = Geist({
@@ -50,6 +51,10 @@ export const metadata: Metadata = {
       index: true,
       follow: true,
     },
+  },
+  other: {
+    'rating': 'adult',
+    'RTA': 'RTA-5042-1996-1400-1577-RTA',
   },
 };
 
@@ -1027,6 +1032,7 @@ export default async function RootLayout({
         <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <AgeGate />
         {children}
         <SocialFooter />
         <Analytics />
