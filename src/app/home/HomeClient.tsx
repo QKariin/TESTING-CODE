@@ -186,24 +186,20 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
         });
     }, []);
 
-    /* ── Scroll listener ── */
+    /* ── Scroll listener (uses window now, no scroll hijacking) ── */
     useEffect(() => {
-        const el = landingPageRef.current;
-        if (!el) return;
         const handleScroll = () => {
-            setIsScrolled(el.scrollTop > window.innerHeight * 0.35);
+            setIsScrolled(window.scrollY > window.innerHeight * 0.35);
         };
-        el.addEventListener('scroll', handleScroll, { passive: true });
-        return () => el.removeEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    /* ── Scroll reveal (scroll-listener, works with fixed scroll container) ── */
+    /* ── Scroll reveal (uses window scroll) ── */
     const revealedRef = useRef(new Set<Element>());
     const runReveal = useCallback(() => {
-        const container = landingPageRef.current;
-        if (!container) return;
-        const vh = container.clientHeight;
-        container.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
+        const vh = window.innerHeight;
+        document.querySelectorAll<HTMLElement>('.funnel-section, .grow-card').forEach(el => {
             if (revealedRef.current.has(el) || el.tagName === 'HEADER') return;
             const rect = el.getBoundingClientRect();
             if (rect.top < vh * 0.92 && rect.bottom > 0) {
@@ -212,7 +208,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 revealedRef.current.add(el);
             }
         });
-        container.querySelectorAll<HTMLElement>('.glass-box').forEach(el => {
+        document.querySelectorAll<HTMLElement>('.glass-box').forEach(el => {
             if (revealedRef.current.has(el)) return;
             const rect = el.getBoundingClientRect();
             if (rect.top < vh * 0.92 && rect.bottom > 0) {
@@ -223,11 +219,9 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
     }, []);
 
     useEffect(() => {
-        const container = landingPageRef.current;
-        if (!container) return;
         runReveal();
-        container.addEventListener('scroll', runReveal, { passive: true });
-        return () => container.removeEventListener('scroll', runReveal);
+        window.addEventListener('scroll', runReveal, { passive: true });
+        return () => window.removeEventListener('scroll', runReveal);
     }, [runReveal]);
 
     // Re-check when reviews load (new .grow-card elements added to DOM)
@@ -449,7 +443,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
 
     return (
         <>
-        <style>{`html, body { height: 100% !important; overflow: hidden !important; }`}</style>
+        <style>{`html, body { overscroll-behavior: none; background: #020202 !important; }`}</style>
         {/* Fixed background — outside landing-page so transforms can't break position:fixed */}
         <div className="landing-bg" />
         <div ref={landingPageRef} className={`landing-page${isScrolled ? ' scrolled' : ''}`}>
@@ -473,7 +467,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             </div>
 
             {/* Fixed dark tint — stays forever */}
-            <div style={{ position: 'fixed', inset: 0, zIndex: 1, background: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
+            <div style={{ position: 'fixed', top: -50, left: 0, width: '100%', height: 'calc(100lvh + 100px)', zIndex: 1, background: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
 
             {/* Hero header — scrolls with page */}
             <header className="grow-card" style={{ position: 'relative', zIndex: 2, height: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '10vh', background: isScrolled ? 'transparent' : 'rgba(5,5,6,0.6)', backdropFilter: isScrolled ? 'none' : 'blur(8px)', WebkitBackdropFilter: isScrolled ? 'none' : 'blur(8px)', borderRadius: '0 0 18px 18px', marginBottom: 14, overflow: 'hidden', opacity: 1, transform: 'scale(1)', transition: 'background 0.5s ease' }}>
@@ -498,16 +492,33 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                 </div>
             </header>
 
-            {/* Sticky nav — appears after scrolling past hero */}
-            <div className="sticky-nav" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', background: 'rgba(15,15,18,0.98)', backdropFilter: 'blur(25px)', WebkitBackdropFilter: 'blur(25px)', borderBottom: '1px solid rgba(197,160,89,0.1)', transition: 'transform 0.35s ease, opacity 0.35s ease', transform: isScrolled ? 'translateY(0)' : 'translateY(-100%)', opacity: isScrolled ? 1 : 0, pointerEvents: isScrolled ? 'auto' : 'none' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700, letterSpacing: 3, color: '#c5a059', lineHeight: 1 }}>Queen Karin&apos;s</span>
-                    <div style={{ display: 'flex', alignItems: 'baseline', marginTop: 2 }}>
-                        <span style={{ fontFamily: 'Italianno,cursive', fontSize: 20, color: '#fff' }}>Kink</span>
-                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 8, color: '#fff', opacity: 0.6, marginLeft: 4, letterSpacing: 4 }}>-DOM</span>
-                    </div>
+            {/* Fixed header — tribute style, appears on scroll */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+                textAlign: 'center', padding: '10px 20px 8px',
+                background: 'rgba(4,4,6,0.65)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(197,160,89,0.08)',
+                transition: 'transform 0.35s ease, opacity 0.35s ease',
+                transform: isScrolled ? 'translateY(0)' : 'translateY(-100%)',
+                opacity: isScrolled ? 1 : 0,
+                pointerEvents: isScrolled ? 'auto' : 'none',
+            }}>
+                <div style={{
+                    fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 500,
+                    color: 'rgba(197,160,89,0.4)', letterSpacing: '8px', textTransform: 'uppercase',
+                    marginBottom: 2,
+                }}>
+                    PRESENTED BY
                 </div>
-                <a href="/login" className="btn-join" style={{ fontFamily: 'Cinzel,serif', fontSize: 11, fontWeight: 700, letterSpacing: 3, color: '#c5a059', textDecoration: 'none', padding: '10px 44px', borderRadius: 999, margin: 0, width: 'auto', height: 'auto' }}>JOIN</a>
+                <h2 style={{
+                    fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.3rem, 5vw, 1.8rem)',
+                    color: '#fff', letterSpacing: '4px', textTransform: 'uppercase',
+                    margin: 0, fontWeight: 600, lineHeight: 1.1, whiteSpace: 'nowrap',
+                }}>
+                    QUEEN KARIN
+                </h2>
             </div>
 
             {/* Main Content */}
