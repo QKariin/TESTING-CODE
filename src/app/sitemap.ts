@@ -31,10 +31,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
-            url: `${baseUrl}/home`,
+            url: `${baseUrl}/privacy`,
             lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 1,
+            changeFrequency: 'yearly',
+            priority: 0.3,
         },
         {
             url: `${baseUrl}/blog`,
