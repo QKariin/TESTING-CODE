@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { supabaseAdmin } from "@/lib/supabase";
+import SocialFooter from "@/components/SocialFooter";
 import "../css/globals.css";
 
 const geistSans = Geist({
@@ -1027,6 +1028,7 @@ export default async function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {children}
+        <SocialFooter />
         <Analytics />
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
