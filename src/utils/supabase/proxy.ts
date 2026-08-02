@@ -39,16 +39,6 @@ export async function updateSession(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Root → logged-in users go to profile/dashboard, unauthenticated see the homepage
-    if (pathname === '/') {
-        if (user) {
-            const email = (user.email || '').trim().toLowerCase();
-            const isCEO = email === 'ceo@qkarin.com' || email === 'queen@qkarin.com';
-            return NextResponse.redirect(new URL(isCEO ? '/dashboard' : '/profile', request.url));
-        }
-        // Let unauthenticated users see the root page (no redirect)
-    }
-
     if (!user && pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && !pathname.startsWith('/blog') && !pathname.startsWith('/privacy') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
         return NextResponse.redirect(new URL('/', request.url))
     }
