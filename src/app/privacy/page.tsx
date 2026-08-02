@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Privacy Policy',
-    description: 'Privacy Policy for Queen Karin — how we collect, use, and protect your personal data.',
+    description: 'Privacy Policy for Queen Karin — how I collect, use, and protect your personal data.',
 };
 
 const S = {
@@ -22,81 +22,85 @@ export default function PrivacyPage() {
         <div style={S.page}>
             <div style={S.container}>
                 <h1 style={S.h1}>PRIVACY POLICY</h1>
-                <p style={S.subtitle}>LAST UPDATED: AUGUST 2026</p>
+                <p style={S.subtitle}>LAST UPDATED: JULY 22, 2026</p>
 
+                <h2 style={S.h2}>1. WHO I AM</h2>
                 <p style={S.p}>
-                    This Privacy Policy explains how Queen Karin (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your personal information when you use our website and services at qkarin.com.
+                    This website is operated exclusively by Queen Karin (&quot;I,&quot; &quot;me,&quot; &quot;my&quot;). This Privacy Policy explains how I collect, use, and protect your personal information when you join and use my platform and services. By using this site, you agree to the terms described below.
                 </p>
 
                 <div style={S.divider} />
 
-                <h2 style={S.h2}>1. INFORMATION WE COLLECT</h2>
-                <p style={S.p}>We may collect the following types of information:</p>
+                <h2 style={S.h2}>2. AGE &amp; CONTENT</h2>
+                <p style={S.p}>
+                    This platform contains adult content and is strictly intended for users who are 18 years of age or older. By accessing this site, you confirm that you meet this requirement.
+                </p>
+
+                <h2 style={S.h2}>3. WHAT I COLLECT</h2>
+                <p style={S.p}>I collect only what is necessary to provide my services:</p>
                 <ul style={S.ul}>
-                    <li>Account information: email address, display name, profile picture</li>
-                    <li>Authentication data provided through third-party login (Google, Discord, Twitter/X)</li>
-                    <li>Payment information: transaction records, payment method details (processed by third-party payment providers)</li>
-                    <li>Usage data: pages visited, features used, interactions within the platform</li>
-                    <li>Content you submit: messages, reviews, uploaded media</li>
-                    <li>Device and browser information collected automatically</li>
+                    <li><strong style={{ color: 'rgba(255,255,255,0.55)' }}>Account information:</strong> Your email address, chosen display name, and any profile preferences you provide during registration.</li>
+                    <li><strong style={{ color: 'rgba(255,255,255,0.55)' }}>Usage data:</strong> Task activity, routine uploads, progression history, and engagement data within the platform, used to power your personalized experience.</li>
+                    <li><strong style={{ color: 'rgba(255,255,255,0.55)' }}>Communications:</strong> Messages sent through the built-in chat system are stored securely on my servers.</li>
+                    <li><strong style={{ color: 'rgba(255,255,255,0.55)' }}>Payment information:</strong> Payments are processed by third-party providers. I do NOT store or access your card numbers, billing addresses, or any financial credentials. I receive only payment confirmation and the email address linked to your account.</li>
                 </ul>
 
-                <h2 style={S.h2}>2. HOW WE USE YOUR INFORMATION</h2>
+                <h2 style={S.h2}>4. HOW I USE YOUR INFORMATION</h2>
                 <ul style={S.ul}>
-                    <li>To provide and maintain our services</li>
-                    <li>To process payments and verify transactions</li>
-                    <li>To communicate with you about your account and services</li>
-                    <li>To personalize your experience within the platform</li>
-                    <li>To maintain security and prevent fraud</li>
-                    <li>To comply with legal obligations</li>
+                    <li>To provide, operate, and improve the platform</li>
+                    <li>To communicate with you regarding your account and activity</li>
+                    <li>To process payments securely through third-party providers</li>
+                    <li>To protect platform security and prevent misuse</li>
                 </ul>
-
-                <h2 style={S.h2}>3. THIRD-PARTY SERVICES</h2>
                 <p style={S.p}>
-                    We use third-party services for authentication (Supabase Auth), payment processing (DeStream, cryptocurrency providers), analytics (Vercel Analytics), and hosting. These services may collect information as described in their own privacy policies. We do not sell your personal data to third parties.
+                    I do not sell, rent, or share your personal data with third parties for marketing purposes. Ever.
                 </p>
 
-                <h2 style={S.h2}>4. DATA STORAGE AND SECURITY</h2>
+                <h2 style={S.h2}>5. PAYMENT PROCESSING</h2>
                 <p style={S.p}>
-                    Your data is stored securely using industry-standard encryption and security measures. We use Supabase for database storage with row-level security policies. While we take reasonable steps to protect your information, no method of transmission over the internet is 100% secure.
+                    Card payments are handled by third-party providers. Cryptocurrency payments are processed on-chain. In both cases, I receive only a payment confirmation and your email &mdash; no card numbers, no billing details, no exceptions.
                 </p>
 
-                <h2 style={S.h2}>5. COOKIES AND TRACKING</h2>
+                <h2 style={S.h2}>6. DATA STORAGE &amp; SECURITY</h2>
                 <p style={S.p}>
-                    We use essential cookies for authentication and session management. We use Vercel Analytics for anonymous usage statistics. We do not use advertising cookies or trackers.
+                    Your data is stored on secured, encrypted servers. I apply industry-standard security measures to protect your information. Account data and chat messages are accessible only through authenticated sessions.
                 </p>
 
-                <h2 style={S.h2}>6. YOUR RIGHTS</h2>
+                <h2 style={S.h2}>7. YOUR RIGHTS</h2>
                 <p style={S.p}>You have the right to:</p>
                 <ul style={S.ul}>
-                    <li>Access the personal data we hold about you</li>
-                    <li>Request correction of inaccurate data</li>
+                    <li>Access the personal data I hold about you</li>
+                    <li>Request correction of inaccurate information</li>
                     <li>Request deletion of your account and associated data</li>
-                    <li>Withdraw consent for data processing</li>
-                    <li>Request a copy of your data in a portable format</li>
                 </ul>
-
-                <h2 style={S.h2}>7. DATA RETENTION</h2>
                 <p style={S.p}>
-                    We retain your data for as long as your account is active or as needed to provide services. Upon account deletion, your personal data will be removed within 30 days, except where retention is required by law.
+                    To exercise any of these rights, contact me directly!
+                </p>
+                <p style={S.p}>
+                    Account deletion requests will be reviewed and processed within 90 days of submission. During this period your account will remain inactive but your data will be retained. After the 90-day review period has passed, your personal data will be permanently deleted, unless retention is required by law.
                 </p>
 
-                <h2 style={S.h2}>8. AGE REQUIREMENT</h2>
+                <h2 style={S.h2}>8. COOKIES</h2>
                 <p style={S.p}>
-                    Our services are intended for individuals 18 years of age or older. We do not knowingly collect information from anyone under 18. If we become aware of such collection, we will delete the data immediately.
+                    I use only essential cookies required for authentication and session management. I do not use advertising, tracking, or analytics cookies.
                 </p>
 
-                <h2 style={S.h2}>9. CHANGES TO THIS POLICY</h2>
+                <h2 style={S.h2}>9. DATA RETENTION</h2>
                 <p style={S.p}>
-                    We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated revision date. Continued use of our services after changes constitutes acceptance of the updated policy.
+                    Your data is retained for as long as your account remains active. Upon a verified deletion request, I will remove your personal data within 90 days, unless retention is required by law.
+                </p>
+
+                <h2 style={S.h2}>10. THIRD-PARTY LINKS</h2>
+                <p style={S.p}>
+                    This site may contain links to external platforms. I am not responsible for the privacy practices of any third-party websites. Please review their policies independently.
+                </p>
+
+                <h2 style={S.h2}>11. CHANGES TO THIS POLICY</h2>
+                <p style={S.p}>
+                    I may update this policy periodically. Any significant changes will be communicated through the platform. Continued use of the service after an update constitutes your acceptance of the revised policy.
                 </p>
 
                 <div style={S.divider} />
-
-                <h2 style={S.h2}>10. CONTACT</h2>
-                <p style={S.p}>
-                    If you have questions about this Privacy Policy or wish to exercise your data rights, contact us through the platform or via our Discord server.
-                </p>
 
                 <p style={S.contact}>
                     Queen Karin &middot; qkarin.com
