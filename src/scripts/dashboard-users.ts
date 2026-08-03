@@ -406,7 +406,7 @@ export async function updateDetail(u: any) {
     // Notify React of lock state for this user
     if (typeof window !== 'undefined' && (window as any)._setActiveLocks) {
         (window as any)._setActiveLocks({
-            paywall: !!(u.parameters?.paywall?.active),
+            paywall: !!(u.parameters?.paywall?.active) || u.paywall === true,
             silenced: u.silence === true,
         });
     }

@@ -1283,10 +1283,12 @@ export default function DashboardPage() {
                 if (updated.hierarchy !== undefined) found.hierarchy = updated.hierarchy;
                 if (updated.name !== undefined) found.name = updated.name;
                 if (updated.silence !== undefined) found.silence = updated.silence === true;
+                if (updated.paywall !== undefined) found.paywall = updated.paywall === true;
                 if (updated.parameters !== undefined) {
-                    found.parameters = { ...found.parameters, ...updated.parameters };
-                    // Sync paywall flag
-                    found.paywall = !!(updated.parameters?.paywall?.active);
+                    // Use the DB parameters as truth — don't merge with stale local copy
+                    // (e.g. unlock routes delete parameters.paywall, but spread would preserve the old one)
+                    found.parameters = { ...updated.parameters };
+                    found.paywall = !!(updated.parameters?.paywall?.active) || updated.paywall === true;
                 }
                 if (updated.avatar_url) {
                     const pic = getOptimizedUrl(updated.avatar_url, 100) || '/collar-placeholder.png';
