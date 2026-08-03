@@ -1,15 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+
+const SKIP_PATHS = ["/profile", "/dashboard", "/vault", "/chat", "/onboarding"];
 
 export default function AgeGate() {
-    const [show, setShow] = useState(false);
+    const pathname = usePathname();
+    const [show, setShow] = useState<boolean | null>(null);
 
     useEffect(() => {
-        if (!localStorage.getItem("age_verified")) setShow(true);
+        setShow(!localStorage.getItem("age_verified"));
     }, []);
 
-    if (!show) return null;
+    // Don't render on authenticated pages or while checking localStorage
+    if (!show || SKIP_PATHS.some(p => pathname.startsWith(p))) return null;
 
     const confirm = () => {
         localStorage.setItem("age_verified", "1");
