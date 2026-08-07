@@ -673,31 +673,12 @@ export default function PaymentModal({
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2.8rem', color: '#fff', fontWeight: 700, lineHeight: 1 }}>€{Number(amountEur).toFixed(2)}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {/* CARD button — visible, tappable */}
-                    <button onClick={() => setCardStep('story')}
-                        style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        PAY WITH CARD
-                    </button>
-                    {paypalBody && (
-                        <button onClick={handlePayPal} disabled={paypalLoading}
-                            style={{ width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: paypalLoading ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: paypalLoading ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7.5 21H3L5 9h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H7l-0.5 4z" stroke="rgba(0,112,186,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10.5 17H6L8 5h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H10.5z" stroke="rgba(0,150,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            {paypalLoading ? 'REDIRECTING...' : 'PAY WITH PAYPAL'}
-                        </button>
-                    )}
+                    {/* CRYPTO — primary option */}
                     <button onClick={() => setScreen('crypto-picker')}
-                        style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
+                        style={{ width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
-                    {paypalMeUrl && (
-                        <a href={`${paypalMeUrl}/${Number(amountEur).toFixed(2)}EUR`} target="_blank" rel="noopener noreferrer"
-                            style={{ width: '100%', padding: '18px', background: 'rgba(0,112,186,0.08)', border: '1px solid rgba(0,112,186,0.3)', borderRadius: 10, color: 'rgba(255,255,255,0.75)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none', boxSizing: 'border-box' as const }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7.5 21H3L5 9h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H7l-0.5 4z" stroke="rgba(0,112,186,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M10.5 17H6L8 5h5.5c2.5 0 4.5 1 4 4-0.7 3-3 4-5.5 4H10.5z" stroke="rgba(0,150,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                            PAY WITH PAYPAL
-                        </a>
-                    )}
                     {throneUrl && (
                         <button onClick={() => setCardStep('throne')}
                             style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -705,6 +686,14 @@ export default function PaymentModal({
                             PAY WITH THRONE
                         </button>
                     )}
+                    {/* Card/PayPal disabled */}
+                    <div style={{ width: '100%', padding: '14px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                            CARD PAYMENTS
+                        </div>
+                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 1 }}>Temporarily unavailable</div>
+                    </div>
                 </div>
                 <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
