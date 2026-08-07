@@ -599,8 +599,8 @@ export default function PaymentModal({
     if (cardStep === 'throne') {
         const tiers = [
             { label: '1 WEEK', price: 55, thronePrice: 66, tag: null },
-            { label: '1 MONTH', price: 155, thronePrice: 186, tag: null },
-            { label: '1 YEAR', price: 1200, thronePrice: 1440, tag: 'BEST VALUE' },
+            { label: '1 MONTH', price: 99, thronePrice: 119, tag: null },
+            { label: '1 YEAR', price: 499, thronePrice: 599, tag: 'BEST VALUE' },
         ];
         return (
             <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'scroll', scrollbarWidth: 'none' }}>
