@@ -598,9 +598,9 @@ export default function PaymentModal({
     /* ── THRONE ── */
     if (cardStep === 'throne') {
         const tiers = [
-            { label: '1 WEEK', price: 55, thronePrice: 66, tag: null },
-            { label: '1 MONTH', price: 99, thronePrice: 119, tag: null },
-            { label: '1 YEAR', price: 499, thronePrice: 599, tag: 'BEST VALUE' },
+            { label: '1 WEEK', price: 55, thronePrice: 66, url: 'https://throne.com/queenkarin/item/56d3445e-e070-4fae-9f0f-98b5dcccfc60', tag: null },
+            { label: '1 MONTH', price: 99, thronePrice: 119, url: 'https://throne.com/queenkarin/item/56d3445e-e070-4fae-9f0f-98b5dcccfc60', tag: null },
+            { label: '1 YEAR', price: 499, thronePrice: 599, url: 'https://throne.com/queenkarin/item/56d3445e-e070-4fae-9f0f-98b5dcccfc60', tag: 'BEST VALUE' },
         ];
         return (
             <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'scroll', scrollbarWidth: 'none' }}>
@@ -618,7 +618,7 @@ export default function PaymentModal({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
                         {tiers.map(t => (
-                            <a key={t.label} href={throneUrl} target="_blank" rel="noopener noreferrer"
+                            <a key={t.label} href={t.url} target="_blank" rel="noopener noreferrer"
                                 style={{ position: 'relative', width: '100%', padding: '18px 20px', background: t.tag ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${t.tag ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', boxSizing: 'border-box' as const }}>
                                 {t.tag && <div style={{ position: 'absolute', top: -8, right: 14, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', fontWeight: 700, color: '#000', background: '#c5a059', padding: '2px 8px', borderRadius: 4, letterSpacing: 2 }}>{t.tag}</div>}
                                 <div>
