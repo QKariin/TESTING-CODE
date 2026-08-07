@@ -597,57 +597,48 @@ export default function PaymentModal({
 
     /* ── THRONE ── */
     if (cardStep === 'throne') {
-        const throneAmount = Math.ceil(amountEur * 1.2 * 100) / 100;
+        const tiers = [
+            { label: '1 WEEK', price: 55, thronePrice: 66, tag: null },
+            { label: '1 MONTH', price: 155, thronePrice: 186, tag: null },
+            { label: '1 YEAR', price: 1200, thronePrice: 1440, tag: 'BEST VALUE' },
+        ];
         return (
-            <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+            <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px', overflowY: 'scroll', scrollbarWidth: 'none' }}>
                 <div style={BG} />
                 <div style={OVERLAY} />
+                <style>{`*::-webkit-scrollbar{display:none!important}`}</style>
                 <div style={{ ...CARD, maxWidth: 420 }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
                         <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M2 19h20v2H2v-2zm2-3l2-8 4 4 2-6 2 6 4-4 2 8H4z" fill="rgba(197,160,89,0.85)"/></svg>
                         </div>
                     </div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 6 }}>The comfortable option.</div>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center', letterSpacing: 1, marginBottom: 16 }}>For those who prefer the familiar.</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 6 }}>Pay with card via Throne</div>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', letterSpacing: 1, marginBottom: 24 }}>Select your program duration</div>
 
-                    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(197,160,89,0.6)', flexShrink: 0 }} />
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
-                            Available for <strong style={{ color: 'rgba(255,255,255,0.75)' }}>Week Entry Program only.</strong><br/>
-                            Usual price €55.00 + 20% lazy tax = <strong style={{ color: '#c5a059' }}>€66.00</strong>
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                        {tiers.map(t => (
+                            <a key={t.label} href={throneUrl} target="_blank" rel="noopener noreferrer"
+                                style={{ position: 'relative', width: '100%', padding: '18px 20px', background: t.tag ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${t.tag ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', boxSizing: 'border-box' as const }}>
+                                {t.tag && <div style={{ position: 'absolute', top: -8, right: 14, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', fontWeight: 700, color: '#000', background: '#c5a059', padding: '2px 8px', borderRadius: 4, letterSpacing: 2 }}>{t.tag}</div>}
+                                <div>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.85rem', color: '#fff', fontWeight: 600, letterSpacing: 2 }}>{t.label}</div>
+                                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 1, marginTop: 2 }}>€{t.price} + 20% service fee</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#c5a059', fontWeight: 700 }}>€{t.thronePrice}</div>
+                                </div>
+                            </a>
+                        ))}
                     </div>
 
-                    <div style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 12, padding: '20px', marginBottom: 20, textAlign: 'center' }}>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 4, marginBottom: 6 }}>YOU WILL PAY</div>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2.4rem', color: '#c5a059', fontWeight: 700, lineHeight: 1, marginBottom: 4 }}>€{throneAmount.toFixed(2)}</div>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 1 }}>instead of €{Number(amountEur).toFixed(2)} — Throne takes a cut</div>
-                    </div>
-
-                    <div style={{ background: 'rgba(255,80,80,0.04)', border: '1px solid rgba(255,80,80,0.12)', borderRadius: 10, padding: '14px 16px', marginBottom: 12, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,120,120,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
-                            Your access will <strong style={{ color: '#fff' }}>not open automatically.</strong><br/>Expect it within 24 hours.
-                        </div>
-                    </div>
-
-                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 24, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ background: 'rgba(197,160,89,0.04)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 10, padding: '14px 16px', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.7 }}>
-                            <strong style={{ color: '#c5a059' }}>Include your email in the Throne gift message.</strong><br/>
-                            That is how I find your account.
+                            <strong style={{ color: '#c5a059' }}>Include your email in the Throne gift message</strong> and the <strong style={{ color: '#fff' }}>exact amount shown above.</strong>
                         </div>
                     </div>
 
-                    <style>{`@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');`}</style>
-                    <div style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1rem', color: 'rgba(197,160,89,0.6)', textAlign: 'center', marginBottom: 24 }}>
-                        Patience is also a virtue.
-                    </div>
-
-                    <a href={throneUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', textAlign: 'center', textDecoration: 'none', marginBottom: 10, boxSizing: 'border-box' as const }}>
-                        OPEN THRONE
-                    </a>
                     <button onClick={() => { setCardStep(null); setScreen('crypto-picker'); }}
                         style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
