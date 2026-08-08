@@ -33,23 +33,23 @@ export async function POST(req: Request) {
             const profile = await findProfile(memberId, 'ID, name, parameters');
             if (profile) {
                 const params = profile.parameters || {};
-                await supabaseAdmin.from('profiles').update({
-                    parameters: {
-                        ...params,
-                        paywall: { ...(params.paywall || {}), active: false },
-                        pendingCryptoPay: null,
-                        purchaseHistory: [
-                            ...(params.purchaseHistory || []),
-                            {
-                                type: 'PAYWALL_TRIBUTE_CRYPTO',
-                                amount: params.paywall?.amount || 0,
-                                timestamp: new Date().toISOString(),
-                                memberId,
-                                name: profile.name || memberId,
-                                sessionId: orderId,
-                            },
-                        ],
+                const updatedParams = { ...params };
+                delete updatedParams.paywall;
+                updatedParams.pendingCryptoPay = null;
+                updatedParams.purchaseHistory = [
+                    ...(params.purchaseHistory || []),
+                    {
+                        type: 'PAYWALL_TRIBUTE_CRYPTO',
+                        amount: params.paywall?.amount || 0,
+                        timestamp: new Date().toISOString(),
+                        memberId,
+                        name: profile.name || memberId,
+                        sessionId: orderId,
                     },
+                ];
+                await supabaseAdmin.from('profiles').update({
+                    paywall: false,
+                    parameters: updatedParams,
                 }).eq('ID', profile.ID);
             }
         }

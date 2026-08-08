@@ -192,22 +192,21 @@ async function fulfillPaywall(orderId: string, memberId: string) {
     if (!profile) return;
 
     const params = profile.parameters || {};
+    const updatedParams = { ...params };
+    delete updatedParams.paywall;
+    updatedParams.purchaseHistory = [
+        ...(params.purchaseHistory || []),
+        {
+            type: 'PAYWALL_TRIBUTE_PAYPAL',
+            amount: params.paywall?.amount || 0,
+            timestamp: new Date().toISOString(),
+            memberId,
+            name: profile.name || memberId,
+            sessionId: orderId,
+        },
+    ];
     await supabaseAdmin.from('profiles').update({
         paywall: false,
-        parameters: {
-            ...params,
-            paywall: { ...(params.paywall || {}), active: false },
-            purchaseHistory: [
-                ...(params.purchaseHistory || []),
-                {
-                    type: 'PAYWALL_TRIBUTE_PAYPAL',
-                    amount: params.paywall?.amount || 0,
-                    timestamp: new Date().toISOString(),
-                    memberId,
-                    name: profile.name || memberId,
-                    sessionId: orderId,
-                },
-            ],
-        },
+        parameters: updatedParams,
     }).eq('ID', profile.ID);
 }

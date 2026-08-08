@@ -37,7 +37,7 @@ export async function GET() {
             });
         }
 
-        const PAYMENT_TYPES = new Set(['COIN_PURCHASE', 'PAYWALL_TRIBUTE', 'PAYWALL_TRIBUTE_CRYPTO']);
+        const PAYMENT_TYPES = new Set(['COIN_PURCHASE', 'PAYWALL_TRIBUTE', 'PAYWALL_TRIBUTE_CRYPTO', 'PAYWALL_TRIBUTE_THRONE', 'PAYWALL_TRIBUTE_PAYPAL', 'TRIBUTE_CRYPTO']);
 
         // Flatten purchaseHistory — only real payment webhook entries
         for (const profile of profilesRes.data || []) {

@@ -91,29 +91,30 @@ export async function POST(req: Request) {
         // Convert to EUR cents for logging (rough: assume EUR or USD ≈ EUR)
         const amountEur = amountInUnits / 100;
 
+        const updatedParams = { ...params };
+        delete updatedParams.paywall;
+        updatedParams.purchaseHistory = [
+            ...history,
+            {
+                type: 'PAYWALL_TRIBUTE_THRONE',
+                amount: amountEur,
+                currency,
+                timestamp: new Date().toISOString(),
+                memberId: profile.member_id,
+                name: profile.name || profile.member_id,
+                sessionId: event_id,
+                throneEvent: event_type,
+                gifterUsername: data?.gifter_username || 'Anonymous',
+            },
+        ];
+
         await supabaseAdmin
             .from('profiles')
             .update({
-                parameters: {
-                    ...params,
-                    paywall: { ...(params.paywall || {}), active: false },
-                    purchaseHistory: [
-                        ...history,
-                        {
-                            type: 'PAYWALL_TRIBUTE_THRONE',
-                            amount: amountEur,
-                            currency,
-                            timestamp: new Date().toISOString(),
-                            memberId: profile.member_id,
-                            name: profile.name || profile.member_id,
-                            sessionId: event_id,
-                            throneEvent: event_type,
-                            gifterUsername: data?.gifter_username || 'Anonymous',
-                        },
-                    ],
-                },
+                paywall: false,
+                parameters: updatedParams,
             })
-            .ilike('member_id', email); // email always lowercase string from regex match
+            .ilike('member_id', email);
 
         console.log('[throne webhook] paywall cleared for:', email, 'amount:', amountEur, currency);
         return NextResponse.json({ ok: true });

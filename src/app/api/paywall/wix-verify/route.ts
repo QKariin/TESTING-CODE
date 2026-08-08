@@ -33,24 +33,24 @@ export async function POST(req: Request) {
         if (profile) {
             const params = profile.parameters || {};
             const amount = Number(checkout?.priceSummary?.total?.amount || 0);
+            const updatedParams = { ...params };
+            delete updatedParams.paywall;
+            updatedParams.purchaseHistory = [
+                ...(params.purchaseHistory || []),
+                {
+                    type: 'PAYWALL_TRIBUTE',
+                    amount,
+                    timestamp: new Date().toISOString(),
+                    memberId,
+                    name: profile.name || memberId,
+                    sessionId: checkoutId,
+                },
+            ];
             await supabaseAdmin
                 .from('profiles')
                 .update({
-                    parameters: {
-                        ...params,
-                        paywall: { ...(params.paywall || {}), active: false },
-                        purchaseHistory: [
-                            ...(params.purchaseHistory || []),
-                            {
-                                type: 'PAYWALL_TRIBUTE',
-                                amount,
-                                timestamp: new Date().toISOString(),
-                                memberId,
-                                name: profile.name || memberId,
-                                sessionId: checkoutId,
-                            },
-                        ],
-                    },
+                    paywall: false,
+                    parameters: updatedParams,
                 })
                 .eq('ID', profile.ID);
         }

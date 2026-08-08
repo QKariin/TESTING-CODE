@@ -90,14 +90,47 @@ export async function POST(req: Request) {
             completed_at: new Date().toISOString(),
         }).eq('id', orderId);
 
-        // Credit coins to user (skip if coins=0, e.g. entrance tribute or keyholder)
+        let profile: any = null;
+        const email = userEmail || order.user_email;
+        const uid = userId || order.user_id;
+
+        // Paywall payment (coins=0, pay_url starts with "paywall:")
+        if (!coins && order.pay_url?.startsWith('paywall:')) {
+            const paywallEmail = order.pay_url.replace('paywall:', '').toLowerCase();
+            const { data: pwProfile } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, name, member_id, parameters')
+                .ilike('member_id', paywallEmail)
+                .maybeSingle();
+            if (pwProfile) {
+                const params = pwProfile.parameters || {};
+                const updatedParams = { ...params };
+                delete updatedParams.paywall;
+                updatedParams.purchaseHistory = [
+                    ...(params.purchaseHistory || []),
+                    {
+                        type: 'PAYWALL_TRIBUTE_CRYPTO',
+                        amount: order.amount_cents / 100,
+                        timestamp: new Date().toISOString(),
+                        memberId: pwProfile.member_id,
+                        name: pwProfile.name || pwProfile.member_id,
+                        sessionId: orderId,
+                    },
+                ];
+                await supabaseAdmin.from('profiles').update({
+                    paywall: false,
+                    parameters: updatedParams,
+                }).eq('ID', pwProfile.ID);
+                console.log(`[CRYPTAPI WEBHOOK] Paywall unlocked for ${paywallEmail}`);
+            }
+            return new NextResponse('*ok*', { status: 200 });
+        }
+
+        // Credit coins to user (skip if coins=0)
         if (!coins) {
             console.log(`[CRYPTAPI WEBHOOK] Order ${orderId} completed (no coin credit needed)`);
             return new NextResponse('*ok*', { status: 200 });
         }
-        let profile: any = null;
-        const email = userEmail || order.user_email;
-        const uid = userId || order.user_id;
 
         if (email) {
             const { data } = await supabaseAdmin
