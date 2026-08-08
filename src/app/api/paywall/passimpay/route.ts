@@ -26,31 +26,33 @@ export async function POST(req: Request) {
 
         const orderId = `pw${Date.now()}${memberId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // Step 1: Get live EUR→USD + EUR→crypto rates from CoinGecko
-        // PassimPay platform is USD-based, so we must convert EUR→USD before creating order
+        // +10% crypto processing fee
+        const amountCharged = Number(amount) * 1.10;
+
+        // Get live EUR→crypto rates from CoinGecko
         const cgMap: Record<string, string> = {
             '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
             '70': 'tether', '71': 'tether', '72': 'tether',
         };
         const cgId = cgMap[String(currencyId)] || 'bitcoin';
         let cryptoAmount: string | null = null;
-        let amountUsd = Number(amount); // fallback: treat EUR ≈ USD if CoinGecko fails
+        let amountUsd = amountCharged * 1.09; // fallback EUR→USD rate
         try {
             const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur,usd`, { cache: 'no-store' });
             const rateData = await rateRes.json();
             const eurPrice = rateData[cgId]?.eur;
             const usdPrice = rateData[cgId]?.usd;
             if (eurPrice && usdPrice) {
-                amountUsd = Number(amount) * (usdPrice / eurPrice);
-                const raw = Number(amount) / eurPrice;
+                amountUsd = amountCharged * (usdPrice / eurPrice);
+                const raw = amountCharged / eurPrice;
                 cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
             } else if (eurPrice) {
-                const raw = Number(amount) / eurPrice;
+                const raw = amountCharged / eurPrice;
                 cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
             }
         } catch {}
 
-        // Step 2: Create order (amount in USD — PassimPay platform currency)
+        // Create order (amount in USD — PassimPay platform currency)
         const orderRes = await ppRequest('/createorder', {
             platform_id: platformId,
             order_id: orderId,

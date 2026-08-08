@@ -46,26 +46,29 @@ export async function POST(req: Request) {
             (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
         const orderId = `kh${Date.now()}${identifier.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // Step 1: Get live EUR→USD + EUR→crypto rates (PassimPay is USD-based)
+        // +10% crypto processing fee
+        const amountCharged = amountEur * 1.10;
+
+        // Get live EUR→crypto rates (PassimPay is USD-based)
         const cgId = CRYPTO_ID_MAP[String(currencyId)] || 'bitcoin';
         let cryptoAmount: string | null = null;
-        let amountUsd = Number(amountEur);
+        let amountUsd = amountCharged * 1.09; // fallback EUR→USD rate
         try {
             const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur,usd`, { cache: 'no-store' });
             const rateData = await rateRes.json();
             const eurPrice = rateData[cgId]?.eur;
             const usdPrice = rateData[cgId]?.usd;
             if (eurPrice && usdPrice) {
-                amountUsd = Number(amountEur) * (usdPrice / eurPrice);
-                const raw = amountEur / eurPrice;
+                amountUsd = amountCharged * (usdPrice / eurPrice);
+                const raw = amountCharged / eurPrice;
                 cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
             } else if (eurPrice) {
-                const raw = amountEur / eurPrice;
+                const raw = amountCharged / eurPrice;
                 cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
             }
         } catch {}
 
-        // Step 2: Create order (amount in USD — PassimPay platform currency)
+        // Create order (amount in USD — PassimPay platform currency)
         const orderRes = await ppRequest('/createorder', {
             platform_id: platformId,
             order_id: orderId,

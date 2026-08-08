@@ -54,10 +54,11 @@ export async function POST(req: Request) {
 
         const orderId = crypto.randomUUID();
         const amountEur = tier.amountEur;
+        const amountCharged = amountEur * 1.10; // +10% crypto processing fee
 
-        // Convert EUR to crypto
+        // Convert EUR to crypto (+10% markup)
         const convertRes = await fetch(
-            `${CRYPTAPI_BASE}/${ticker}/convert/?value=${amountEur}&from=eur`
+            `${CRYPTAPI_BASE}/${ticker}/convert/?value=${amountCharged}&from=eur`
         );
         const convertData = await convertRes.json();
         if (convertData.status !== 'success') {

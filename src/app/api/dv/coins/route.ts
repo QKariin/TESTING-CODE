@@ -33,7 +33,7 @@ export async function POST(req: Request) {
             || (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
 
         const orderId = crypto.randomUUID();
-        const amountEur = (pkg.amountCents / 100).toFixed(2);
+        const amountEur = ((pkg.amountCents / 100) * 1.10).toFixed(2); // +10% crypto processing fee
 
         // Create DV.net payment wallet
         const dvRes = await fetch(`${dvHost}/api/v1/external/wallet`, {

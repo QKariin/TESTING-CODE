@@ -43,16 +43,38 @@ export async function POST(req: Request) {
             `${user.app_metadata?.provider || 'oauth'}_${user.user_metadata?.provider_id || user.id}`;
         const orderId = `coins${Date.now()}${identifier.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`.slice(0, 64);
 
-        // Step 1: Create order
+        // +10% crypto processing fee
+        const amountCharged = amountEur * 1.10;
+
+        // Get EUR→USD rate for PassimPay order + EUR→crypto rate for display
+        const cgId = CRYPTO_ID_MAP[String(currencyId)] || 'bitcoin';
+        let cryptoAmount: string | null = null;
+        let amountUsd = amountCharged * 1.09; // fallback EUR→USD rate
+        try {
+            const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur,usd`, { cache: 'no-store' });
+            const rateData = await rateRes.json();
+            const eurPrice = rateData[cgId]?.eur;
+            const usdPrice = rateData[cgId]?.usd;
+            if (eurPrice && usdPrice) {
+                amountUsd = amountCharged * (usdPrice / eurPrice);
+                const raw = amountCharged / eurPrice;
+                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
+            } else if (eurPrice) {
+                const raw = amountCharged / eurPrice;
+                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
+            }
+        } catch {}
+
+        // Create order (amount in USD — PassimPay platform currency)
         const orderRes = await ppRequest('/createorder', {
             platform_id: platformId,
             order_id: orderId,
-            amount: Number(amountEur).toFixed(2),
+            amount: amountUsd.toFixed(2),
         }, apiKey);
         const orderData = await orderRes.json();
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        // Step 2: Get wallet address
+        // Get wallet address
         const walletRes = await ppRequest('/getpaymentwallet', {
             payment_id: String(currencyId),
             platform_id: platformId,
@@ -60,19 +82,6 @@ export async function POST(req: Request) {
         }, apiKey);
         const walletData = await walletRes.json();
         if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet returned' }, { status: 500 });
-
-        // Step 3: Get EUR→crypto rate
-        const cgId = CRYPTO_ID_MAP[String(currencyId)] || 'bitcoin';
-        let cryptoAmount: string | null = null;
-        try {
-            const rateRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=eur`, { cache: 'no-store' });
-            const rateData = await rateRes.json();
-            const eurPrice = rateData[cgId]?.eur;
-            if (eurPrice) {
-                const raw = amountEur / eurPrice;
-                cryptoAmount = cgId === 'tether' ? raw.toFixed(2) : raw.toFixed(8);
-            }
-        } catch {}
 
         // Store pending order in profile so webhook can match it
         try {
