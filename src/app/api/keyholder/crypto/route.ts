@@ -109,6 +109,8 @@ export async function POST(req: Request) {
             pay_url: `keyholder:${tierId}:${tier.days}:${displayName}`,
         });
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier, order_id: orderId, amount: amountEur, currency_id: ticker, payment_type: 'keyholder', tier_id: tierId, user_id: user.id }); } catch {}
+
         return NextResponse.json({
             success: true,
             order_id: orderId,

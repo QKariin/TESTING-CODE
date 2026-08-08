@@ -83,6 +83,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
         }
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier, order_id: orderId, amount: pkg.amountCents / 100, currency_id: 'dv', payment_type: 'coins', user_id: user.id }); } catch {}
+
         return NextResponse.json({ url: payUrl, orderId });
     } catch (error: any) {
         console.error('[DV.NET] Checkout error:', error);
