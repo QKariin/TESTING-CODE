@@ -1,0 +1,160 @@
+name: Quality & Delivery Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main
+    types: [opened, reopened, synchronize, ready_for_review]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  schedule:
+    # Runs daily at 00:00 UTC on the default branch (main)
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: write
+
+env:
+  DATABASE_URL: "postgresql://ci:ci@127.0.0.1:5432/ci"
+
+concurrency:
+  group: nextjs-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------------------------
+  # 1. PUSH TO DEVELOP -> CREATE OR UPDATE PR TO MAIN
+  # -------------------------------------------------------------
+  ensure-pr-exists:
+    name: Ensure PR from develop to main exists
+    runs-on: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create or update PR from develop to main
+        env:
+          GH_TOKEN: ${{ secrets.AUTOMATION_PAT || secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/merge-develop-to-main.js
+
+  # -------------------------------------------------------------
+  # 2. BUILD & VALIDATE (PRs AND SCHEDULED MAIN)
+  # -------------------------------------------------------------
+  build-and-validate:
+    name: Build and validate
+    runs-on: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Add Git utilities to PATH
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          "C:\Program Files\Git\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: ${{ runner.environment == 'github-hosted' && 'npm' || '' }}
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint, Format & Validate
+        run: npm run validate
+
+      - name: Build Next.js App
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+  # -------------------------------------------------------------
+  # 3. SECURITY SCANS (DIFF ON PR, FULL SCAN ON MAIN)
+  # -------------------------------------------------------------
+  security-scans:
+    name: Security Scans
+    runs-on: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Add Git utilities to PATH
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          "C:\Program Files\Git\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history required for diff-based scanning against main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: ${{ runner.environment == 'github-hosted' && 'npm' || '' }}
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --legacy-peer-deps
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+
+      # Install Semgrep using standalone uv
+      - name: Install Semgrep
+        shell: powershell
+        run: |
+          if (-not (Get-Command semgrep -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing uv binary..."
+            powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+            
+            $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+            
+            Write-Host "Installing Semgrep via uv..."
+            uv tool install semgrep
+            
+            "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      # Differential scan using open-source semgrep diff
+      - name: Semgrep Scan (Changes Only on PR)
+        if: github.event_name == 'pull_request'
+        shell: powershell
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          semgrep diff --baseline-commit origin/main --config=p/typescript --config=p/nextjs --error
+
+      # Semgrep Full Scan (Scheduled / Manual runs on main)
+      - name: Semgrep Scan (Full Codebase on main)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: semgrep scan --config=p/typescript --config=p/nextjs --error .
+
+  # -------------------------------------------------------------
+  # 4. IF PR CHECKS PASS -> AUTO-MERGE TO MAIN
+  # -------------------------------------------------------------
+  auto-merge-pr:
+    name: Auto-merge PR into main
+    runs-on: ${{ vars.CI_RUNNER_LABEL || 'ubuntu-latest' }}
+    if: github.event_name == 'pull_request' && github.head_ref == 'develop'
+    needs:
+      - build-and-validate
+      - security-scans
+    steps:
+      - name: Merge PR
+        env:
+          GH_TOKEN: ${{ secrets.AUTOMATION_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge develop --repo ${{ github.repository }} --merge
