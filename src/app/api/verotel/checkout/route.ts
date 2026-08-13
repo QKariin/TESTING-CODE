@@ -55,6 +55,8 @@ export async function POST(req: Request) {
             email: user.email || undefined,
         });
 
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier, order_id: orderId, amount: 55, currency_id: 'verotel', payment_type: 'tribute', user_id: user.id }); } catch {}
+
         return NextResponse.json({ url: `${VEROTEL_URL}?JWT=${jwt}` });
     } catch (error: any) {
         console.error('[VEROTEL] Checkout error:', error);

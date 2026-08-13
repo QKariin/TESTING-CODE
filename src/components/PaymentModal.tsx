@@ -619,6 +619,7 @@ export default function PaymentModal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
                         {tiers.map(t => (
                             <a key={t.label} href={t.url} target="_blank" rel="noopener noreferrer"
+                                onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: t.thronePrice, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: t.label }) }); } catch {} }}
                                 style={{ position: 'relative', width: '100%', padding: '18px 20px', background: t.tag ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${t.tag ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', boxSizing: 'border-box' as const }}>
                                 {t.tag && <div style={{ position: 'absolute', top: -8, right: 14, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', fontWeight: 700, color: '#000', background: '#c5a059', padding: '2px 8px', borderRadius: 4, letterSpacing: 2 }}>{t.tag}</div>}
                                 <div>
