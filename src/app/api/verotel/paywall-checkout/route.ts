@@ -59,7 +59,7 @@ export async function POST(req: Request) {
             email: user.email || undefined,
         });
 
-        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId, order_id: orderId, amount, currency_id: 'verotel', payment_type: 'paywall', user_id: user.id }); } catch {}
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId, order_id: orderId, amount, currency_id: 'verotel', payment_type: 'paywall' }); } catch {}
 
         return NextResponse.json({ url: `${VEROTEL_URL}?JWT=${jwt}` });
     } catch (error: any) {

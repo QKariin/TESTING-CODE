@@ -105,7 +105,7 @@ export async function POST(req: Request) {
             pay_url: `paywall:${email}`,
         });
 
-        try { await supabaseAdmin.from('payment_logs').insert({ member_id: email, order_id: orderId, amount: amountEur, currency_id: ticker, payment_type: 'paywall', user_id: user.id }); } catch {}
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: email, order_id: orderId, amount: amountEur, currency_id: ticker, payment_type: 'paywall' }); } catch {}
 
         return NextResponse.json({
             success: true,

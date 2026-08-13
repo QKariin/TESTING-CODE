@@ -93,7 +93,7 @@ export async function POST(req: Request) {
             }
         } catch {}
 
-        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier || null, order_id: orderId, tier_id: null, amount: Number(amountEur), currency_id: String(currencyId), payment_type: 'coins', user_id: user.id }); } catch {}
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier || null, order_id: orderId, tier_id: null, amount: Number(amountEur), currency_id: String(currencyId), payment_type: 'coins' }); } catch {}
 
         return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur, coins });
     } catch (err: any) {

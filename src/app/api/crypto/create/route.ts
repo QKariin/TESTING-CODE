@@ -116,7 +116,7 @@ export async function POST(req: Request) {
             pay_url: qrUrl,
         });
 
-        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier, order_id: orderId, amount: amountEur, currency_id: ticker, payment_type: 'coins', user_id: user.id }); } catch {}
+        try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier, order_id: orderId, amount: amountEur, currency_id: ticker, payment_type: 'coins' }); } catch {}
 
         return NextResponse.json({
             success: true,
