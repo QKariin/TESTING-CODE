@@ -5,7 +5,7 @@ import { currId, users, adminEmail, getAdminEmailFallback } from './dashboard-st
 import { isMemberOnline } from './dashboard-presence';
 import { createClient } from '@/utils/supabase/client';
 import { getOptimizedUrl, mediaType } from './media';
-import { clean } from './utils';
+import { clean, triggerSound } from './utils';
 import { uploadToSupabase } from './mediaSupabase';
 import { updateSidebarItem } from './dashboard-sidebar';
 
@@ -189,6 +189,10 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             const rowMemberId = (msg.member_id || '').toLowerCase();
             if (rowMemberId !== activeId.toLowerCase() && rowMemberId !== activeUserEmail) return;
             appendChatMessage(msg);
+            const senderEmail = (msg.sender_email || '').toLowerCase();
+            if (senderEmail !== (adminEmail || '').toLowerCase() && senderEmail !== getAdminEmailFallback().toLowerCase()) {
+                triggerSound('msgSound');
+            }
         })
         .subscribe();
 
@@ -276,6 +280,11 @@ async function pollNewMessages(memberId: string, gen: number) {
         });
         if (gen !== _chatGen) return;
         newMsgs.forEach((m: any) => appendChatMessage(m));
+        const incomingMsgs = newMsgs.filter((m: any) => {
+            const s = (m.sender_email || '').toLowerCase();
+            return s !== (adminEmail || '').toLowerCase() && s !== getAdminEmailFallback().toLowerCase();
+        });
+        if (incomingMsgs.length > 0) triggerSound('msgSound');
     } catch {
         // silently drop — stale or network error
     }
