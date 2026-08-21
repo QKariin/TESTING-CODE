@@ -190,7 +190,7 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             if (rowMemberId !== activeId.toLowerCase() && rowMemberId !== activeUserEmail) return;
             appendChatMessage(msg);
             const senderEmail = (msg.sender_email || '').toLowerCase();
-            if (senderEmail !== (adminEmail || '').toLowerCase() && senderEmail !== getAdminEmailFallback().toLowerCase()) {
+            if (senderEmail !== (adminEmail || '').toLowerCase() && senderEmail !== (getAdminEmailFallback() || '').toLowerCase()) {
                 triggerSound('msgSound');
             }
         })
@@ -282,7 +282,7 @@ async function pollNewMessages(memberId: string, gen: number) {
         newMsgs.forEach((m: any) => appendChatMessage(m));
         const incomingMsgs = newMsgs.filter((m: any) => {
             const s = (m.sender_email || '').toLowerCase();
-            return s !== (adminEmail || '').toLowerCase() && s !== getAdminEmailFallback().toLowerCase();
+            return s !== (adminEmail || '').toLowerCase() && s !== (getAdminEmailFallback() || '').toLowerCase();
         });
         if (incomingMsgs.length > 0) triggerSound('msgSound');
     } catch {
