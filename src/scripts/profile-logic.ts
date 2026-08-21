@@ -997,16 +997,62 @@ function _updateInstallRow() {
 function _sendInstallNotifyOnce(u: any) {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     if (!isStandalone) return;
-    if (localStorage.getItem('_appInstallNotified')) return;
-    const { memberId, id } = getState();
-    const userId = memberId || id;
-    if (!userId) return;
-    localStorage.setItem('_appInstallNotified', '1');
-    fetch('/api/app-install-notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberId: userId, memberName: u?.name || 'Unknown' })
-    }).catch(() => {});
+    const state = getState();
+    const raw = (window as any).__currentProfileRaw || state.raw || state;
+    if (raw?.parameters?.appInstallClaimed === true) return;
+    if (localStorage.getItem('_appInstallClaimed')) return;
+
+    // Show claim popup
+    const ov = document.createElement('div');
+    ov.id = '_installClaimOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);';
+    ov.innerHTML = `
+        <div style="text-align:center;max-width:340px;padding:40px 30px;">
+            <div style="font-size:2.5rem;margin-bottom:18px;">&#x1F451;</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:#c5a059;letter-spacing:4px;margin-bottom:10px;">APP INSTALLED</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:30px;">
+                You earned <span style="color:#c5a059;font-weight:600;">1,000 coins</span> for installing the app. Tap below to claim them.
+            </div>
+            <button id="_claimInstallBtn" style="width:100%;padding:18px 30px;background:linear-gradient(135deg,#8b0000,#6b0000);border:1px solid rgba(197,160,89,0.3);color:#fff;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:5px;cursor:pointer;border-radius:0;">CLAIM 1,000 COINS</button>
+            <div id="_claimInstallStatus" style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:14px;letter-spacing:2px;"></div>
+        </div>
+    `;
+    document.body.appendChild(ov);
+
+    const btn = document.getElementById('_claimInstallBtn')!;
+    const status = document.getElementById('_claimInstallStatus')!;
+    btn.addEventListener('click', async () => {
+        btn.textContent = 'CLAIMING...';
+        btn.style.opacity = '0.5';
+        (btn as HTMLButtonElement).disabled = true;
+        const userId = state.memberId || state.id || '';
+        try {
+            await fetch('/api/claim-reward', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: userId, choice: 'coins', source: 'install' })
+            });
+            await fetch('/api/app-install-notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ memberId: userId, memberName: u?.name || 'Unknown' })
+            });
+            localStorage.setItem('_appInstallClaimed', '1');
+            btn.textContent = '1,000 COINS CLAIMED';
+            btn.style.background = 'rgba(197,160,89,0.15)';
+            btn.style.borderColor = 'rgba(197,160,89,0.5)';
+            btn.style.color = '#c5a059';
+            status.textContent = 'Added to your wallet.';
+            status.style.color = 'rgba(197,160,89,0.6)';
+            setTimeout(() => { ov.remove(); }, 2500);
+        } catch {
+            btn.textContent = 'CLAIM 1,000 COINS';
+            btn.style.opacity = '1';
+            (btn as HTMLButtonElement).disabled = false;
+            status.textContent = 'Something went wrong. Try again.';
+            status.style.color = 'rgba(200,60,60,0.6)';
+        }
+    });
 }
 
 export async function handleInstallApp() {

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         }
 
         // Define Rewards
-        const COIN_REWARD = 10;
+        const COIN_REWARD = source === 'install' ? 1000 : 10;
         const POINT_REWARD = 50;
 
         // 1. Get current balance
