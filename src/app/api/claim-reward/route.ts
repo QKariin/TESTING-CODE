@@ -57,7 +57,9 @@ export async function POST(req: Request) {
             await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
         } catch (_) {}
 
-        const logMsg = choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
+        const logMsg = source === 'install'
+            ? `APP INSTALL REWARD — +${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i> claimed`
+            : choice === 'coins' ? `REWARD CLAIMED (+${COIN_REWARD} <i class="fas fa-coins" style="color:#c5a059;"></i>)` : `REWARD CLAIMED (+${POINT_REWARD} MERIT)`;
         try { await DbService.sendMessage(profileId, logMsg, 'system'); } catch (_) { }
 
         // Post to global_messages for /home notifications (filtered out of global chat UI)
