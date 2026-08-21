@@ -97,7 +97,7 @@ export async function POST(req: Request) {
                             authUser = data?.user;
                         }
                         if (!authUser) {
-                            const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+                            const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
                             authUser = users.find((u: any) =>
                                 (u.email || '').toLowerCase() === logRow.member_id.toLowerCase()
                             );
