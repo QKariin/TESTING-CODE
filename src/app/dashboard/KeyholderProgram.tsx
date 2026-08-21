@@ -1304,33 +1304,54 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                         )}
                         {program ? (
                             <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }} className="kscr">
-                                {PHASES.map(phase => (
-                                    <div key={phase.name} style={{ marginBottom: 22 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                            <div style={{ width: 3, height: 16, borderRadius: 2, background: phase.color, opacity: .7 }} />
-                                            <span style={{ fontFamily: FC, fontSize: '.4rem', color: phase.color, letterSpacing: 5 }}>{phase.name}</span>
-                                            <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
+                                {(() => {
+                                    const totalDays = Math.max(info?.lockDays || 30, ...Object.keys(program).map(Number).filter(n => !isNaN(n)));
+                                    const CYCLE_PHASES = [
+                                        { name: 'OBEDIENCE', color: GOLD },
+                                        { name: 'DISCIPLINE', color: '#8b0000' },
+                                        { name: 'ENDURANCE', color: '#9b59b6' },
+                                        { name: 'DEVOTION', color: GOLD },
+                                    ];
+                                    const phases: { name: string; color: string; days: number[] }[] = [];
+                                    for (let d = 1; d <= totalDays; d += 7) {
+                                        const cycleIdx = Math.floor((d - 1) / 7) % CYCLE_PHASES.length;
+                                        const base = CYCLE_PHASES[cycleIdx];
+                                        const week = Math.floor((d - 1) / 7) + 1;
+                                        const days = [];
+                                        for (let i = d; i < d + 7 && i <= totalDays; i++) days.push(i);
+                                        phases.push({ name: week <= 4 ? base.name : `${base.name} ${Math.ceil(week / 4)}`, color: base.color, days });
+                                    }
+                                    return phases.map(phase => (
+                                        <div key={phase.name + phase.days[0]} style={{ marginBottom: 22 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                                <div style={{ width: 3, height: 16, borderRadius: 2, background: phase.color, opacity: .7 }} />
+                                                <span style={{ fontFamily: FC, fontSize: '.4rem', color: phase.color, letterSpacing: 5 }}>{phase.name}</span>
+                                                <span style={{ fontFamily: F, fontSize: '.32rem', color: TEXT_DIM, letterSpacing: 1 }}>DAY {phase.days[0]}-{phase.days[phase.days.length-1]}</span>
+                                                <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: sel?'1fr 1fr':'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
+                                                {phase.days.map(d => {
+                                                    const tasks = program[String(d)]||[];
+                                                    const isA = sel===d;
+                                                    const isC = info?.daysIn===d;
+                                                    const isEmpty = tasks.length === 0;
+                                                    return (<div key={d} className="kdc" onClick={() => setSel(isA?null:d)} style={{
+                                                        borderRadius: 8, padding: '10px 12px',
+                                                        border: `1px solid ${isA?'rgba(197,160,89,.35)':isC?'rgba(139,0,0,.3)':isEmpty?'rgba(255,255,255,.06)':'rgba(197,160,89,.12)'}`,
+                                                        background: isA?'rgba(197,160,89,.1)':isC?'rgba(139,0,0,.08)':'rgba(22,20,30,.95)',
+                                                        opacity: isEmpty && !isA ? .5 : 1,
+                                                    }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <span style={{ fontFamily: FC, fontSize: '.7rem', color: isA?GOLD:isC?RED:'rgba(255,255,255,.55)' }}>{d}</span>
+                                                            {isC && <span style={{ fontFamily: F, fontSize: '.28rem', color: RED, letterSpacing: 2 }}>TODAY</span>}
+                                                            <span style={{ fontFamily: F, fontSize: '.35rem', color: isEmpty?'rgba(255,255,255,.2)':TEXT_DIM }}>{isEmpty?'EMPTY':tasks.length+1}</span>
+                                                        </div>
+                                                    </div>);
+                                                })}
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: sel?'1fr 1fr':'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
-                                            {phase.days.map(d => {
-                                                const tasks = program[String(d)]||[];
-                                                const isA = sel===d;
-                                                const isC = info?.daysIn===d;
-                                                return (<div key={d} className="kdc" onClick={() => setSel(isA?null:d)} style={{
-                                                    borderRadius: 8, padding: '10px 12px',
-                                                    border: `1px solid ${isA?'rgba(197,160,89,.35)':isC?'rgba(139,0,0,.3)':'rgba(197,160,89,.12)'}`,
-                                                    background: isA?'rgba(197,160,89,.1)':isC?'rgba(139,0,0,.08)':'rgba(22,20,30,.95)',
-                                                }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <span style={{ fontFamily: FC, fontSize: '.7rem', color: isA?GOLD:isC?RED:'rgba(255,255,255,.55)' }}>{d}</span>
-                                                        {isC && <span style={{ fontFamily: F, fontSize: '.28rem', color: RED, letterSpacing: 2 }}>TODAY</span>}
-                                                        <span style={{ fontFamily: F, fontSize: '.35rem', color: TEXT_DIM }}>{tasks.length+1}</span>
-                                                    </div>
-                                                </div>);
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
+                                    ));
+                                })()}
                             </div>
                         ) : (
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
