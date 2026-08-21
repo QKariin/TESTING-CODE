@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { findProfile } from '@/lib/lookup';
+import { discordNewMember } from '@/lib/discord';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
                                 (authUser.email ? authUser.email.split('@')[0] : 'Subject');
                             const displayName = rawName.split(' ')[0];
 
-                            // Create profile
+                            // Create profile (entrance coins added later in tribute case)
                             await supabaseAdmin.from('profiles').insert({
                                 ID: authUser.id,
                                 member_id: logRow.member_id,
@@ -124,6 +125,8 @@ export async function POST(req: Request) {
                                 Name: displayName,
                                 Status: 'idle',
                                 Taskdom_History: '[]',
+                                taskdom_active_task: null,
+                                taskdom_pending_state: null,
                             });
 
                             profile = {
@@ -242,10 +245,19 @@ export async function POST(req: Request) {
             case 'tribute': {
                 const amount = pendingMeta?.amount || 0;
                 const tierId = pendingMeta?.tierId || 'weekly';
+                const displayName = profile.name || memberId.split('@')[0];
+
+                // Give entrance coins (same as Verotel entrance tribute)
+                const entranceCoins = 4999;
+                const newWallet = (profile.wallet || 0) + entranceCoins;
 
                 await supabaseAdmin.from('profiles').update({
+                    wallet: newWallet,
                     parameters: {
                         ...params,
+                        devotion: params.devotion || 100,
+                        promo72h: true,
+                        welcome_pending: true,
                         pendingTributePay: null,
                         purchaseHistory: [
                             ...(params.purchaseHistory || []),
@@ -253,17 +265,20 @@ export async function POST(req: Request) {
                                 type: 'TRIBUTE_CRYPTO',
                                 amount,
                                 tierId,
+                                coins: entranceCoins,
                                 timestamp: new Date().toISOString(),
                                 memberId,
-                                name: profile.name || memberId,
+                                name: displayName,
                                 sessionId: orderId,
                             },
                         ],
                     },
                 }).eq('ID', profile.ID);
-                console.log('[passimpay webhook] tribute recorded for:', memberId, 'amount:', amount);
-                pushTitle = 'Tribute Payment (Crypto)';
-                pushMessage = `${profile.name || memberId} sent ${amount} tribute via PassimPay`;
+
+                console.log('[passimpay webhook] tribute completed for:', memberId, 'amount:', amount, 'coins:', entranceCoins);
+                discordNewMember(displayName).catch(() => {});
+                pushTitle = 'New Tribute Received';
+                pushMessage = `${displayName} just entered the court as Hall Boy — ${entranceCoins} coins deposited.`;
                 break;
             }
 
