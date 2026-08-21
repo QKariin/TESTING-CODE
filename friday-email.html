@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queen Karin — Friday Night</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #050505;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.07; }
+  }
+
+  @keyframes rotateGlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(197,160,89,0.1); }
+    50% { border-color: rgba(197,160,89,0.3); }
+  }
+
+  @keyframes countPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #050505;
+    position: relative;
+  }
+
+  .wrap::after {
+    content: '';
+    position: absolute;
+    top: 300px;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    transform: translateX(-50%);
+    pointer-events: none;
+    animation: breathe 6s ease infinite;
+  }
+
+  /* ——— HERO ——— */
+  .hero-duo {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .hero-duo-panel {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-duo-panel img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    filter: brightness(0.5) saturate(1.2) contrast(1.05);
+  }
+
+  .hero-duo-divider {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(197,160,89,0.3), rgba(197,160,89,0.15), transparent);
+    z-index: 3;
+  }
+
+  .hero-duo-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5,5,5,0.15) 0%, rgba(5,5,5,0) 15%, rgba(5,5,5,0) 35%, rgba(5,5,5,0.5) 58%, rgba(5,5,5,0.9) 78%, #050505 100%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-duo-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.5) 100%);
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 44px 44px;
+    z-index: 4;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #050505;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%;
+    animation: fadeInUp 1s ease 0.3s both, shimmer 4s ease infinite;
+    padding: 7px 20px;
+    margin-bottom: 22px;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 52px;
+    font-weight: 300;
+    line-height: 1.08;
+    color: #fff;
+    margin-bottom: 14px;
+    animation: fadeInUp 1s ease 0.5s both;
+    letter-spacing: 1px;
+  }
+
+  .hero-title em {
+    font-weight: 300;
+    font-style: italic;
+    color: #d4af6a;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    font-weight: 200;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInUp 1s ease 0.7s both;
+  }
+
+  /* ——— URGENCY BAR ——— */
+  .urgency-bar {
+    position: relative;
+    background: linear-gradient(180deg, rgba(12,10,8,1) 0%, rgba(8,6,4,1) 100%);
+    border-top: 1px solid rgba(197,160,89,0.1);
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .urgency-track {
+    display: inline-block;
+    animation: tickerScroll 25s linear infinite;
+  }
+
+  .urgency-item {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 0 14px;
+  }
+
+  .urgency-item span {
+    color: #d4af6a;
+    font-weight: 600;
+  }
+
+  .urgency-sep {
+    display: inline-block;
+    color: rgba(197,160,89,0.2);
+    font-size: 6px;
+    vertical-align: middle;
+    padding: 0 4px;
+  }
+
+  /* ——— GOLD SEPARATOR ——— */
+  .gold-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 40px 0 0;
+  }
+
+  .gold-sep-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.35), transparent);
+  }
+
+  .gold-sep-diamond {
+    width: 5px;
+    height: 5px;
+    background: rgba(197,160,89,0.3);
+    transform: rotate(45deg);
+  }
+
+  /* ——— MESSAGE ——— */
+  .message {
+    padding: 40px 44px 44px;
+  }
+
+  .message p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .msg-headline {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #d4af6a;
+    margin-bottom: 6px;
+  }
+
+  .msg-subline {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  .message strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 400;
+  }
+
+  .message em {
+    font-style: italic;
+    color: rgba(232,201,122,0.7);
+  }
+
+  /* ——— CHALLENGE STRIP ——— */
+  .challenge-strip {
+    margin: 0 30px;
+    padding: 28px 34px;
+    border-top: 1px solid rgba(197,160,89,0.08);
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    text-align: center;
+  }
+
+  .challenge-strip p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  .challenge-strip strong {
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* ——— FEATURES ——— */
+  .features {
+    padding: 40px 44px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .feat-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .feat-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(197,160,89,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .feat-text {
+    flex: 1;
+  }
+
+  .feat-text h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+
+  .feat-text p {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+
+  /* ——— OFFER BLOCK ——— */
+  .offer {
+    margin: 30px 30px 0;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,10,10,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+
+  .offer-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 400px;
+    background: conic-gradient(from 0deg, transparent, rgba(197,160,89,0.04), transparent, rgba(139,0,0,0.06), transparent);
+    animation: rotateGlow 20s linear infinite;
+    pointer-events: none;
+  }
+
+  .offer .corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+  }
+  .offer .corner::before,
+  .offer .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(197,160,89,0.25);
+  }
+  .offer .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .offer .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .offer .corner-tl { top: -1px; left: -1px; }
+  .offer .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .offer .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .offer .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .offer-inner {
+    padding: 55px 44px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .offer-inner::before {
+    content: '';
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    height: 250px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 5s ease infinite;
+  }
+
+  .offer-label {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: #d4af6a;
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  .offer-quote {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.5);
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .offer-quote strong {
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+  }
+
+  .offer-sig {
+    margin-top: 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* ——— CTA ——— */
+  .cta-wrap {
+    text-align: center;
+    padding: 50px 40px 18px;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 22px 68px;
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.4);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.8s ease;
+  }
+
+  .cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  .cta:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 8px;
+    padding: 22px 78px;
+    border-color: rgba(197,160,89,0.3);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cta:hover::before { left: 100%; }
+  .cta:hover::after { width: 80%; }
+
+  .cta-note {
+    text-align: center;
+    padding: 14px 40px 0;
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: countPulse 3s ease infinite;
+  }
+
+  /* ——— DIVIDER ——— */
+  .divider {
+    padding: 50px 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .divider-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .divider-diamond {
+    width: 4px;
+    height: 4px;
+    background: rgba(197,160,89,0.2);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* ——— BOTTOM QUOTE ——— */
+  .bottom-quote-solo {
+    padding: 0 40px 45px;
+    text-align: center;
+  }
+
+  .bottom-quote-solo p {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.75;
+  }
+
+  .bottom-quote-solo .attr {
+    display: block;
+    margin-top: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-style: normal;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* ——— SECOND CTA ——— */
+  .cta2-wrap {
+    text-align: center;
+    padding: 40px 40px 12px;
+  }
+
+  .cta2 {
+    display: inline-block;
+    padding: 18px 56px;
+    background: transparent;
+    color: #c5a059;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(197,160,89,0.2);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s ease;
+  }
+
+  .cta2:hover {
+    border-color: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.04);
+    letter-spacing: 7px;
+    box-shadow: 0 0 40px rgba(197,160,89,0.08);
+  }
+
+  .cta2:hover::after { width: 70%; }
+
+  .cta2-note {
+    text-align: center;
+    padding: 10px 40px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 1px;
+  }
+
+  /* ——— FOOTER ——— */
+  .footer {
+    border-top: 1px solid rgba(197,160,89,0.06);
+    padding: 40px 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .footer-brand {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.12);
+    margin-bottom: 10px;
+  }
+
+  .footer a {
+    font-size: 10px;
+    color: rgba(255,255,255,0.1);
+    text-decoration: none;
+    letter-spacing: 3px;
+    transition: color 0.4s ease;
+  }
+
+  .footer a:hover { color: #c5a059; }
+
+  /* ——— MOBILE ——— */
+  @media (max-width: 520px) {
+    .hero-duo { height: 400px; }
+    .hero-title { font-size: 38px; }
+    .hero-content { padding: 0 26px 32px; }
+    .message { padding: 30px 20px 30px; }
+    .message p { font-size: 17px; line-height: 1.8; }
+    .msg-headline { font-size: 24px; letter-spacing: 2px; }
+    .msg-subline { font-size: 13px; letter-spacing: 1px; }
+    .challenge-strip { margin: 0 12px; padding: 22px 16px; }
+    .challenge-strip p { font-size: 14px; }
+    .features { padding: 30px 20px 10px; gap: 16px; }
+    .feat-icon { width: 32px; height: 32px; font-size: 14px; }
+    .feat-text h4 { font-size: 15px; }
+    .feat-text p { font-size: 10px; }
+    .offer { margin: 20px 12px 0; }
+    .offer-inner { padding: 32px 18px; }
+    .offer-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 22px; }
+    .offer-quote { font-size: 20px; }
+    .cta-wrap { padding: 36px 20px 14px; }
+    .cta { padding: 18px 0; letter-spacing: 4px; font-size: 11px; width: 100%; display: block; text-align: center; }
+    .cta:hover { padding: 18px 0; letter-spacing: 5px; }
+    .cta-note { padding: 10px 20px 0; font-size: 9px; }
+    .cta2-wrap { padding: 30px 20px 10px; }
+    .cta2 { padding: 16px 0; letter-spacing: 3px; font-size: 10px; width: 100%; display: block; text-align: center; }
+    .cta2-note { font-size: 12px; padding: 8px 20px 0; }
+    .divider { padding: 36px 0; }
+    .bottom-quote-solo { padding: 0 20px 36px; }
+    .bottom-quote-solo p { font-size: 18px; }
+    .bottom-quote-solo .attr { font-size: 8px; letter-spacing: 4px; }
+    .gold-sep { padding: 28px 0 0; }
+    .footer { padding: 30px 20px; }
+    .footer-brand { font-size: 14px; letter-spacing: 6px; }
+  }
+</style>
+</head>
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero-duo">
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/qkarin-hero-1-small.jpg" alt="">
+    </div>
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/qkarin-hero-2-small.jpg" alt="">
+    </div>
+    <div class="hero-duo-divider"></div>
+    <div class="hero-duo-gradient"></div>
+    <div class="hero-content">
+      <div class="hero-tag">Tonight</div>
+      <h1 class="hero-title">Ready to <em>Play?</em></h1>
+      <p class="hero-sub">Your Friday just got interesting.</p>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="urgency-bar">
+    <div class="urgency-track">
+      <span class="urgency-item">come <span>closer</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">friday <span>nights</span> are mine</span><span class="urgency-sep">&diams;</span><span class="urgency-item">you know you <span>want</span> this</span><span class="urgency-sep">&diams;</span><span class="urgency-item">stop <span>scrolling</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">start <span>kneeling</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">come <span>closer</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">friday <span>nights</span> are mine</span><span class="urgency-sep">&diams;</span><span class="urgency-item">you know you <span>want</span> this</span><span class="urgency-sep">&diams;</span><span class="urgency-item">stop <span>scrolling</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">start <span>kneeling</span></span><span class="urgency-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- GOLD SEPARATOR -->
+  <div class="gold-sep">
+    <div class="gold-sep-line"></div>
+    <div class="gold-sep-diamond"></div>
+    <div class="gold-sep-line"></div>
+  </div>
+
+  <!-- MESSAGE -->
+  <div class="message">
+    <p>
+      <span class="msg-headline">It's Friday Night.</span>
+      <span class="msg-subline">and i have plans for you.</span>
+      You've been thinking about it all week.
+      That little thought in the back of your head that won't go away.
+      The one that whispers <em>what if.</em><br><br>
+      What if you stopped watching from a distance.
+      What if you actually <strong>walked in.</strong><br><br>
+      This isn't just another site. This is a place where
+      the rules are different. Where someone like me
+      decides what happens next. And you? You finally get to
+      <strong>stop pretending</strong> you don't want that.
+    </p>
+  </div>
+
+  <!-- CHALLENGE STRIP -->
+  <div class="challenge-strip">
+    <p>
+      Most people will read this, feel something, and keep scrolling.<br>
+      The interesting ones? They <strong>click.</strong>
+    </p>
+  </div>
+
+  <!-- WHAT'S INSIDE -->
+  <div class="features">
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Kneeling Sessions</h4>
+        <p>Daily rituals that keep you focused, present, and exactly where you belong.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Personal Tasks</h4>
+        <p>Real assignments. Not suggestions. You earn your place here.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Your Own Profile</h4>
+        <p>Rank, score, history. Everything tracked. I see all of it.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Direct Access</h4>
+        <p>Chat, tasks, rewards. If you prove yourself, you get closer. Simple as that.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE BOX -->
+  <div class="offer">
+    <div class="offer-glow"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="offer-inner">
+      <div class="offer-label">A Word</div>
+      <div class="offer-quote">
+        I built this for a specific type of person.<br>
+        The kind who reads this and <strong>feels it.</strong><br><br>
+        If that's you, I want you in.<br>
+        If it's not, you wouldn't have read this far.
+      </div>
+      <div class="offer-sig">Karin</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com" class="cta" target="_blank">Come Play</a>
+  </div>
+  <div class="cta-note">Free to join. Hard to leave.</div>
+
+  <!-- DIVIDER -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- BOTTOM QUOTE -->
+  <div class="bottom-quote-solo">
+    <p>You've spent enough Friday nights doing nothing interesting. Tonight, that changes.</p>
+    <span class="attr">See you inside.</span>
+  </div>
+
+  <!-- SECOND CTA -->
+  <div class="cta2-wrap">
+    <a href="https://throne.qkarin.com" class="cta2" target="_blank">Enter the Throne</a>
+  </div>
+  <div class="cta2-note">You already know you want to.</div>
+
+  <!-- FOOTER DIVIDER -->
+  <div class="divider" style="padding: 40px 0;">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">QUEEN KARIN</div>
+    <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+  </div>
+
+</div>
+
+</body>
+</html>
