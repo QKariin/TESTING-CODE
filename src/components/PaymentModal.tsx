@@ -282,7 +282,7 @@ export default function PaymentModal({
             <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 420 }}>
             {/* AMOUNT — first, biggest, unmissable */}
             <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 6, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>SEND EXACTLY</div>
-            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(2.8rem,9vw,4rem)', color: '#fff', fontWeight: 900, lineHeight: 1, marginBottom: 6, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
+            <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(1.5rem,5vw,2.2rem)', color: '#fff', fontWeight: 900, lineHeight: 1, marginBottom: 6, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.6)', letterSpacing: 3, fontWeight: 600 }}>{cryptoData.currency}</span>
                 <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '1rem' }}>·</span>
