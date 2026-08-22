@@ -144,7 +144,7 @@ function buildItemHtml(u: any, now: number): string {
         const badgeLabel = isAwaitingVideo ? 'VIDEO PROOF' : 'LOCK REQUEST';
         const badgeIcon = isAwaitingVideo ? '🔏' : '⏳';
         return `
-            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${badgeBg};border:1px solid ${badgeBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+            <div class="u-item ${isActive ? 'active' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${badgeBg};border:1px solid ${badgeBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
                 <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
                 <div style="font-size:1.4rem;position:relative;z-index:1;">${badgeIcon}</div>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${badgeColor};letter-spacing:3px;position:relative;z-index:1;">${badgeLabel}</div>
@@ -158,7 +158,7 @@ function buildItemHtml(u: any, now: number): string {
 
     if (isVaultLocked && !isLocked) {
         return `
-            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.4);justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+            <div class="u-item ${isActive ? 'active' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.4);justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
                 <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
                 <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:rgba(139,0,0,0.85);position:relative;z-index:1;flex-shrink:0;"><path d="${LOCK_PATH}"/></svg>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:rgba(139,0,0,0.85);letter-spacing:3px;position:relative;z-index:1;">KEYHOLDER</div>
@@ -173,7 +173,7 @@ function buildItemHtml(u: any, now: number): string {
         const lockBorder = isSilenced ? 'rgba(220,60,60,0.4)' : 'rgba(197,160,89,0.4)';
         const lockLabel = isSilenced ? 'SILENCED' : 'PAYWALLED';
         return `
-            <div class="u-item ${isActive ? 'active' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
+            <div class="u-item ${isActive ? 'active' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:${lockBg};border:1px solid ${lockBorder};justify-content:center;align-items:center;flex-direction:column;gap:4px;min-height:68px;padding:10px 15px;">
                 <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
                 <svg viewBox="0 0 24 24" style="width:28px;height:28px;fill:${lockColor};position:relative;z-index:1;flex-shrink:0;"><path d="${LOCK_PATH}"/></svg>
                 <div style="font-family:'Rajdhani',sans-serif;font-size:0.42rem;color:${lockColor};letter-spacing:3px;position:relative;z-index:1;">${lockLabel}</div>
@@ -365,7 +365,7 @@ function patchCard(list: HTMLElement, u: any, now: number) {
         return;
     }
 
-    // For special cards (locked/vault-request/keyholder), just update name text
+    // For special cards (locked/vault-request/keyholder), update name + unread state
     if (isLocked || hasVaultRequest || isVaultLocked) {
         // Update name if changed
         const nameEls = existing.querySelectorAll<HTMLElement>('div[style*="letter-spacing"]');
@@ -374,8 +374,8 @@ function patchCard(list: HTMLElement, u: any, now: number) {
                 el.textContent = clean(u.name);
             }
         });
-        // Update active state
         existing.classList.toggle('active', isActive);
+        existing.classList.toggle('has-msg', hasMsg);
         return;
     }
 
