@@ -468,7 +468,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                 @media (min-width: 769px) {
                     .kh-container { max-width: 1100px !important; padding: 0 60px 40px !important; }
                     .kh-section { margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); padding-left: calc(50vw - 50% + 60px); padding-right: calc(50vw - 50% + 60px); }
-                    .kh-toast { left: auto !important; right: 32px !important; max-width: 420px !important; bottom: 32px !important; }
+                    .kh-toast { left: auto !important; right: 32px !important; max-width: 340px !important; bottom: 32px !important; }
                     .kh-quiz-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-tiers-grid { grid-template-columns: repeat(3, 1fr) !important; }
                     .kh-features-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -512,78 +512,30 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
 
                 return (
                 <div key={t._id} className="kh-toast" style={{
-                    position: 'fixed', bottom: 'calc(85px + env(safe-area-inset-bottom) + 16px)',
+                    position: 'fixed', bottom: 24,
                     right: 12, left: 12, zIndex: 99999,
-                    background: 'linear-gradient(135deg, #0d0d1f 0%, #1a0a2e 100%)',
-                    border: '1px solid rgba(197,160,89,0.4)',
-                    borderRadius: 18, padding: isRisky ? '0' : '20px 22px',
-                    boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(197,160,89,0.08)',
+                    background: 'rgba(30,8,8,0.95)',
+                    border: '1px solid rgba(139,0,0,0.35)',
+                    borderRadius: 10, padding: '12px 16px',
+                    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
                     animation: t._leaving ? 'toastOut 0.4s ease-in forwards' : 'toastIn 0.4s ease-out forwards',
                     overflow: 'hidden',
+                    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                 }}>
-                    {isRisky ? (
-                        <div style={{ display: 'flex', minHeight: 130 }}>
-                            <div style={{ flex: '0 0 28%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(197,160,89,0.04)', borderRight: '1px solid rgba(197,160,89,0.12)', padding: '16px 12px', gap: 8 }}>
-                                <img src={t.cardIcon} alt="" style={{ width: '65%', maxWidth: 65, height: 'auto', opacity: 0.9 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                {t.cardName && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 2, textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.3 }}>{t.cardName}</div>}
-                            </div>
-                            <div style={{ flex: 1, padding: '16px 18px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4 }}>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>Recent Activity</span>
-                                    {when && <span style={{ color: 'rgba(197,160,89,0.3)', letterSpacing: 1, fontSize: '0.4rem' }}>{when}</span>}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    {avatar ? (
-                                        <img src={avatar} alt="" style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.5)', flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                    ) : (
-                                        <div style={{ width: 38, height: 38, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.35)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.9rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600, flexShrink: 0 }}>{initial}</div>
-                                    )}
-                                    <div>
-                                        <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1.05rem', color: '#c5a059', letterSpacing: 1 }}>{t.sender_name}</div>
-                                        {t.hierarchy && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 1 }}>{t.hierarchy}</div>}
-                                    </div>
-                                </div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', fontWeight: 400, marginTop: 6, letterSpacing: 0.5 }}>
-                                    just gambled {(t.stakeAmount||0).toLocaleString()} coins
-                                </div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.85rem', fontWeight: 600, marginTop: 2, letterSpacing: 0.5 }}>
-                                    {t.isWin
-                                        ? <span style={{ color: '#4ade80' }}>total won: {(t.wonAmount||0).toLocaleString()}</span>
-                                        : t.lostAmount === 0
-                                            ? <span style={{ color: '#c5a059' }}>lost nothing</span>
-                                            : <span style={{ color: '#ff0000' }}>total lost: {(t.lostAmount||0).toLocaleString()}</span>
-                                    }
-                                </div>
-                                <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
-                                    style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)', padding: '5px 16px', borderRadius: 6, fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', letterSpacing: 1, cursor: 'pointer', marginTop: 6 }}
-                                >DISMISS</button>
-                            </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        {avatar ? (
+                            <img src={avatar} alt="" style={{ flexShrink: 0, width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(139,0,0,0.5)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        ) : (
+                            <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(139,0,0,0.4)', background: 'rgba(139,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{initial}</div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600, lineHeight: 1.2 }}>{t.sender_name}</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 500, lineHeight: 1.3, marginTop: 1 }}>{displayText}</div>
                         </div>
-                    ) : (
-                        <>
-                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', color: '#c5a059', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span>Recent Activity</span>
-                            {when && <span style={{ color: 'rgba(197,160,89,0.4)', letterSpacing: 1, fontSize: '0.45rem' }}>{when}</span>}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                            {avatar ? (
-                                <img src={avatar} alt="" style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(197,160,89,0.6)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                            ) : (
-                                <div style={{ flexShrink: 0, width: 62, height: 62, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.4)', background: 'linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.05))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: 'rgba(197,160,89,0.6)', fontWeight: 600 }}>{initial}</div>
-                            )}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontFamily: "'Rosella Solid', serif", fontSize: '1.15rem', color: '#c5a059', letterSpacing: 1, lineHeight: 1.2 }}>{t.sender_name}</div>
-                                {t.hierarchy && <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.4rem', color: 'rgba(197,160,89,0.4)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 2 }}>{t.hierarchy}</div>}
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.65)', fontWeight: 500, lineHeight: 1.4, marginTop: 4 }}>{displayText}</div>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                            <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
-                                style={{ flex: 1, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '9px 0', borderRadius: 8, fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: 1, cursor: 'pointer' }}
-                            >DISMISS</button>
-                        </div>
-                        </>
-                    )}
+                        {when && <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>{when}</div>}
+                        <button onClick={() => setToasts(prev => prev.filter(x => x._id !== t._id))}
+                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: '1rem', cursor: 'pointer', padding: '0 2px', flexShrink: 0, lineHeight: 1 }}>&times;</button>
+                    </div>
                 </div>
                 );
             })}
