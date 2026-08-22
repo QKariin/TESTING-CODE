@@ -84,6 +84,7 @@
     position: relative;
     display: flex;
     width: 100%;
+    height: 520px;
     overflow: hidden;
     background: #050505;
   }
@@ -96,9 +97,12 @@
 
   .hero-duo-panel img {
     width: 100%;
+    height: 100%;
     max-width: 100%;
+    object-fit: cover;
+    object-position: center top;
     display: block;
-    filter: brightness(0.85) saturate(1.1) contrast(1.05);
+    filter: brightness(0.5) saturate(1.2) contrast(1.05);
   }
 
   .hero-duo-divider {
@@ -115,7 +119,7 @@
   .hero-duo-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(5,5,5,0) 0%, rgba(5,5,5,0) 50%, rgba(5,5,5,0.6) 75%, #050505 100%);
+    background: linear-gradient(180deg, rgba(5,5,5,0.15) 0%, rgba(5,5,5,0) 15%, rgba(5,5,5,0) 35%, rgba(5,5,5,0.5) 58%, rgba(5,5,5,0.9) 78%, #050505 100%);
     z-index: 2;
     pointer-events: none;
   }
@@ -665,7 +669,7 @@
 
   /* ——— MOBILE ——— */
   @media (max-width: 520px) {
-    .hero-duo { }
+    .hero-duo { height: 400px; }
     .hero-title { font-size: 38px; }
     .hero-content { padding: 0 26px 32px; }
     .message { padding: 30px 20px 30px; }
@@ -704,9 +708,13 @@
 
   <!-- HERO -->
   <div class="hero-duo">
-    <div class="hero-duo-panel" style="flex:1;">
-      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/types-of-submissives.png" alt="" style="object-position: center center;">
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-1.jpeg" alt="">
     </div>
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
+    </div>
+    <div class="hero-duo-divider"></div>
     <div class="hero-duo-gradient"></div>
     <div class="hero-content">
       <div class="hero-tag">30 Days</div>
@@ -752,6 +760,11 @@
       You don't need another one-time session that leaves you empty.<br>
       You need <strong>30 days that change you.</strong>
     </p>
+  </div>
+
+  <!-- INFOGRAPHIC -->
+  <div style="padding: 30px 30px 0;">
+    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/types-of-submissives.png" alt="Types of Submissives" style="width:100%; display:block; border: 1px solid rgba(197,160,89,0.1);">
   </div>
 
   <!-- WHAT'S INSIDE -->
