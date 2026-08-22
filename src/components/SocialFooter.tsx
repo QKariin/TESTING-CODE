@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 
-const HIDDEN_PREFIXES = ['/dashboard', '/profile', '/vault', '/chat', '/onboarding'];
+const HIDDEN_PREFIXES = ['/dashboard', '/profile', '/vault', '/chat', '/onboarding', '/keyholder'];
 
 const SOCIALS = [
     {

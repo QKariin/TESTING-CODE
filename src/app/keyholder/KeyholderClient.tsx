@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import FaqFooter from '@/components/FaqFooter';
 import PaymentModal from '@/components/PaymentModal';
 import '@/css/landing.css';
 
@@ -1114,6 +1113,5 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                 />
             )}
 
-        <FaqFooter hideOnDesktop />
     </>);
 }
