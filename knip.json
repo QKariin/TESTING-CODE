@@ -1,0 +1,14 @@
+{
+  "exclude": [
+    "types",
+    "nsTypes",
+    "exports",
+    "nsExports",
+    "dependencies",
+    "devDependencies",
+    "unlisted",
+    "unresolved",
+    "files",
+    "binaries"
+  ]
+}
