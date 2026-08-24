@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queen Karin — Weekend or Month. Choose.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #050505;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.07; }
+  }
+
+  @keyframes rotateGlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(197,160,89,0.1); }
+    50% { border-color: rgba(197,160,89,0.3); }
+  }
+
+  @keyframes countPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #050505;
+    position: relative;
+  }
+
+  .wrap::after {
+    content: '';
+    position: absolute;
+    top: 300px;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    transform: translateX(-50%);
+    pointer-events: none;
+    animation: breathe 6s ease infinite;
+  }
+
+  /* HERO */
+  .hero-duo {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .hero-duo-panel {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-duo-panel img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    filter: brightness(0.5) saturate(1.2) contrast(1.05);
+  }
+
+  .hero-duo-divider {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(197,160,89,0.3), rgba(197,160,89,0.15), transparent);
+    z-index: 3;
+  }
+
+  .hero-duo-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5,5,5,0.15) 0%, rgba(5,5,5,0) 15%, rgba(5,5,5,0) 35%, rgba(5,5,5,0.5) 58%, rgba(5,5,5,0.9) 78%, #050505 100%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-duo-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.5) 100%);
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 44px 44px;
+    z-index: 4;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #050505;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%;
+    animation: fadeInUp 1s ease 0.3s both, shimmer 4s ease infinite;
+    padding: 7px 20px;
+    margin-bottom: 22px;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.08;
+    color: #fff;
+    margin-bottom: 14px;
+    animation: fadeInUp 1s ease 0.5s both;
+    letter-spacing: 1px;
+  }
+
+  .hero-title em {
+    font-weight: 300;
+    font-style: italic;
+    color: #d4af6a;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    font-weight: 200;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInUp 1s ease 0.7s both;
+  }
+
+  /* URGENCY BAR */
+  .urgency-bar {
+    position: relative;
+    background: linear-gradient(180deg, rgba(12,10,8,1) 0%, rgba(8,6,4,1) 100%);
+    border-top: 1px solid rgba(197,160,89,0.1);
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .urgency-track {
+    display: inline-block;
+    animation: tickerScroll 30s linear infinite;
+  }
+
+  .urgency-item {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 0 14px;
+  }
+
+  .urgency-item span {
+    color: #d4af6a;
+    font-weight: 600;
+  }
+
+  .urgency-sep {
+    display: inline-block;
+    color: rgba(197,160,89,0.2);
+    font-size: 6px;
+    vertical-align: middle;
+    padding: 0 4px;
+  }
+
+  /* GOLD SEPARATOR */
+  .gold-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 40px 0 0;
+  }
+
+  .gold-sep-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.35), transparent);
+  }
+
+  .gold-sep-diamond {
+    width: 5px;
+    height: 5px;
+    background: rgba(197,160,89,0.3);
+    transform: rotate(45deg);
+  }
+
+  /* MESSAGE */
+  .message {
+    padding: 40px 44px 44px;
+  }
+
+  .message p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .msg-headline {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #d4af6a;
+    margin-bottom: 6px;
+  }
+
+  .msg-subline {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  .message strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 400;
+  }
+
+  .message em {
+    font-style: italic;
+    color: rgba(232,201,122,0.7);
+  }
+
+  /* CHALLENGE STRIP */
+  .challenge-strip {
+    margin: 0 30px;
+    padding: 28px 34px;
+    border-top: 1px solid rgba(197,160,89,0.08);
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    text-align: center;
+  }
+
+  .challenge-strip p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  .challenge-strip strong {
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* DUAL OFFER */
+  .dual-offer {
+    padding: 40px 30px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .offer-card {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,10,10,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+
+  .offer-card-inner {
+    padding: 44px 28px 36px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .offer-card-inner::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 5s ease infinite;
+  }
+
+  .offer-card .corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+  }
+  .offer-card .corner::before,
+  .offer-card .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(197,160,89,0.25);
+  }
+  .offer-card .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .offer-card .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .offer-card .corner-tl { top: -1px; left: -1px; }
+  .offer-card .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .offer-card .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .offer-card .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .card-number {
+    font-family: 'Cinzel', serif;
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    background: linear-gradient(180deg, rgba(212,175,106,0.5) 0%, rgba(197,160,89,0.15) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .card-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.5);
+    margin-bottom: 22px;
+  }
+
+  .card-rule {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent);
+    margin: 0 auto 22px;
+  }
+
+  .card-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .card-stats {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 28px;
+    text-align: left;
+  }
+
+  .card-stats li {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.5);
+    padding: 7px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-stats li::before {
+    content: '\25C6';
+    font-size: 5px;
+    color: rgba(197,160,89,0.4);
+    flex-shrink: 0;
+  }
+
+  .card-stats li strong {
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+  }
+
+  .card-cta {
+    display: inline-block;
+    padding: 16px 0;
+    width: 100%;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    text-align: center;
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-cta.gold {
+    background: transparent;
+    color: #c5a059;
+    border: 1px solid rgba(197,160,89,0.2);
+  }
+
+  .card-cta.gold:hover {
+    border-color: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.04);
+    letter-spacing: 7px;
+  }
+
+  .card-cta.red {
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    border: 1px solid rgba(139,0,0,0.4);
+  }
+
+  .card-cta.red:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 7px;
+  }
+
+  /* FEATURES */
+  .features {
+    padding: 40px 44px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .feat-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .feat-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(197,160,89,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .feat-text {
+    flex: 1;
+  }
+
+  .feat-text h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+
+  .feat-text p {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+
+  /* OFFER BLOCK */
+  .offer-block {
+    margin: 30px 30px 0;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,10,10,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+
+  .offer-block-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 400px;
+    background: conic-gradient(from 0deg, transparent, rgba(197,160,89,0.04), transparent, rgba(139,0,0,0.06), transparent);
+    animation: rotateGlow 20s linear infinite;
+    pointer-events: none;
+  }
+
+  .offer-block .corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+  }
+  .offer-block .corner::before,
+  .offer-block .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(197,160,89,0.25);
+  }
+  .offer-block .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .offer-block .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .offer-block .corner-tl { top: -1px; left: -1px; }
+  .offer-block .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .offer-block .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .offer-block .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .offer-block-inner {
+    padding: 55px 44px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .offer-block-inner::before {
+    content: '';
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    height: 250px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 5s ease infinite;
+  }
+
+  .offer-label {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: #d4af6a;
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  .offer-quote {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.5);
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .offer-quote strong {
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+  }
+
+  .offer-sig {
+    margin-top: 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* CTA */
+  .cta-wrap {
+    text-align: center;
+    padding: 50px 40px 18px;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 22px 68px;
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.4);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.8s ease;
+  }
+
+  .cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  .cta:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 8px;
+    padding: 22px 78px;
+    border-color: rgba(197,160,89,0.3);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cta:hover::before { left: 100%; }
+  .cta:hover::after { width: 80%; }
+
+  /* DIVIDER */
+  .divider {
+    padding: 50px 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .divider-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .divider-diamond {
+    width: 4px;
+    height: 4px;
+    background: rgba(197,160,89,0.2);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* BOTTOM QUOTE */
+  .bottom-quote-solo {
+    padding: 0 40px 45px;
+    text-align: center;
+  }
+
+  .bottom-quote-solo p {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.75;
+  }
+
+  .bottom-quote-solo .attr {
+    display: block;
+    margin-top: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-style: normal;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* SECOND CTA */
+  .cta2-wrap {
+    text-align: center;
+    padding: 40px 40px 12px;
+  }
+
+  .cta2 {
+    display: inline-block;
+    padding: 18px 56px;
+    background: transparent;
+    color: #c5a059;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(197,160,89,0.2);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s ease;
+  }
+
+  .cta2:hover {
+    border-color: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.04);
+    letter-spacing: 7px;
+    box-shadow: 0 0 40px rgba(197,160,89,0.08);
+  }
+
+  .cta2:hover::after { width: 70%; }
+
+  .cta2-note {
+    text-align: center;
+    padding: 10px 40px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 1px;
+  }
+
+  /* FOOTER */
+  .footer {
+    border-top: 1px solid rgba(197,160,89,0.06);
+    padding: 40px 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .footer-brand {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.12);
+    margin-bottom: 10px;
+  }
+
+  .footer a {
+    font-size: 10px;
+    color: rgba(255,255,255,0.1);
+    text-decoration: none;
+    letter-spacing: 3px;
+    transition: color 0.4s ease;
+  }
+
+  .footer a:hover { color: #c5a059; }
+
+  /* MOBILE */
+  @media (max-width: 520px) {
+    .hero-duo { height: 400px; }
+    .hero-title { font-size: 34px; }
+    .hero-content { padding: 0 26px 32px; }
+    .message { padding: 30px 20px 30px; }
+    .message p { font-size: 17px; line-height: 1.8; }
+    .msg-headline { font-size: 24px; letter-spacing: 2px; }
+    .msg-subline { font-size: 13px; letter-spacing: 1px; }
+    .challenge-strip { margin: 0 12px; padding: 22px 16px; }
+    .challenge-strip p { font-size: 14px; }
+    .dual-offer { padding: 30px 12px 0; gap: 14px; }
+    .card-number { font-size: 42px; }
+    .card-desc { font-size: 14px; }
+    .card-stats li { font-size: 13px; }
+    .offer-card-inner { padding: 36px 20px 30px; }
+    .features { padding: 30px 20px 10px; gap: 16px; }
+    .feat-icon { width: 32px; height: 32px; font-size: 14px; }
+    .feat-text h4 { font-size: 15px; }
+    .feat-text p { font-size: 10px; }
+    .offer-block { margin: 20px 12px 0; }
+    .offer-block-inner { padding: 32px 18px; }
+    .offer-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 22px; }
+    .offer-quote { font-size: 20px; }
+    .cta-wrap { padding: 36px 20px 14px; }
+    .cta { padding: 18px 0; letter-spacing: 4px; font-size: 11px; width: 100%; display: block; text-align: center; }
+    .cta:hover { padding: 18px 0; letter-spacing: 5px; }
+    .cta2-wrap { padding: 30px 20px 10px; }
+    .cta2 { padding: 16px 0; letter-spacing: 3px; font-size: 10px; width: 100%; display: block; text-align: center; }
+    .cta2-note { font-size: 12px; padding: 8px 20px 0; }
+    .divider { padding: 36px 0; }
+    .bottom-quote-solo { padding: 0 20px 36px; }
+    .bottom-quote-solo p { font-size: 18px; }
+    .bottom-quote-solo .attr { font-size: 8px; letter-spacing: 4px; }
+    .gold-sep { padding: 28px 0 0; }
+    .footer { padding: 30px 20px; }
+    .footer-brand { font-size: 14px; letter-spacing: 6px; }
+  }
+</style>
+</head>
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero-duo">
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-1.jpeg" alt="">
+    </div>
+    <div class="hero-duo-panel">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
+    </div>
+    <div class="hero-duo-divider"></div>
+    <div class="hero-duo-gradient"></div>
+    <div class="hero-content">
+      <div class="hero-tag">Your Training Awaits</div>
+      <h1 class="hero-title">Three Ways to<br><em>Serve.</em></h1>
+      <p class="hero-sub">Either way, you're mine.</p>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="urgency-bar">
+    <div class="urgency-track">
+      <span class="urgency-item">7 day <span>bootcamp</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">30 day <span>program</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>keyholder</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">real <span>training</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>excuses</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">7 day <span>bootcamp</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">30 day <span>program</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>keyholder</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">real <span>training</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>excuses</span></span><span class="urgency-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- GOLD SEPARATOR -->
+  <div class="gold-sep">
+    <div class="gold-sep-line"></div>
+    <div class="gold-sep-diamond"></div>
+    <div class="gold-sep-line"></div>
+  </div>
+
+  <!-- MESSAGE -->
+  <div class="message">
+    <p>
+      <span class="msg-headline">Pick Your Poison.</span>
+      <span class="msg-subline">there is no easy option.</span>
+      You keep saying you want to be trained.
+      You keep watching from the outside, scrolling, imagining,
+      telling yourself <em>"one day."</em><br><br>
+      I built three programs. A <strong>7-day starter</strong> if you want
+      to test yourself. A full <strong>30-day training</strong> if you're ready
+      to actually change. And a <strong>Keyholder program</strong> for the ones
+      who want to take it further than most ever dare.<br><br>
+      All three are structured. All three are real. All three require you
+      to show up, shut up, and <strong>do the work.</strong>
+    </p>
+  </div>
+
+  <!-- CHALLENGE STRIP -->
+  <div class="challenge-strip">
+    <p>
+      I don't care which one you pick. I care that you <strong>stop pretending</strong> and actually commit to something for once.
+    </p>
+  </div>
+
+  <!-- DUAL OFFER CARDS -->
+  <div class="dual-offer">
+
+    <!-- WEEK CARD -->
+    <div class="offer-card">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number">7</div>
+        <div class="card-label">Days of Obedience</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">
+          One week. Structured. Intense. Perfect if you've never
+          submitted before and want to find out what you're made of.
+        </div>
+        <ul class="card-stats">
+          <li><strong>Daily kneeling</strong> rituals with escalating targets</li>
+          <li><strong>Chastity</strong> check-ins every single day</li>
+          <li><strong>Writing</strong> confessions and devotion tasks</li>
+          <li><strong>Photo proofs</strong> to verify your obedience</li>
+          <li><strong>Real submissions</strong> reviewed personally</li>
+        </ul>
+        <a href="https://throne.qkarin.com/tribute" class="card-cta gold" target="_blank">Try One Week</a>
+      </div>
+    </div>
+
+    <!-- MONTH CARD -->
+    <div class="offer-card">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number">30</div>
+        <div class="card-label">Days of Transformation</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">
+          One month. Four phases. Over a thousand tasks.
+          This is not a trial. This is where you become someone worth owning.
+        </div>
+        <ul class="card-stats">
+          <li><strong>1,000+ tasks</strong> across four escalating phases</li>
+          <li><strong>Obedience drills,</strong> wheel spins, card draws</li>
+          <li><strong>Video, photo,</strong> and writing submissions</li>
+          <li><strong>Endurance challenges</strong> that push your limits</li>
+          <li><strong>Personally reviewed</strong> by me. Every day.</li>
+        </ul>
+        <a href="https://throne.qkarin.com/tribute" class="card-cta red" target="_blank">Begin Training</a>
+      </div>
+    </div>
+
+    <!-- KEYHOLDER CARD -->
+    <div class="offer-card" style="border-color: rgba(139,0,0,0.2);">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number" style="background: linear-gradient(180deg, rgba(139,0,0,0.7) 0%, rgba(139,0,0,0.2) 100%); -webkit-background-clip: text; background-clip: text;">&#128274;</div>
+        <div class="card-label" style="color: rgba(139,0,0,0.6);">Keyholder Program</div>
+        <div class="card-rule" style="background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), transparent);"></div>
+        <div class="card-desc">
+          I built an actual keyholder app. Not a DM arrangement.
+          Not a timer on your phone. A real platform where I control your lock,
+          assign your tasks, and track every single day.
+        </div>
+        <ul class="card-stats">
+          <li><strong>Real lock timer</strong> running live inside the app, not a screenshot, not a promise</li>
+          <li><strong>Daily chastity check-in</strong> with photo proof submitted through the app</li>
+          <li><strong>Tasks generated every day</strong> automatically. Kneeling, writing, endurance, confessions</li>
+          <li><strong>I add or remove days</strong> from your lock based on how you behave</li>
+          <li><strong>Your progress tracked</strong> on a personal dashboard. Streaks, points, completion rate</li>
+          <li><strong>Spin wheels, card draws,</strong> dice rolls built into the app. Punishments are randomized</li>
+          <li><strong>No other domme has this.</strong> This is custom-built software, not a Lovense link</li>
+        </ul>
+        <a href="https://throne.qkarin.com/keyholder" class="card-cta red" target="_blank" style="background: linear-gradient(135deg, rgba(139,0,0,0.8), rgba(80,0,0,0.9)); border-color: rgba(139,0,0,0.3);">Give Me the Key</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- INFOGRAPHIC -->
+  <div style="padding: 30px 30px 0;">
+    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/types-of-submissives.png" alt="Types of Submissives" style="width:100%; display:block; border: 1px solid rgba(197,160,89,0.1);">
+  </div>
+
+  <!-- WHAT'S INSIDE -->
+  <div class="features">
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Obedience Drills</h4>
+        <p>Simon Says, timed challenges, instant compliance tests. You follow or you fail.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Wheel Spins and Card Draws</h4>
+        <p>Randomized punishments. You don't get to choose. That's the point.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Endurance Challenges</h4>
+        <p>Cold showers, plank holds, corner time. Your body serves too, not just your words.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Writing Confessions</h4>
+        <p>Journal entries, devotion letters, punishment lines. You will be honest with yourself.</p>
+      </div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon">&#9830;</div>
+      <div class="feat-text">
+        <h4>Photo and Video Proofs</h4>
+        <p>I verify everything. You don't get to lie about doing the work.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUOTE BOX -->
+  <div class="offer-block">
+    <div class="offer-block-glow"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="offer-block-inner">
+      <div class="offer-label">Hear Me</div>
+      <div class="offer-quote">
+        The week is for the curious.<br>
+        The month is for the <strong>serious.</strong><br>
+        The key is for the <strong>devoted.</strong><br><br>
+        Seven days breaks the illusion that you're in control.
+        Thirty days rebuilds you into someone worth owning.
+        The key? That means you're <strong>already mine.</strong>
+      </div>
+      <div class="offer-sig">Karin</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/tribute" class="cta" target="_blank">Start Now</a>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- BOTTOM QUOTE -->
+  <div class="bottom-quote-solo">
+    <p>Every week you spend doing nothing is another week wasted. Every month that passes is a month you could have been mine. So stop thinking. Start kneeling.</p>
+    <span class="attr">Your Queen is waiting.</span>
+  </div>
+
+  <!-- SECOND CTA -->
+  <div class="cta2-wrap">
+    <a href="https://throne.qkarin.com/tribute" class="cta2" target="_blank">Enter the Throne</a>
+  </div>
+  <div class="cta2-note">The week. The month. The key. Just stop choosing nothing.</div>
+
+  <!-- FOOTER DIVIDER -->
+  <div class="divider" style="padding: 40px 0;">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">QUEEN KARIN</div>
+    <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+  </div>
+
+</div>
+
+</body>
+</html>
