@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
-import { defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { defaultDayTasks, generateDefaultProgram, kneelTarget } from '@/lib/vault-program-defaults';
 import { DbService } from '@/lib/supabase-service';
 import { findProfile } from '@/lib/lookup';
 
@@ -1280,12 +1280,22 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
             const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
             const dayTasks = program[String(dayNumber)];
             if (dayTasks && Array.isArray(dayTasks) && dayTasks.length > 0) {
-                return dayTasks.map((t: any) => {
+                const orders = dayTasks.map((t: any) => {
                     const order: any = { type: t.type, target: t.target || 1, done: 0 };
                     if (t.label) order.label = t.label;
                     if (t.config) order.config = t.config;
                     return order;
                 });
+                // Safety net: ensure kneel + chastity_check exist on EVERY day
+                if (!orders.some((o: any) => o.type === 'kneel')) {
+                    const kt = kneelTarget(dayNumber);
+                    orders.unshift({ type: 'kneel', target: kt, done: 0, label: `Kneel ${kt} times` });
+                }
+                if (!orders.some((o: any) => o.type === 'chastity_check')) {
+                    const idx = orders.findIndex((o: any) => o.type === 'kneel');
+                    orders.splice(idx + 1, 0, { type: 'chastity_check', target: 1, done: 0, label: 'Chastity check-in' });
+                }
+                return orders;
             }
             console.warn(`[vault] Program found but day ${dayNumber} has no tasks, falling back to defaults`);
         }
