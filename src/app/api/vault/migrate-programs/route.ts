@@ -57,9 +57,42 @@ export async function POST(req: NextRequest) {
         }
     }
 
+    // Also patch vault_program_template (the master template used by dashboard)
+    let templatePatched = 0;
+    const { data: tplRows } = await supabaseAdmin
+        .from('vault_program_template')
+        .select('id, day_number, tasks');
+
+    if (tplRows) {
+        for (const row of tplRows) {
+            const tasks: any[] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : (row.tasks || []);
+            let changed = false;
+
+            if (!tasks.some((t: any) => t.type === 'kneel')) {
+                const kt = kneelTarget(row.day_number);
+                tasks.unshift({ type: 'kneel', target: kt, label: `Kneel ${kt} times` });
+                changed = true;
+            }
+
+            if (!tasks.some((t: any) => t.type === 'chastity_check')) {
+                const kneelIdx = tasks.findIndex((t: any) => t.type === 'kneel');
+                tasks.splice(kneelIdx + 1, 0, { type: 'chastity_check', target: 1, label: 'Chastity check-in' });
+                changed = true;
+            }
+
+            if (changed) {
+                await supabaseAdmin.from('vault_program_template').update({
+                    tasks: JSON.stringify(tasks),
+                }).eq('id', row.id);
+                templatePatched++;
+            }
+        }
+    }
+
     return NextResponse.json({
         total: programs.length,
         patched: patchedCount,
-        message: `Done. ${patchedCount} programs patched with kneel + chastity_check on every day.`,
+        templatePatched,
+        message: `Done. ${patchedCount} member programs + ${templatePatched} template days patched.`,
     });
 }
