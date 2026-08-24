@@ -10,7 +10,10 @@ export function kneelTarget(d: number): number {
 }
 
 export function defaultDayTasks(d: number): any[] {
-    const t: any[] = [{ type: 'kneel', target: kneelTarget(d), label: `Kneel ${kneelTarget(d)} times` }];
+    const t: any[] = [
+        { type: 'kneel', target: kneelTarget(d), label: `Kneel ${kneelTarget(d)} times` },
+        { type: 'chastity_check', target: 1, label: 'Chastity check-in' },
+    ];
 
     // PHASE 1 - OBEDIENCE - Foundation (Days 1-7)
     if (d===1) {
@@ -409,9 +412,9 @@ export function defaultDayTasks(d: number): any[] {
     return t;
 }
 
-export function generateDefaultProgram(): Record<string, any[]> {
+export function generateDefaultProgram(totalDays = 30): Record<string, any[]> {
     const program: Record<string, any[]> = {};
-    for (let d = 1; d <= 30; d++) {
+    for (let d = 1; d <= totalDays; d++) {
         program[String(d)] = defaultDayTasks(d);
     }
     return program;
