@@ -57,7 +57,9 @@ export default function TributePage() {
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    setUserEmail(user.email || (user.user_metadata?.user_name ? `@${user.user_metadata.user_name}` : null));
+                    const fakeEmail = user.email?.trim().toLowerCase()
+                        || `${user.app_metadata?.provider || 'oauth'}_${user.user_metadata?.provider_id || user.id}@${user.app_metadata?.provider || 'oauth'}.com`;
+                    setUserEmail(fakeEmail);
                     try { await (await fetch('/api/auth/link-profile', { method: 'POST' })).json(); } catch {}
                 }
             } catch {}
