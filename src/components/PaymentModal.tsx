@@ -598,7 +598,7 @@ export default function PaymentModal({
     /* ── THRONE ── */
     if (cardStep === 'throne') {
         const tiers = [
-            { label: '1 WEEK', price: 55, thronePrice: 66, url: 'https://throne.com/queenkarin/item/03825d92-45f0-43ee-a7f9-9d0ffa97d298', tag: null },
+            { label: '1 WEEK', price: 55, thronePrice: 66, url: 'https://throne.com/queenkarin/item/e91248a4-2957-4c78-b3ff-6ccb13500be3', tag: null },
             { label: '1 MONTH', price: 99, thronePrice: 119, url: 'https://throne.com/queenkarin/item/da1b54cb-9834-43ba-92e9-b72c4454f9ca', tag: null },
             { label: '1 YEAR', price: 499, thronePrice: 599, url: 'https://throne.com/queenkarin/item/de87531d-1ee9-4c69-9528-f671a0b98d9b', tag: 'BEST VALUE' },
         ];
