@@ -427,7 +427,7 @@ export default function PaymentModal({
             <div style={{ ...CARD, maxWidth: 420 }}>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 5, marginBottom: 12, textAlign: 'center' }}>REVOLUT</div>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: '#fff', fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>2 minutes. That's it.</div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Anonymous. No one knows. Not even your bank.</div>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 24, letterSpacing: 1 }}>Buy Bitcoin directly in Revolut and send it here.</div>
                 {(() => {
                     const steps = [
                         { img: '/revolut-guide/step1.png', lines: ['Open Revolut.', 'Tap Crypto at the bottom. Then tap Send.'] },
@@ -670,6 +670,11 @@ export default function PaymentModal({
                         style={{ width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
+                    </button>
+                    <button onClick={() => setCardStep('revolut')}
+                        style={{ width: '100%', padding: '18px', background: 'rgba(0,100,224,0.06)', border: '1px solid rgba(0,100,224,0.25)', borderRadius: 10, color: 'rgba(0,100,224,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,100,224,0.8)" strokeWidth="1.5"><path d="M19 5h-2V3H7v2H5a2 2 0 00-2 2v1a5 5 0 004 4.9V17a2 2 0 002 2h6a2 2 0 002-2v-4.1A5 5 0 0021 8V7a2 2 0 00-2-2z"/></svg>
+                        PAY WITH REVOLUT
                     </button>
                     {throneUrl && (
                         <button onClick={() => setCardStep('throne')}
