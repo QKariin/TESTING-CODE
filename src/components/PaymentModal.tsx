@@ -683,14 +683,12 @@ export default function PaymentModal({
                             PAY WITH THRONE
                         </button>
                     )}
-                    {/* Card/PayPal disabled */}
-                    <div style={{ width: '100%', padding: '14px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, textAlign: 'center' }}>
-                        <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 3, marginBottom: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                            CARD PAYMENTS
-                        </div>
-                        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.15)', letterSpacing: 1 }}>Temporarily unavailable</div>
-                    </div>
+                    {/* Card via Destream */}
+                    <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer"
+                        style={{ width: '100%', padding: '18px', background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: 10, color: 'rgba(76,175,80,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(76,175,80,0.8)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        PAY WITH CARD
+                    </a>
                 </div>
                 <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
