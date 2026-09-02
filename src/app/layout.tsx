@@ -19,19 +19,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://throne.qkarin.com'),
   title: {
-    default: 'Queen Karin — Femdom, Findom & Female Domination',
+    default: 'Queen Karin — Femdom & Female Domination',
     template: '%s | Queen Karin',
   },
-  description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes. Apply to serve or stay locked out.',
-  keywords: ['femdom', 'femdom meaning', 'femdom definition', 'findom', 'findomme', 'findom meaning', 'female domination', 'financial domination', 'queen karin', 'dominatrix', 'female supremacy', 'femdom online', 'online domination', 'chastity', 'keyholder', 'keyholder online', 'online keyholder service', 'online keyholder app', 'find online keyholder', 'keyholder meaning', 'keyholder website', 'digital keyholder', 'chastity key holding', 'female led relationship', 'flr relationship', 'woman led relationship', 'paypigs', 'findom tribute', 'worship', 'submission', 'fin domination', 'virtual keyholder', 'virtual domme', 'virtual mistress', 'virtual dominatrix', 'virtual femdom', 'virtual chastity', 'online mistress', 'online domme', 'online dominatrix', 'real online mistress', 'find a domme online', 'online slave training', 'online sub training', 'obedience training femdom'],
+  description: 'Enter the world of Queen Karin. Real femdom & female domination. No agencies, no bots, no fakes. Apply to serve or stay locked out.',
+  keywords: ['femdom', 'femdom meaning', 'femdom definition', 'female domination', 'queen karin', 'dominatrix', 'female supremacy', 'femdom online', 'online domination', 'chastity', 'keyholder', 'keyholder online', 'online keyholder service', 'online keyholder app', 'find online keyholder', 'keyholder meaning', 'keyholder website', 'digital keyholder', 'chastity key holding', 'female led relationship', 'flr relationship', 'woman led relationship', 'worship', 'submission', 'virtual keyholder', 'virtual domme', 'virtual mistress', 'virtual dominatrix', 'virtual femdom', 'virtual chastity', 'online mistress', 'online domme', 'online dominatrix', 'real online mistress', 'find a domme online', 'online slave training', 'online sub training', 'obedience training femdom'],
   authors: [{ name: 'Queen Karin' }],
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
   openGraph: {
-    title: 'Queen Karin — Femdom, Findom & Female Domination',
-    description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes.',
+    title: 'Queen Karin — Femdom & Female Domination',
+    description: 'Enter the world of Queen Karin. Real femdom & female domination. No agencies, no bots, no fakes.',
     url: 'https://throne.qkarin.com',
     siteName: 'Queen Karin',
     images: [{ url: '/og-cover.png', width: 1200, height: 630, alt: 'Queen Karin' }],
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Queen Karin — Femdom, Findom & Female Domination',
-    description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes.',
+    title: 'Queen Karin — Femdom & Female Domination',
+    description: 'Enter the world of Queen Karin. Real femdom & female domination. No agencies, no bots, no fakes.',
     images: ['/og-cover.png'],
   },
   robots: {

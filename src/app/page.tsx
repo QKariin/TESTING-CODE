@@ -5,14 +5,14 @@ import HomeClient from './home/HomeClient';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-    title: 'Queen Karin — Femdom, Findom & Female Domination',
-    description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. Custom-built app with chastity keyholding, daily task training, hierarchy ranking, merit scoring & a live leaderboard. No agencies, no bots, no fakes. One Dominant. One system. Built from scratch.',
+    title: 'Queen Karin — Femdom & Female Domination',
+    description: 'Enter the world of Queen Karin. Real femdom & female domination. Custom-built app with chastity keyholding, daily task training, hierarchy ranking, merit scoring & a live leaderboard. No agencies, no bots, no fakes. One Dominant. One system. Built from scratch.',
     alternates: {
         canonical: 'https://throne.qkarin.com',
     },
     openGraph: {
-        title: 'Queen Karin — Femdom, Findom & Female Domination',
-        description: 'Enter the world of Queen Karin. Real femdom, findom & female domination. No agencies, no bots, no fakes.',
+        title: 'Queen Karin — Femdom & Female Domination',
+        description: 'Enter the world of Queen Karin. Real femdom & female domination. No agencies, no bots, no fakes.',
         url: 'https://throne.qkarin.com',
     },
 };

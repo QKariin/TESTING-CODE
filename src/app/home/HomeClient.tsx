@@ -778,7 +778,6 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600, margin: '0 auto' }}>
                         {[
                             { title: 'KEYHOLDING', desc: 'Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.', href: '/keyholder', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> },
-                            { title: 'FINANCIAL DOMINATION', desc: 'Tribute is not a transaction. It is proof of devotion. An economy built on worship, not negotiation.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
                             { title: 'TASK TRAINING', desc: 'Daily assignments. Photo proof. Deadlines. Real consequences. A structured system of obedience with merit and punishment.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
                             { title: 'SISSIFICATION', desc: 'Guided transformation under absolute authority. Wardrobe. Behavior. Identity. Nothing is optional.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><path d="M12 2a5 5 0 0 1 5 5c0 4-5 7-5 7s-5-3-5-7a5 5 0 0 1 5-5z"/><path d="M12 14v8M8 18h8"/></svg> },
                             { title: 'ONLINE DOMINATION', desc: 'Real-time control from anywhere. Not a fantasy you browse, a lifestyle you live under Her command.', href: '/login', icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
@@ -961,7 +960,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
             {/* SEO content -- invisible to users, crawlable by Google */}
             <aside style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 <header>
-                    <h1>Queen Karin -- Femdom, Findom &amp; Female Domination</h1>
+                    <h1>Queen Karin -- Femdom &amp; Female Domination</h1>
                     <p>No agencies. No bots. No fakes.</p>
                     <a href="/login">Join Now</a>
                 </header>
@@ -976,10 +975,6 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                         <h3>Keyholding &amp; Chastity Control</h3>
                         <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.</p>
                         <a href="/keyholder">Surrender Key</a>
-                    </article>
-                    <article>
-                        <h3>Financial Domination</h3>
-                        <p>Tribute isn&apos;t a transaction. It&apos;s proof of devotion. An economy built on worship, not negotiation.</p>
                     </article>
                     <article>
                         <h3>Task Training &amp; Obedience</h3>

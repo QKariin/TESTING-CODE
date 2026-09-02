@@ -554,7 +554,7 @@ export default function TestLandingPage() {
                             </div>
                         </>) },
                         { key: 'kinks', title: "Queen Karin's", subtitle: 'Kinks', content: (<>
-                            <p className="funnel-text">Chastity. Financial domination. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
+                            <p className="funnel-text">Chastity. Sissification. Task training. Body worship. Humiliation. Not a menu to pick from. A system to be placed into, based on what I decide you need.</p>
                             <p className="funnel-text dim">You don&apos;t choose your kink here. I do.</p>
                             <div className="section-gallery three-up">
                                 <div className="section-gallery-item"><img src="/collar-placeholder.png" alt="" /><div className="section-gallery-label">Chastity</div></div>
@@ -661,13 +661,6 @@ export default function TestLandingPage() {
                         <h3>KEYHOLDING</h3>
                         <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.</p>
                         <a href="/keyholder" className="service-cta">SURRENDER KEY</a>
-                    </div>
-
-                    <div className="service-card grow-card">
-                        <div className="service-icon">&#9830;</div>
-                        <h3>FINANCIAL DOMINATION</h3>
-                        <p>Tribute isn&apos;t a transaction. It&apos;s proof of devotion. An economy built on worship, not negotiation.</p>
-                        <a href="/login" className="service-cta">ENTER</a>
                     </div>
 
                     <div className="service-card grow-card">
@@ -790,7 +783,7 @@ export default function TestLandingPage() {
             {/* SEO content -- invisible to users, crawlable by Google */}
             <main aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
                 <header>
-                    <h1>Queen Karin -- Femdom, Findom &amp; Female Domination</h1>
+                    <h1>Queen Karin -- Femdom &amp; Female Domination</h1>
                     <p>No agencies. No bots. No fakes.</p>
                     <a href="/login">Join Now</a>
                 </header>
@@ -805,10 +798,6 @@ export default function TestLandingPage() {
                         <h3>Keyholding &amp; Chastity Control</h3>
                         <p>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game, a commitment.</p>
                         <a href="/keyholder">Surrender Key</a>
-                    </article>
-                    <article>
-                        <h3>Financial Domination</h3>
-                        <p>Tribute isn&apos;t a transaction. It&apos;s proof of devotion. An economy built on worship, not negotiation.</p>
                     </article>
                     <article>
                         <h3>Task Training &amp; Obedience</h3>
