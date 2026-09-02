@@ -509,7 +509,7 @@ export default function TestLandingPage() {
                         <a href="#about" className="shelf-nav-btn hero-fade" style={{ animationDelay: '0.6s' }}>About Me</a>
                         <a href="#leaderboard-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.0s' }}>Hierarchy</a>
                         <a href="#services" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.4s' }}>Service</a>
-                        <a href="#keyholder-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Keyholder</a>
+                        <a href="/keyholder" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Keyholder</a>
                         <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }}>Feedback</a>
                         <button className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.6s' }} onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
                     </nav>
