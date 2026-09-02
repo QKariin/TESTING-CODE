@@ -509,8 +509,9 @@ export default function TestLandingPage() {
                         <a href="#about" className="shelf-nav-btn hero-fade" style={{ animationDelay: '0.6s' }}>About Me</a>
                         <a href="#leaderboard-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.0s' }}>Hierarchy</a>
                         <a href="#services" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.4s' }}>Service</a>
-                        <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Feedback</a>
-                        <button className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }} onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
+                        <a href="#keyholder-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Keyholder</a>
+                        <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }}>Feedback</a>
+                        <button className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.6s' }} onClick={() => { const f = document.getElementById('footerFrame') as HTMLIFrameElement; if (f?.contentWindow) f.contentWindow.postMessage({ type: 'openFaq' }, '*'); }}>FAQ</button>
                     </nav>
                     {/* JOIN button only in sticky header */}
                 </div>
@@ -690,6 +691,35 @@ export default function TestLandingPage() {
                         <a href="/login" className="service-cta">ENTER</a>
                     </div>
                 </div>
+
+                {/* KEYHOLDER — dedicated section */}
+                <section id="keyholder-section" className="funnel-section funnel-section-glass" style={{ position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(139,0,0,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 18 }}>
+                        <div style={{ fontSize: 48, lineHeight: 1, marginBottom: 4 }}>&#9919;</div>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.35rem', color: 'rgba(139,0,0,0.5)', letterSpacing: 6, textTransform: 'uppercase' }}>Chastity Control</div>
+                        <h2 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.2rem, 4vw, 1.6rem)', fontWeight: 700, letterSpacing: 6, color: 'rgba(197,160,89,0.85)', textTransform: 'uppercase', margin: 0 }}>Keyholder</h2>
+                        <div style={{ width: 60, height: 1, background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.4), transparent)', margin: '4px 0' }} />
+                        <p className="funnel-text" style={{ maxWidth: 420 }}>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game — a commitment.</p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 400, marginTop: 10 }}>
+                            <div style={{ padding: '14px 18px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 10, textAlign: 'left' }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(197,160,89,0.7)', letterSpacing: 2, marginBottom: 6 }}>DAILY TASKS</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Every day you receive tasks assigned by Queen Karin directly. You complete routines and submit proof. Nothing is optional.</div>
+                            </div>
+                            <div style={{ padding: '14px 18px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 10, textAlign: 'left' }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(197,160,89,0.7)', letterSpacing: 2, marginBottom: 6 }}>KNEELING SESSIONS</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>You check in and out of kneeling sessions. Your progress is tracked. Queen Karin can see everything in real time.</div>
+                            </div>
+                            <div style={{ padding: '14px 18px', background: 'rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.15)', borderRadius: 10, textAlign: 'left' }}>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.7rem', fontWeight: 600, color: 'rgba(197,160,89,0.7)', letterSpacing: 2, marginBottom: 6 }}>FULL ACCOUNTABILITY</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>Your dashboard shows daily progress, completed tasks, kneeling count, merit, and full history. Nothing goes unnoticed. You report to her, not to yourself.</div>
+                            </div>
+                        </div>
+
+                        <a href="/keyholder" style={{ display: 'inline-block', marginTop: 18, padding: '14px 40px', fontFamily: 'Cinzel, serif', fontSize: '0.7rem', fontWeight: 700, letterSpacing: 4, color: '#fff', background: 'linear-gradient(135deg, rgba(139,0,0,0.6), rgba(139,0,0,0.3))', border: '1px solid rgba(139,0,0,0.4)', borderRadius: 8, textDecoration: 'none', textTransform: 'uppercase', transition: 'all 0.3s' }}>SURRENDER KEY</a>
+                    </div>
+                </section>
 
                 {/* REVIEWS — each card grows individually */}
                 <div id="reviews" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, position: 'relative', zIndex: 2 }}>
