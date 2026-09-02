@@ -543,7 +543,8 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                         <a href="#about" className="shelf-nav-btn hero-fade" style={{ animationDelay: '0.6s' }}>About Me</a>
                         <a href="#leaderboard-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.0s' }}>Hierarchy</a>
                         <a href="#services" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.4s' }}>Service</a>
-                        <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Feedback</a>
+                        <a href="#keyholder-section" className="shelf-nav-btn hero-fade" style={{ animationDelay: '1.8s' }}>Keyholder</a>
+                        <a href="#reviews" className="shelf-nav-btn hero-fade" style={{ animationDelay: '2.2s' }}>Feedback</a>
                     </nav>
                     {/* JOIN button only in sticky header */}
                 </div>
@@ -796,6 +797,46 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                                 <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, maxWidth: 420, margin: '0 auto' }}>{s.desc}</div>
                             </a>
                         ))}
+                    </div>
+                </div>
+
+                {/* KEYHOLDER — dedicated section */}
+                <div id="keyholder-section" className="scroll-section" style={{ marginTop: 180, padding: '0 16px', position: 'relative', zIndex: 2, opacity: 0, transform: 'translateY(30px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}>
+                    {/* Section header */}
+                    <div className="grow-card" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 48 }}>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(139,0,0,0.5))' }} />
+                        <h2 style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,1)', letterSpacing: '12px', margin: 0 }}>KEYHOLDER</h2>
+                        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(139,0,0,0.5), transparent)' }} />
+                    </div>
+                    <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+                        <div style={{ marginBottom: 20 }}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(139,0,0,0.6)" strokeWidth="1.2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                        </div>
+                        <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.3rem', color: 'rgba(139,0,0,0.45)', letterSpacing: 6, marginBottom: 16, textTransform: 'uppercase' }}>Chastity Control</div>
+                        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.8, maxWidth: 440, margin: '0 auto 32px' }}>Your lock. Her rules. Daily check-ins, real-time control, strict accountability. Not a game — a commitment.</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            {[
+                                { title: 'DAILY TASKS', text: 'Every day you receive tasks assigned by Queen Karin directly. You complete routines and submit proof. Nothing is optional.' },
+                                { title: 'KNEELING SESSIONS', text: 'You check in and out of kneeling sessions. Your progress is tracked. Queen Karin can see everything in real time.' },
+                                { title: 'FULL ACCOUNTABILITY', text: 'Your dashboard shows daily progress, completed tasks, kneeling count, merit, and full history. Nothing goes unnoticed. You report to her, not to yourself.' },
+                            ].map((item, i) => (
+                                <div key={i} style={{
+                                    padding: '20px 22px', borderRadius: 14, textAlign: 'left',
+                                    background: 'rgba(12,11,16,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                                    border: '1px solid rgba(139,0,0,0.15)',
+                                }}>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', fontWeight: 600, color: 'rgba(197,160,89,0.7)', letterSpacing: 3, marginBottom: 8 }}>{item.title}</div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', lineHeight: 1.7 }}>{item.text}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <a href="/keyholder" style={{
+                            display: 'inline-block', marginTop: 32, padding: '16px 44px',
+                            fontFamily: 'Cinzel, serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: 5,
+                            color: '#fff', textDecoration: 'none', textTransform: 'uppercase',
+                            background: 'linear-gradient(135deg, rgba(139,0,0,0.5), rgba(139,0,0,0.25))',
+                            border: '1px solid rgba(139,0,0,0.35)', borderRadius: 10,
+                        }}>Surrender Key</a>
                     </div>
                 </div>
 
