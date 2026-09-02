@@ -636,7 +636,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                     </div>
                     <div style={{ borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', maxWidth: 300, margin: '0 auto', background: '#000' }}>
                         <video
-                            src="/tribute-intro.mov#t=0.1"
+                            src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/tribute-intro.mov#t=0.1"
                             controls
                             playsInline
                             preload="metadata"

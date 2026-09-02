@@ -1106,7 +1106,7 @@ export default function TributePage() {
                 {/* ── VIDEO ── */}
                 <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.1)', maxWidth: '75%', margin: '48px auto 0', background: '#000' }}>
                     <video
-                        src="/tribute-intro.mov"
+                        src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/tribute-intro.mov"
                         autoPlay muted loop playsInline
                         style={{ width: '100%', display: 'block', opacity: 0.6 }}
                     />
