@@ -3404,49 +3404,26 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
             <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 16px 24px' }}>
                 <input ref={overlayFileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleOverlayUpload} />
 
-                {/* ── KEYHOLDER TIERS — card stack like pending review ── */}
+                {/* ── KEYHOLDER — single card like challenge cards ── */}
                 <div style={{ marginBottom: 24 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 16 }}>
-                        <div style={{ height: 1, flex: 1, maxWidth: 80, background: 'linear-gradient(to right, transparent, rgba(139,0,0,0.25))' }} />
-                        <span style={{ fontFamily: "'Cinzel',serif", fontSize: '0.44rem', color: 'rgba(139,0,0,0.6)', fontWeight: 600, letterSpacing: 5 }}>KEYHOLDER</span>
-                        <div style={{ height: 1, flex: 1, maxWidth: 80, background: 'linear-gradient(to left, transparent, rgba(139,0,0,0.25))' }} />
-                    </div>
-                    <div style={{ position: 'relative', width: '100%', height: 380, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', perspective: 900, marginBottom: 8 }}>
-                        {[
-                            { key: '7', label: '7 DAYS', coins: '5,500' },
-                            { key: '14', label: '14 DAYS', coins: '10,000' },
-                            { key: '30', label: '30 DAYS', coins: '15,000' },
-                            { key: '90', label: '90 DAYS', coins: '30,000' },
-                            { key: '365', label: '365 DAYS', coins: '66,600' },
-                        ].map((tier, i) => {
-                            const count = 5;
-                            const mid = (count - 1) / 2;
-                            const off = i - mid;
-                            const absOff = Math.abs(off);
-                            const zIdx = 10 - Math.round(absOff);
-                            return (
-                                <div key={tier.key} className="kh-card" style={{
-                                    position: 'absolute', bottom: 0, width: 220, height: 340, borderRadius: 14, overflow: 'hidden',
-                                    cursor: 'pointer', border: '1px solid rgba(139,0,0,0.2)', boxShadow: '0 6px 24px rgba(0,0,0,0.6)',
-                                    background: '#0a0a0c', transformOrigin: 'center bottom',
-                                    transition: 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease',
-                                    ['--off' as any]: off, ['--abs' as any]: absOff,
-                                    transform: `translateX(calc(var(--off) * 22px)) rotate(calc(var(--off) * 4deg)) translateY(calc(var(--abs) * -5px))`,
-                                    zIndex: zIdx,
-                                } as any}
-                                    onClick={() => (window as any).openVaultLockRequest?.()}>
-                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(ellipse at 50% 40%, rgba(139,0,0,0.08) 0%, #0a0a0c 70%)' }}>
-                                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="rgba(139,0,0,0.3)" strokeWidth="1.5">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                                        </svg>
-                                    </div>
-                                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '10px 12px', background: 'linear-gradient(transparent, rgba(0,0,0,0.85) 40%)' }}>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(139,0,0,0.8)' }}>{tier.label}</div>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', marginTop: 2, letterSpacing: 0.5 }}>{tier.coins} coins</div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    <div style={{
+                        position: 'relative', borderRadius: 14, overflow: 'hidden',
+                        border: '1px solid rgba(139,0,0,0.2)', minHeight: 180,
+                        background: 'radial-gradient(ellipse at 50% 30%, rgba(139,0,0,0.1) 0%, rgba(5,8,18,0.98) 70%)',
+                    }}>
+                        <div style={{ position: 'relative', padding: '28px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', minHeight: 180 }}>
+                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(139,0,0,0.35)" strokeWidth="1.2" style={{ marginBottom: 14 }}>
+                                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                            </svg>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>KEYHOLDER</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>Lock yourself under Queen Karin's control</div>
+                            <button onClick={() => (window as any).openVaultLockRequest?.()} style={{
+                                display: 'block', margin: '0 auto', padding: '10px 32px', borderRadius: 10,
+                                border: '1px solid rgba(139,0,0,0.4)', background: 'rgba(139,0,0,0.1)',
+                                color: 'rgba(200,60,60,0.9)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 700,
+                                letterSpacing: '3px', cursor: 'pointer', backdropFilter: 'blur(12px)',
+                            }}>START NOW</button>
+                        </div>
                     </div>
                 </div>
 
