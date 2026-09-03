@@ -844,6 +844,7 @@ export async function POST(req: NextRequest) {
                 expires_at: newExpires,
                 lock_days: newLockDays,
             }).eq('id', session.id);
+            if (dayChange > 0) await _extendProgram(email, session.id, newLockDays);
             console.log(`[vault] quiz_grade: ${correct}/${total} → dayChange=${dayChange}, newLockDays=${newLockDays}`);
         }
 
@@ -887,6 +888,7 @@ export async function POST(req: NextRequest) {
                 expires_at: newExpires,
                 lock_days: newLockDays,
             }).eq('id', session.id);
+            if (dayDelta > 0) await _extendProgram(email, session.id, newLockDays);
             console.log(`[vault] apply_followup: ${followUpType} ${delta} → lock_days ${session.lock_days} → ${newLockDays}`);
         }
 
@@ -1225,25 +1227,7 @@ export async function POST(req: NextRequest) {
             lock_days: newLockDays,
             expires_at: newExpires,
         }).eq('id', session.id);
-        // Extend stored program to cover new days
-        try {
-            const { data: prog } = await supabaseAdmin
-                .from('vault_member_program').select('id, program').eq('member_id', email).single();
-            if (prog) {
-                const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : (prog.program || {});
-                let added = 0;
-                for (let day = 1; day <= newLockDays; day++) {
-                    if (!program[String(day)]) {
-                        program[String(day)] = defaultDayTasks(day);
-                        added++;
-                    }
-                }
-                if (added > 0) {
-                    await supabaseAdmin.from('vault_member_program').update({ program: JSON.stringify(program) }).eq('id', prog.id);
-                    console.log(`[vault] add_lock_days: added ${added} missing program days`);
-                }
-            }
-        } catch (e: any) { console.error('[vault] add_lock_days program extend error:', e?.message); }
+        await _extendProgram(email, session.id, newLockDays);
 
         // Send card to member's chat
         const cardData = { days: d, newTotal: newLockDays, newExpires };
@@ -1261,6 +1245,28 @@ export async function POST(req: NextRequest) {
 }
 
 // ── HELPERS ──
+
+// Ensure stored program covers all days up to newLockDays
+async function _extendProgram(memberId: string, sessionId: string, newLockDays: number) {
+    try {
+        const { data: prog } = await supabaseAdmin
+            .from('vault_member_program').select('id, program')
+            .eq('session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (!prog) return;
+        const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : (prog.program || {});
+        let added = 0;
+        for (let day = 1; day <= newLockDays; day++) {
+            if (!program[String(day)]) {
+                program[String(day)] = defaultDayTasks(day);
+                added++;
+            }
+        }
+        if (added > 0) {
+            await supabaseAdmin.from('vault_member_program').update({ program: JSON.stringify(program) }).eq('id', prog.id);
+            console.log(`[vault] _extendProgram: added ${added} days → total ${newLockDays} for ${memberId}`);
+        }
+    } catch (e: any) { console.error('[vault] _extendProgram error:', e?.message); }
+}
 
 // Read orders from member's custom program; auto-generate program if missing
 async function _getOrdersForDay(sessionId: string, dayNumber: number) {
@@ -1317,7 +1323,26 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
                 }
                 return orders;
             }
-            console.warn(`[vault] Program found but day ${dayNumber} has no tasks, falling back to defaults`);
+            // Day missing from stored program — generate, save back, and return
+            console.warn(`[vault] Program found but day ${dayNumber} has no tasks, backfilling...`);
+            const newTasks = defaultDayTasks(dayNumber);
+            program[String(dayNumber)] = newTasks;
+            try {
+                const { data: progRow } = await supabaseAdmin
+                    .from('vault_member_program').select('id')
+                    .eq('session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                if (progRow) {
+                    await supabaseAdmin.from('vault_member_program')
+                        .update({ program: JSON.stringify(program) }).eq('id', progRow.id);
+                    console.log(`[vault] Backfilled day ${dayNumber} into stored program`);
+                }
+            } catch (_) {}
+            return newTasks.map((t: any) => {
+                const order: any = { type: t.type, target: t.target || 1, done: 0 };
+                if (t.label) order.label = t.label;
+                if (t.config) order.config = t.config;
+                return order;
+            });
         }
     } catch (err: any) {
         console.error('[vault] _getOrdersForDay error:', err?.message || err);
