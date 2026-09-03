@@ -25,19 +25,19 @@ function _showCoinConfirm(opts: { title: string; cost: number; wallet: number; o
 
     if (isVault) {
         // Full-screen vault mood
-        ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#080507;animation:_ccFadeIn 0.25s ease;';
-        const accent = canAfford ? 'rgba(255,255,255,0.5)' : 'rgba(255,60,60,0.5)';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(4,3,6,0.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);animation:_ccFadeIn 0.25s ease;';
+        const accent = canAfford ? 'rgba(197,160,89,0.8)' : 'rgba(255,60,60,0.5)';
         ov.innerHTML = `
-            <div style="text-align:center;max-width:340px;padding:0 28px;">
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.45);letter-spacing:4px;margin-bottom:24px;">${opts.title}</div>
-                <div style="font-family:Cinzel,serif;font-size:2.6rem;color:${accent};font-weight:700;letter-spacing:2px;">${opts.cost.toLocaleString()}</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.35);margin-top:6px;letter-spacing:3px;">COINS</div>
-                <div style="width:40px;height:1px;background:rgba(255,255,255,0.1);margin:24px auto;"></div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(255,255,255,0.4);">wallet: ${opts.wallet.toLocaleString()} coins</div>
-                ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,60,60,0.6);margin-top:8px;">insufficient funds</div>' : ''}
-                <div style="display:flex;gap:14px;margin-top:32px;">
-                    <button id="_ccCancel" style="flex:1;padding:16px 0;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);font-family:Cinzel,serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;">CANCEL</button>
-                    ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:16px 0;border-radius:10px;background:rgba(139,0,0,0.15);border:1px solid rgba(139,0,0,0.3);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;">PROCEED</button>' : ''}
+            <div style="text-align:center;width:88%;max-width:380px;padding:44px 32px;background:rgba(12,10,16,0.6);border:1px solid rgba(197,160,89,0.1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);">
+                <div style="font-family:Orbitron,sans-serif;font-size:0.32rem;color:rgba(197,160,89,0.35);letter-spacing:6px;margin-bottom:28px;">${opts.title}</div>
+                <div style="font-family:Cinzel,serif;font-size:2.8rem;color:${accent};font-weight:700;letter-spacing:2px;line-height:1;">${opts.cost.toLocaleString()}</div>
+                <div style="font-family:Orbitron,sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.4);margin-top:8px;letter-spacing:5px;">COINS</div>
+                <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.2),transparent);margin:28px auto;"></div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.3);letter-spacing:1px;">wallet: ${opts.wallet.toLocaleString()} coins</div>
+                ${!canAfford ? '<div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,60,60,0.6);margin-top:10px;letter-spacing:1px;">insufficient funds</div>' : ''}
+                <div style="display:flex;gap:14px;margin-top:36px;">
+                    <button id="_ccCancel" style="flex:1;padding:16px 0;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;white-space:nowrap;">CANCEL</button>
+                    ${canAfford ? '<button id="_ccConfirm" style="flex:1;padding:16px 0;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.25);color:rgba(197,160,89,0.85);font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:3px;cursor:pointer;white-space:nowrap;">PROCEED</button>' : ''}
                 </div>
             </div>`;
     } else {
