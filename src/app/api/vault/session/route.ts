@@ -1225,6 +1225,26 @@ export async function POST(req: NextRequest) {
             lock_days: newLockDays,
             expires_at: newExpires,
         }).eq('id', session.id);
+        // Extend stored program to cover new days
+        try {
+            const { data: prog } = await supabaseAdmin
+                .from('vault_member_program').select('id, program').eq('member_id', email).single();
+            if (prog) {
+                const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : (prog.program || {});
+                let added = 0;
+                for (let day = 1; day <= newLockDays; day++) {
+                    if (!program[String(day)]) {
+                        program[String(day)] = defaultDayTasks(day);
+                        added++;
+                    }
+                }
+                if (added > 0) {
+                    await supabaseAdmin.from('vault_member_program').update({ program: JSON.stringify(program) }).eq('id', prog.id);
+                    console.log(`[vault] add_lock_days: added ${added} missing program days`);
+                }
+            }
+        } catch (e: any) { console.error('[vault] add_lock_days program extend error:', e?.message); }
+
         // Send card to member's chat
         const cardData = { days: d, newTotal: newLockDays, newExpires };
         try { await DbService.sendMessage(email, `LOCK_EXTENDED_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) {}
