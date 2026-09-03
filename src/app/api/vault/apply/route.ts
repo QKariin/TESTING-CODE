@@ -109,7 +109,7 @@ export async function POST(req: Request) {
             if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
             // Clone template into member's program IMMEDIATELY at payment
-            try { await _generateMemberProgram(session.id, memberId); } catch (e: any) { console.error('[vault apply] Program generation failed:', e?.message); }
+            try { await _generateMemberProgram(session.id, memberId, chastityDays); } catch (e: any) { console.error('[vault apply] Program generation failed:', e?.message); }
 
             // Clear the keyholder purchase marker
             delete params.keyholder_tier;
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
         if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
         // Auto-generate program from template
-        try { await _generateMemberProgram(session.id, memberId); } catch (_) {}
+        try { await _generateMemberProgram(session.id, memberId, tier.days); } catch (_) {}
 
         // Deduct coins
         const newWallet = wallet - tier.coins;
@@ -271,7 +271,7 @@ export async function GET(req: Request) {
     }
 }
 
-async function _generateMemberProgram(sessionId: string, memberId: string) {
+async function _generateMemberProgram(sessionId: string, memberId: string, totalDays = 30) {
     const admin = getAdmin();
     // Delete any old programs for this member (fresh template copy every time)
     await admin.from('vault_member_program').delete().eq('member_id', memberId);
@@ -291,7 +291,15 @@ async function _generateMemberProgram(sessionId: string, memberId: string) {
     }
     if (Object.keys(program).length === 0) {
         // Fallback: use shared defaults (same as dashboard)
-        Object.assign(program, generateDefaultProgram());
+        Object.assign(program, generateDefaultProgram(totalDays));
+    } else {
+        // Fill in any missing days up to totalDays from defaults
+        const defaults = generateDefaultProgram(totalDays);
+        for (let d = 1; d <= totalDays; d++) {
+            if (!program[String(d)]) {
+                program[String(d)] = defaults[String(d)];
+            }
+        }
     }
     await admin.from('vault_member_program').insert({
         session_id: sessionId,
