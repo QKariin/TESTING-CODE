@@ -2692,7 +2692,6 @@ export default function ProfilePage() {
                 cryptoStatusBody={{ memberId: coinPayment.memberId, coins: coinPayment.coins }}
                 confirmMessage="✓ PAYMENT CONFIRMED — CREDITING COINS..."
                 paypalMeUrl="https://paypal.me/QKarin"
-                throneUrl="https://throne.com/queenkarin"
                 onSuccess={() => { setCoinPayment(null); window.location.reload(); }}
                 onClose={() => setCoinPayment(null)}
             />

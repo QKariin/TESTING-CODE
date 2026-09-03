@@ -683,6 +683,13 @@ export default function PaymentModal({
                             PAY WITH THRONE
                         </button>
                     )}
+                    {paypalMeUrl && (
+                        <a href={paypalMeUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ width: '100%', padding: '18px', background: 'rgba(0,112,192,0.06)', border: '1px solid rgba(0,112,192,0.25)', borderRadius: 10, color: 'rgba(0,112,192,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,112,192,0.8)" strokeWidth="1.5"><path d="M7.5 21H4a1 1 0 01-1-1V4a1 1 0 011-1h5.5a5.5 5.5 0 013.7 9.6A5 5 0 0118 17.5V20a1 1 0 01-1 1h-3"/><path d="M8 3v18"/></svg>
+                            PAY WITH PAYPAL
+                        </a>
+                    )}
                     {/* Card via Destream */}
                     <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer"
                         style={{ width: '100%', padding: '18px', background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: 10, color: 'rgba(76,175,80,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
