@@ -5631,9 +5631,9 @@ export async function openVaultLockRequest() {
     ov.querySelector('#_vaultLockClose')!.addEventListener('click', () => _closeVaultOverlay());
     ov.addEventListener('click', (e) => { if (e.target === ov) _closeVaultOverlay(); });
 
-    // Boost wallet — scroll to shop
+    // Boost wallet — open exchequer (coin purchase)
     const boostBtn = ov.querySelector('#_vaultBoostWallet');
-    if (boostBtn) boostBtn.addEventListener('click', () => { _closeVaultOverlay(); document.getElementById('shopSection')?.scrollIntoView({ behavior: 'smooth' }); });
+    if (boostBtn) boostBtn.addEventListener('click', () => { _closeVaultOverlay(); if ((window as any).goToExchequer) (window as any).goToExchequer(); });
 
     // Lock Now (instant)
     ov.querySelector('#_vaultLockNow')!.addEventListener('click', () => _submitVaultLock('apply-instant'));
