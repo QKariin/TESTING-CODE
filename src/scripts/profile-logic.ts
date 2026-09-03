@@ -5601,14 +5601,15 @@ export async function openVaultLockRequest() {
                 }).join('')}
             </div>
 
-            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:${canAffordAny ? '0' : '10'}px;">WALLET: <span style="color:rgba(255,255,255,0.55);font-weight:600;">${wallet.toLocaleString()}</span></div>
-            ${!canAffordAny ? '<button id="_vaultBoostWallet" style="margin-top:8px;padding:12px 28px;border-radius:8px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);color:rgba(197,160,89,0.65);font-family:Rajdhani,sans-serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;font-weight:600;">BOOST WALLET</button>' : ''}
+            <div style="font-family:Rajdhani,sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:10px;">WALLET: <span style="color:rgba(255,255,255,0.55);font-weight:600;">${wallet.toLocaleString()}</span></div>
+            <button id="_vaultBoostWallet" style="padding:12px 28px;border-radius:8px;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.2);color:rgba(197,160,89,0.65);font-family:Rajdhani,sans-serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;font-weight:600;">BOOST WALLET</button>
 
             <div style="width:100%;height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
 
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button id="_vaultLockNow" style="width:100%;padding:22px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:1rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
-                <button id="_vaultWaitQueen" style="width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
+                <!-- WAIT FOR QUEEN — disabled for now, users lock themselves -->
+                <button id="_vaultWaitQueen" style="display:none;width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
 
             <div id="_vaultDatePicker" style="display:none;margin-top:18px;">
