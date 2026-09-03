@@ -8,8 +8,8 @@ export function kneelTarget(d: number): number {
     if (d<=17) return 12; if (d<=21) return 14;
     if (d<=25) return 16; if (d<=28) return 18;
     if (d<=30) return 20;
-    // Days 31+: random between 10-20 for variety
-    return 10 + Math.floor(Math.random() * 11);
+    // Days 31+: deterministic per day (10-20 range, varies by day but stable per reload)
+    return 10 + (((d * 7) + 3) % 11);
 }
 
 export function defaultDayTasks(d: number): any[] {
