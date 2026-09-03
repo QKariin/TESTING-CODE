@@ -1007,14 +1007,16 @@ function _sendInstallNotifyOnce(u: any) {
     ov.id = '_installClaimOverlay';
     ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);';
     ov.innerHTML = `
-        <div style="text-align:center;max-width:340px;padding:40px 30px;">
-            <div style="font-size:2.5rem;margin-bottom:18px;">&#x1F451;</div>
-            <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:#c5a059;letter-spacing:4px;margin-bottom:10px;">APP INSTALLED</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:30px;">
-                You earned <span style="color:#c5a059;font-weight:600;">1,000 coins</span> for installing the app. Tap below to claim them.
+        <div style="text-align:center;max-width:360px;padding:48px 36px;background:rgba(6,4,2,0.7);border:1px solid rgba(197,160,89,0.12);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1" style="margin-bottom:24px;"><path d="M12 2L9 7H3l5 4-2 7 6-4 6 4-2-7 5-4h-6z"/></svg>
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.35);letter-spacing:6px;margin-bottom:14px;">REWARD</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.1rem;color:rgba(197,160,89,0.85);letter-spacing:5px;margin-bottom:8px;font-weight:600;">APP INSTALLED</div>
+            <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.3),transparent);margin:0 auto 20px;"></div>
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.35);line-height:1.8;margin-bottom:36px;">
+                You earned <span style="color:rgba(197,160,89,0.85);font-weight:600;">1,000 coins</span> for installing the app.<br/>Tap below to claim them.
             </div>
-            <button id="_claimInstallBtn" style="width:100%;padding:18px 30px;background:linear-gradient(135deg,#8b0000,#6b0000);border:1px solid rgba(197,160,89,0.3);color:#fff;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:5px;cursor:pointer;border-radius:0;">CLAIM 1,000 COINS</button>
-            <div id="_claimInstallStatus" style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);margin-top:14px;letter-spacing:2px;"></div>
+            <button id="_claimInstallBtn" style="width:100%;padding:18px 30px;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.3);color:rgba(197,160,89,0.85);font-family:'Cinzel',serif;font-size:0.7rem;letter-spacing:5px;cursor:pointer;transition:all 0.3s;">CLAIM 1,000 COINS</button>
+            <div id="_claimInstallStatus" style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.2);margin-top:16px;letter-spacing:2px;"></div>
         </div>
     `;
     document.body.appendChild(ov);
@@ -1039,9 +1041,9 @@ function _sendInstallNotifyOnce(u: any) {
             });
             localStorage.setItem('_appInstallClaimed', '1');
             btn.textContent = '1,000 COINS CLAIMED';
-            btn.style.background = 'rgba(197,160,89,0.15)';
-            btn.style.borderColor = 'rgba(197,160,89,0.5)';
-            btn.style.color = '#c5a059';
+            btn.style.background = 'rgba(197,160,89,0.1)';
+            btn.style.borderColor = 'rgba(197,160,89,0.4)';
+            btn.style.color = 'rgba(197,160,89,0.85)';
             status.textContent = 'Added to your wallet.';
             status.style.color = 'rgba(197,160,89,0.6)';
             setTimeout(() => { ov.remove(); }, 2500);
