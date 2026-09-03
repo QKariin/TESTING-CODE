@@ -2629,95 +2629,127 @@
         gap: 18px !important;
     }
 
-    .lobby-header {
+    /* ── EXCHEQUER REDESIGN ────────────────────────────── */
+    .exchequer-wrap {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
         width: 100%;
+        max-width: 400px;
+        padding: 0 16px;
     }
 
-    .lobby-header::before {
-        content: '♛';
-        font-size: 1.6rem;
-        color: #c5a059;
-        filter: drop-shadow(0 0 10px rgba(197, 160, 89, 0.7));
-        line-height: 1;
-        margin-bottom: 4px;
+    .exchequer-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 28px;
     }
 
-    .lobby-title {
+    .exchequer-title {
         font-family: 'Cinzel', serif;
-        font-size: 1.3rem;
-        color: #c5a059;
-        letter-spacing: 6px;
-        text-transform: uppercase;
-        text-shadow: 0 0 20px rgba(197, 160, 89, 0.45);
+        font-size: 1.4rem;
         font-weight: 700;
-        margin: 0;
+        color: #c5a059;
+        letter-spacing: 8px;
+        text-shadow: 0 0 30px rgba(197, 160, 89, 0.3);
+        margin-top: 6px;
     }
 
-    .lobby-header::after {
-        content: 'SELECT YOUR TRIBUTE';
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.48rem;
-        color: rgba(197, 160, 89, 0.45);
-        letter-spacing: 4px;
-        margin-top: 4px;
+    .exchequer-sub {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.6rem;
+        font-weight: 500;
+        color: rgba(197, 160, 89, 0.35);
+        letter-spacing: 5px;
+        text-transform: uppercase;
     }
 
-    .coin-grid {
+    .exchequer-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        gap: 12px;
         width: 100%;
     }
 
-    .coin-tile {
-        background: linear-gradient(135deg, rgba(197, 160, 89, 0.1) 0%, rgba(197, 160, 89, 0.03) 100%);
-        border: 1px solid rgba(197, 160, 89, 0.3);
-        border-radius: 10px;
-        padding: 16px 8px;
+    .exchequer-card {
+        background: rgba(197, 160, 89, 0.04);
+        border: 1px solid rgba(197, 160, 89, 0.12);
+        padding: 20px 10px 14px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 7px;
+        gap: 2px;
         cursor: pointer;
-        transition: all 0.15s ease;
+        transition: all 0.2s ease;
         -webkit-tap-highlight-color: transparent;
         position: relative;
-        overflow: hidden;
     }
 
-    .coin-tile:active {
-        background: rgba(197, 160, 89, 0.2);
-        border-color: rgba(197, 160, 89, 0.7);
+    .exchequer-card:active {
+        background: rgba(197, 160, 89, 0.12);
+        border-color: rgba(197, 160, 89, 0.5);
         transform: scale(0.97);
     }
 
-    .coin-amount {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 1rem;
+    .exchequer-coins {
+        font-family: 'Cinzel', serif;
+        font-size: 1.15rem;
         font-weight: 700;
         color: #c5a059;
         letter-spacing: 1px;
-        text-shadow: 0 0 10px rgba(197, 160, 89, 0.4);
+        text-shadow: 0 0 14px rgba(197, 160, 89, 0.25);
+        line-height: 1.2;
     }
 
-    .coin-amount::before {
-        content: '🪙 ';
-        font-size: 0.85rem;
+    .exchequer-label {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.5rem;
+        font-weight: 500;
+        color: rgba(197, 160, 89, 0.3);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
     }
 
-    .coin-price {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 0.6rem;
-        color: rgba(255, 255, 255, 0.45);
-        letter-spacing: 1px;
-        background: rgba(255, 255, 255, 0.04);
-        padding: 3px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.07);
+    .exchequer-buy {
+        font-family: 'Cinzel', serif;
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 2px;
+        background: rgba(197, 160, 89, 0.15);
+        border: 1px solid rgba(197, 160, 89, 0.3);
+        padding: 7px 22px;
+        width: 100%;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .exchequer-card:active .exchequer-buy {
+        background: rgba(197, 160, 89, 0.35);
+        border-color: rgba(197, 160, 89, 0.7);
+        color: #fff;
+    }
+
+    .exchequer-close {
+        margin-top: 28px;
+        background: none;
+        border: 1px solid rgba(197, 160, 89, 0.12);
+        color: rgba(197, 160, 89, 0.35);
+        font-family: 'Cinzel', serif;
+        font-size: 0.55rem;
+        letter-spacing: 5px;
+        padding: 12px 40px;
+        cursor: pointer;
+        transition: all 0.2s;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .exchequer-close:active {
+        border-color: rgba(197, 160, 89, 0.4);
+        color: rgba(197, 160, 89, 0.7);
     }
 
     .lobby-btn {

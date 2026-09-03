@@ -1924,37 +1924,45 @@ export default function ProfilePage() {
                     </div>
 
                     <div id="mobExchequer" className="mob-reward-overlay hidden" style={{ zIndex: 2147483640, display: 'none' }}>
-                        <div className="mob-reward-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
-                            <div className="lobby-header">
-                                <div className="lobby-title">EXCHEQUER</div>
+                        <div className="exchequer-wrap">
+                            <div className="exchequer-header">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.6)" strokeWidth="1"><path d="M12 2L9 8H2l5.5 4.5L5 21l7-4.5L19 21l-2.5-8.5L22 8h-7L12 2z"/></svg>
+                                <div className="exchequer-title">EXCHEQUER</div>
+                                <div className="exchequer-sub">Select your tribute</div>
                             </div>
-                            <div className="coin-grid">
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(2000)}>
-                                    <div className="coin-amount">2,000</div>
-                                    <div className="coin-price">€20.00</div>
+                            <div className="exchequer-grid">
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(2000)}>
+                                    <div className="exchequer-coins">2,000</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€20</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(5500)}>
-                                    <div className="coin-amount">5,500</div>
-                                    <div className="coin-price">€50.00</div>
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(5500)}>
+                                    <div className="exchequer-coins">5,500</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€50</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(12000)}>
-                                    <div className="coin-amount">12,000</div>
-                                    <div className="coin-price">€100.00</div>
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(12000)}>
+                                    <div className="exchequer-coins">12,000</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€100</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(30000)}>
-                                    <div className="coin-amount">30,000</div>
-                                    <div className="coin-price">€250.00</div>
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(30000)}>
+                                    <div className="exchequer-coins">30,000</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€250</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(70000)}>
-                                    <div className="coin-amount">70,000</div>
-                                    <div className="coin-price">€500.00</div>
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(70000)}>
+                                    <div className="exchequer-coins">70,000</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€500</div>
                                 </div>
-                                <div className="coin-tile" onClick={() => (window as any).buyRealCoins(150000)}>
-                                    <div className="coin-amount">150,000</div>
-                                    <div className="coin-price">€1000.00</div>
+                                <div className="exchequer-card" onClick={() => (window as any).buyRealCoins(150000)}>
+                                    <div className="exchequer-coins">150,000</div>
+                                    <div className="exchequer-label">coins</div>
+                                    <div className="exchequer-buy">€1,000</div>
                                 </div>
                             </div>
-                            <button onClick={() => (window as any).closeExchequer()} style={{ marginTop: '24px', background: 'none', border: '1px solid rgba(197,160,89,0.2)', color: 'rgba(197,160,89,0.5)', fontFamily: 'Cinzel', fontSize: '0.65rem', letterSpacing: '4px', padding: '12px 36px', cursor: 'pointer', borderRadius: '2px', transition: 'all 0.2s', WebkitTapHighlightColor: 'transparent' }}>CLOSE</button>
+                            <button className="exchequer-close" onClick={() => (window as any).closeExchequer()}>CLOSE</button>
                         </div>
                     </div>
 
