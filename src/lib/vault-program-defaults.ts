@@ -13,8 +13,9 @@ export function kneelTarget(d: number): number {
 }
 
 export function defaultDayTasks(d: number): any[] {
+    const kt = kneelTarget(d);
     const t: any[] = [
-        { type: 'kneel', target: kneelTarget(d), label: `Kneel ${kneelTarget(d)} times` },
+        { type: 'kneel', target: kt, label: `Kneel ${kt} times` },
         { type: 'chastity_check', target: 1, label: 'Chastity check-in' },
     ];
 
