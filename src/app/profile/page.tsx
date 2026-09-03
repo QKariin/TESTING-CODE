@@ -3408,15 +3408,13 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                 <div style={{ marginBottom: 24 }}>
                     <div style={{
                         position: 'relative', borderRadius: 14, overflow: 'hidden',
-                        border: '1px solid rgba(139,0,0,0.2)', minHeight: 180,
-                        background: 'radial-gradient(ellipse at 50% 30%, rgba(139,0,0,0.1) 0%, rgba(5,8,18,0.98) 70%)',
+                        border: '1px solid rgba(139,0,0,0.2)', minHeight: 200,
                     }}>
-                        <div style={{ position: 'relative', padding: '28px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', minHeight: 180 }}>
-                            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="rgba(139,0,0,0.35)" strokeWidth="1.2" style={{ marginBottom: 14 }}>
-                                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                            </svg>
+                        <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/keyholder-shield.png" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center 40%', opacity: 0.12 }} alt="" />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,8,18,0.5) 0%, rgba(5,8,18,0.92) 70%, rgba(5,8,18,0.98) 100%)' }} />
+                        <div style={{ position: 'relative', padding: '28px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', minHeight: 200 }}>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>KEYHOLDER</div>
-                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>Lock yourself under Queen Karin's control</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>Lock yourself under Queen Karin&#39;s control</div>
                             <button onClick={() => (window as any).openVaultLockRequest?.()} style={{
                                 display: 'block', margin: '0 auto', padding: '10px 32px', borderRadius: 10,
                                 border: '1px solid rgba(139,0,0,0.4)', background: 'rgba(139,0,0,0.1)',
