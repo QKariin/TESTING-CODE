@@ -5607,7 +5607,7 @@ export async function openVaultLockRequest() {
             <div style="width:100%;height:1px;background:rgba(255,255,255,0.06);margin:24px 0;"></div>
 
             <div style="display:flex;flex-direction:column;gap:10px;">
-                <button id="_vaultLockNow" style="width:100%;padding:22px;border-radius:10px;background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.25);color:rgba(200,50,50,0.85);font-family:Cinzel,serif;font-size:1rem;letter-spacing:3px;cursor:pointer;font-weight:700;">LOCK ME NOW</button>
+                <button id="_vaultLockNow" style="width:100%;padding:18px;border-radius:10px;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.3);color:rgba(197,160,89,0.85);font-family:Rajdhani,sans-serif;font-size:0.85rem;letter-spacing:3px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><rect x="9" y="10" width="6" height="5" rx="1"/><path d="M10.5 10V8.5a1.5 1.5 0 013 0V10"/></svg>LOCK YOURSELF</button>
                 <!-- WAIT FOR QUEEN — disabled for now, users lock themselves -->
                 <button id="_vaultWaitQueen" style="display:none;width:100%;padding:14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-family:Rajdhani,sans-serif;font-size:0.8rem;letter-spacing:3px;cursor:pointer;">WAIT FOR QUEEN KARIN</button>
             </div>
