@@ -3416,11 +3416,19 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'center', marginBottom: 6, textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>KEYHOLDER</div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>Lock yourself under Queen Karin&#39;s control</div>
                             <button onClick={() => (window as any).openVaultLockRequest?.()} style={{
-                                display: 'block', margin: '0 auto', padding: '10px 32px', borderRadius: 10,
-                                border: '1px solid rgba(139,0,0,0.4)', background: 'rgba(139,0,0,0.1)',
-                                color: 'rgba(200,60,60,0.9)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 700,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                margin: '0 auto', padding: '10px 28px', borderRadius: 10,
+                                border: '1px solid rgba(197,160,89,0.3)', background: 'rgba(197,160,89,0.06)',
+                                color: 'rgba(197,160,89,0.85)', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', fontWeight: 700,
                                 letterSpacing: '3px', cursor: 'pointer', backdropFilter: 'blur(12px)',
-                            }}>START NOW</button>
+                            }}>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(197,160,89,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    <rect x="9" y="10" width="6" height="5" rx="1" />
+                                    <path d="M10.5 10V8.5a1.5 1.5 0 013 0V10" />
+                                </svg>
+                                START NOW
+                            </button>
                         </div>
                     </div>
                 </div>
