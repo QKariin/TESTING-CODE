@@ -129,6 +129,22 @@ export async function POST(req: Request) {
             console.error('[vault proof] Day 1 orders creation failed:', e?.message);
         }
 
+        // Video proof counts as day 1 chastity check (pending Queen's approval)
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            await supabaseAdmin.from('vault_check_log').insert({
+                session_id: sessionId,
+                member_id: memberId,
+                date: today,
+                type: 'chastity_check',
+                proof_url: videoUrl,
+                status: 'pending',
+                submitted_at: now,
+            });
+        } catch (e: any) {
+            console.error('[vault proof] Day 1 chastity check insert failed:', e?.message);
+        }
+
         // System message
         try {
             await DbService.sendMessage(memberId,
