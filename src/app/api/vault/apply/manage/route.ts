@@ -171,14 +171,56 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, status: 'released_early' });
         }
 
-        // ── APPROVE PROOF (mark video as reviewed) ──
+        // ── APPROVE PROOF (mark video as reviewed + count as chastity check) ──
         if (action === 'approve-proof') {
+            const now = new Date().toISOString();
             const { error: reviewErr } = await supabaseAdmin.from('vault_sessions').update({
                 video_reviewed: true,
-                video_reviewed_at: new Date().toISOString(),
+                video_reviewed_at: now,
             }).eq('id', sessionId);
 
             if (reviewErr) console.error('[VAULT MANAGE] Approve proof failed:', reviewErr);
+
+            // If no chastity check exists for the video submission day, create + approve it
+            try {
+                const videoDate = session.video_submitted_at
+                    ? new Date(session.video_submitted_at).toISOString().split('T')[0]
+                    : (session.started_at ? new Date(session.started_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+
+                const { data: existing } = await supabaseAdmin.from('vault_check_log')
+                    .select('id').eq('session_id', sessionId).eq('date', videoDate).eq('type', 'chastity_check').maybeSingle();
+
+                if (existing) {
+                    // Already exists (pending) — approve it
+                    await supabaseAdmin.from('vault_check_log').update({
+                        status: 'approved', reviewed_at: now, queen_comment: 'Approved via video proof review',
+                    }).eq('id', existing.id);
+                } else {
+                    // Doesn't exist — create and auto-approve
+                    await supabaseAdmin.from('vault_check_log').insert({
+                        session_id: sessionId, member_id: memberId, date: videoDate,
+                        type: 'chastity_check', proof_url: session.video_proof_url || '',
+                        status: 'approved', submitted_at: session.video_submitted_at || now, reviewed_at: now,
+                        queen_comment: 'Approved via video proof review',
+                    });
+                }
+
+                // Sync the chastity order in vault_daily so it counts as done
+                const { data: daily } = await supabaseAdmin.from('vault_daily')
+                    .select('id, orders, orders_completed, orders_total').eq('session_id', sessionId).eq('date', videoDate).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    for (const o of orders) {
+                        if (o.type === 'chastity_check') { o.done = o.target; break; }
+                    }
+                    const completed = orders.filter((o: any) => o.done >= o.target).length;
+                    await supabaseAdmin.from('vault_daily').update({
+                        orders: JSON.stringify(orders), orders_completed: completed, perfect: completed >= orders.length,
+                    }).eq('id', daily.id);
+                }
+            } catch (e: any) {
+                console.error('[VAULT MANAGE] Chastity check sync on proof approve failed:', e?.message);
+            }
 
             try {
                 await DbService.sendMessage(memberId,
