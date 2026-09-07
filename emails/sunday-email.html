@@ -432,13 +432,13 @@
 
   .card-cta {
     display: block;
-    padding: 14px 0 16px;
+    padding: 20px 0 22px;
     width: 100%;
     text-decoration: none;
     font-family: 'Cinzel', serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 5px;
+    letter-spacing: 6px;
     text-transform: uppercase;
     text-align: center;
     transition: all 0.5s ease;
@@ -449,25 +449,30 @@
 
   .card-cta .cta-price {
     display: block;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 1px;
-    margin-top: 6px;
-    color: rgba(255,255,255,0.6);
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 8px;
+    background: linear-gradient(180deg, #e8c97a, #c5a059);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-transform: none;
   }
 
   .card-cta.gold {
-    background: transparent;
-    color: #c5a059;
-    border: 1px solid rgba(197,160,89,0.2);
+    background: linear-gradient(180deg, rgba(197,160,89,0.08) 0%, rgba(197,160,89,0.03) 100%);
+    color: #d4af6a;
+    border: 1px solid rgba(197,160,89,0.25);
+    box-shadow: 0 2px 20px rgba(197,160,89,0.06), inset 0 1px 0 rgba(197,160,89,0.1);
   }
 
   .card-cta.gold:hover {
     border-color: rgba(197,160,89,0.5);
-    background: rgba(197,160,89,0.04);
-    letter-spacing: 7px;
+    background: linear-gradient(180deg, rgba(197,160,89,0.14) 0%, rgba(197,160,89,0.06) 100%);
+    letter-spacing: 8px;
+    box-shadow: 0 4px 30px rgba(197,160,89,0.12), inset 0 1px 0 rgba(197,160,89,0.15);
   }
 
   .card-cta.red {
