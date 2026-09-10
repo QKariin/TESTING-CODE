@@ -1080,7 +1080,7 @@ function renderToHtml(m: any) {
     // Guardian AI → RIGHT (like queen), with gradient label
     if (isGuardian) {
         return `
-            <div class="cb-row cb-row-me">
+            <div class="cb-row cb-row-me cb-ai-msg" data-ai="1">
                 <div class="cb-wrap-me">
                     ${guardianLabel}
                     ${bubble}
@@ -1092,7 +1092,7 @@ function renderToHtml(m: any) {
     // AI response → RIGHT (like queen), with guardian label
     if (isAiResponse) {
         return `
-            <div class="cb-row cb-row-me">
+            <div class="cb-row cb-row-me cb-ai-msg" data-ai="1">
                 <div class="cb-wrap-me">
                     ${aiLabel}
                     ${bubble}
@@ -1104,7 +1104,7 @@ function renderToHtml(m: any) {
     // User message to AI → LEFT, guardian tint
     if (isUserToAi) {
         return `
-            <div class="cb-row cb-row-queen">
+            <div class="cb-row cb-row-queen cb-ai-msg" data-ai="1">
                 ${slaveAv}
                 <div class="cb-wrap-queen">
                     ${bubble}
@@ -1818,6 +1818,18 @@ async function requestAiDraft() {
     btn.style.opacity = '';
 }
 
+function toggleDashAiMessages() {
+    const box = document.getElementById('adminChatBox');
+    if (!box) return;
+    box.classList.toggle('hide-ai');
+    const btn = document.getElementById('toggleAiBtn');
+    if (btn) {
+        const hidden = box.classList.contains('hide-ai');
+        btn.style.opacity = hidden ? '0.4' : '';
+        btn.title = hidden ? 'Show AI messages' : 'Hide AI messages';
+    }
+}
+
 if (typeof window !== 'undefined') {
     (window as any).sendMsg = sendMsg;
     (window as any).handleAdminUpload = handleAdminUpload;
@@ -1841,6 +1853,7 @@ if (typeof window !== 'undefined') {
     (window as any)._rejectCertProof = _rejectCertProof;
     (window as any)._callGuardian = _callGuardian;
     (window as any).requestAiDraft = requestAiDraft;
+    (window as any).toggleDashAiMessages = toggleDashAiMessages;
 }
 
 function _shareNewMemberOnX(name: string, rank: string, avatarUrl: string) {

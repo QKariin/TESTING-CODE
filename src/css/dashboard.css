@@ -4920,6 +4920,11 @@ h3,
     opacity: 1 !important;
 }
 
+/* Hide AI messages toggle */
+#adminChatBox.hide-ai .cb-ai-msg {
+    display: none !important;
+}
+
 /* AI response (right side) — different corner */
 #adminChatBox .cb-ai-right {
     background: rgba(56, 189, 248, 0.08);
