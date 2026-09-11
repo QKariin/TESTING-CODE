@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queen Karin — Friday</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Subject: Your weekend. My rules.
+  Preheader: 48 hours of structure or 48 hours of nothing. You decide before midnight.
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #050505;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.07; }
+  }
+
+  @keyframes rotateGlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(197,160,89,0.1); }
+    50% { border-color: rgba(197,160,89,0.3); }
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(197,160,89,0); }
+    50% { box-shadow: 0 0 18px 2px rgba(197,160,89,0.12); }
+  }
+
+  @keyframes ctaShine {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  @keyframes countPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    overflow: hidden;
+    background: #050505;
+    position: relative;
+  }
+
+  .wrap::after {
+    content: '';
+    position: absolute;
+    top: 300px;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    transform: translateX(-50%);
+    pointer-events: none;
+    animation: breathe 6s ease infinite;
+  }
+
+  /* HERO */
+  .hero-single {
+    position: relative;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    background: #050505;
+  }
+
+  .hero-single img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    filter: brightness(0.4) saturate(1.3) contrast(1.05);
+  }
+
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0) 20%, rgba(5,5,5,0) 35%, rgba(5,5,5,0.5) 55%, rgba(5,5,5,0.9) 78%, #050505 100%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.5) 100%);
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 44px 44px;
+    z-index: 4;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: #050505;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%;
+    animation: fadeInUp 1s ease 0.3s both, shimmer 4s ease infinite;
+    padding: 7px 20px;
+    margin-bottom: 22px;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 44px;
+    font-weight: 300;
+    line-height: 1.08;
+    color: #fff;
+    margin-bottom: 14px;
+    animation: fadeInUp 1s ease 0.5s both;
+    letter-spacing: 1px;
+  }
+
+  .hero-title em {
+    font-weight: 300;
+    font-style: italic;
+    color: #d4af6a;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    font-weight: 200;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInUp 1s ease 0.7s both;
+  }
+
+  /* URGENCY BAR */
+  .urgency-bar {
+    position: relative;
+    background: linear-gradient(180deg, rgba(12,10,8,1) 0%, rgba(8,6,4,1) 100%);
+    border-top: 1px solid rgba(197,160,89,0.1);
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .urgency-track {
+    display: inline-block;
+    animation: tickerScroll 30s linear infinite;
+  }
+
+  .urgency-item {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 0 14px;
+  }
+
+  .urgency-item span {
+    color: #d4af6a;
+    font-weight: 600;
+  }
+
+  .urgency-sep {
+    display: inline-block;
+    color: rgba(197,160,89,0.2);
+    font-size: 6px;
+    vertical-align: middle;
+    padding: 0 4px;
+  }
+
+  /* GOLD SEPARATOR */
+  .gold-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 40px 0 0;
+  }
+
+  .gold-sep-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.35), transparent);
+  }
+
+  .gold-sep-diamond {
+    width: 5px;
+    height: 5px;
+    background: rgba(197,160,89,0.3);
+    transform: rotate(45deg);
+  }
+
+  /* MESSAGE */
+  .message {
+    padding: 40px 44px 44px;
+  }
+
+  .message p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .msg-headline {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #d4af6a;
+    margin-bottom: 6px;
+  }
+
+  .msg-subline {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  .message strong {
+    color: rgba(255,255,255,0.9);
+    font-weight: 400;
+  }
+
+  .message em {
+    font-style: italic;
+    color: rgba(232,201,122,0.7);
+  }
+
+  /* LIVE COUNTER */
+  .live-counter {
+    margin: 0 30px;
+    padding: 32px 34px;
+    border: 1px solid rgba(139,0,0,0.15);
+    background: linear-gradient(165deg, rgba(18,10,10,1) 0%, rgba(10,6,6,1) 100%);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .live-counter::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.08) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #8b0000;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+    animation: countPulse 2s ease infinite;
+    box-shadow: 0 0 12px rgba(139,0,0,0.6);
+  }
+
+  .live-label {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(139,0,0,0.7);
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .live-number {
+    font-family: 'Cinzel', serif;
+    font-size: 56px;
+    font-weight: 700;
+    background: linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .live-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1px;
+    position: relative;
+  }
+
+  /* CHALLENGE STRIP */
+  .challenge-strip {
+    margin: 0 30px;
+    padding: 28px 34px;
+    border-top: 1px solid rgba(197,160,89,0.08);
+    border-bottom: 1px solid rgba(197,160,89,0.08);
+    text-align: center;
+  }
+
+  .challenge-strip p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+  }
+
+  .challenge-strip strong {
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* REVIEWS */
+  .reviews-section {
+    padding: 0 30px;
+  }
+
+  .reviews-header {
+    text-align: center;
+    padding: 44px 0 30px;
+  }
+
+  .reviews-header h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.5);
+    margin-bottom: 8px;
+  }
+
+  .reviews-header p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .review-card {
+    background: linear-gradient(165deg, rgba(15,15,15,1) 0%, rgba(8,8,8,1) 100%);
+    border: 1px solid rgba(197,160,89,0.08);
+    padding: 28px 24px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .review-card::before {
+    content: '\201C';
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    color: rgba(197,160,89,0.1);
+    line-height: 1;
+  }
+
+  .review-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.75;
+    margin-bottom: 16px;
+    padding-left: 6px;
+  }
+
+  .review-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .review-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(197,160,89,0.15);
+    flex-shrink: 0;
+  }
+
+  .review-info {
+    flex: 1;
+  }
+
+  .review-name {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 2px;
+  }
+
+  .review-detail {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+  }
+
+  .review-stars {
+    font-size: 11px;
+    color: rgba(197,160,89,0.5);
+    letter-spacing: 3px;
+    flex-shrink: 0;
+  }
+
+  /* OFFER CARDS */
+  .dual-offer {
+    padding: 40px 30px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .offer-card {
+    flex: 1;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,10,10,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+
+  .offer-card-inner {
+    padding: 30px 24px 28px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .offer-card-inner::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 5s ease infinite;
+  }
+
+  .offer-card .corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+  }
+  .offer-card .corner::before,
+  .offer-card .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(197,160,89,0.25);
+  }
+  .offer-card .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .offer-card .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .offer-card .corner-tl { top: -1px; left: -1px; }
+  .offer-card .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .offer-card .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .offer-card .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .card-number {
+    font-family: 'Cinzel', serif;
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -2px;
+    background: linear-gradient(180deg, rgba(212,175,106,0.5) 0%, rgba(197,160,89,0.15) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .card-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.5);
+    margin-bottom: 14px;
+  }
+
+  .card-rule {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent);
+    margin: 0 auto 14px;
+  }
+
+  .card-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .card-stats {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+    text-align: left;
+  }
+
+  .card-stats li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(197,160,89,0.05);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .card-stats li:last-child { border-bottom: none; }
+
+  .stat-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    opacity: 0.35;
+  }
+
+  .card-stats .stat-title {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 3px;
+  }
+
+  .card-stats .stat-desc {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+  }
+
+  .card-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-align: center;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, rgba(212,175,106,0.7), rgba(232,201,122,0.5), rgba(197,160,89,0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-cta {
+    display: inline-block;
+    padding: 16px 0;
+    width: 100%;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    text-align: center;
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-cta.gold {
+    background: transparent;
+    color: #c5a059;
+    border: 1px solid rgba(197,160,89,0.2);
+    animation: ctaPulse 3s ease infinite;
+  }
+
+  .card-cta.gold::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.08), transparent);
+    animation: ctaShine 4s ease infinite;
+  }
+
+  .card-cta.gold:hover {
+    border-color: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.04);
+    letter-spacing: 7px;
+  }
+
+  .card-cta.red {
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    border: 1px solid rgba(139,0,0,0.4);
+  }
+
+  .card-cta.red:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 7px;
+  }
+
+  /* WEEKEND CHALLENGE */
+  .weekend-block {
+    margin: 30px 30px 0;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,10,10,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+
+  .weekend-block-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 400px;
+    height: 400px;
+    background: conic-gradient(from 0deg, transparent, rgba(197,160,89,0.04), transparent, rgba(139,0,0,0.06), transparent);
+    animation: rotateGlow 20s linear infinite;
+    pointer-events: none;
+  }
+
+  .weekend-block .corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    pointer-events: none;
+  }
+  .weekend-block .corner::before,
+  .weekend-block .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(197,160,89,0.25);
+  }
+  .weekend-block .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .weekend-block .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .weekend-block .corner-tl { top: -1px; left: -1px; }
+  .weekend-block .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .weekend-block .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .weekend-block .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .weekend-block-inner {
+    padding: 50px 44px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .weekend-block-inner::before {
+    content: '';
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    height: 250px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    animation: breathe 5s ease infinite;
+  }
+
+  .offer-label {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: #d4af6a;
+    margin-bottom: 30px;
+    position: relative;
+  }
+
+  .offer-quote {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 26px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.5);
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .offer-quote strong {
+    color: rgba(255,255,255,0.85);
+    font-weight: 400;
+  }
+
+  .offer-sig {
+    margin-top: 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* CTA */
+  .cta-wrap {
+    text-align: center;
+    padding: 50px 40px 18px;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 22px 68px;
+    background: linear-gradient(135deg, #8b0000, #6b0000);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.4);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: left 0.8s ease;
+  }
+
+  .cta::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s cubic-bezier(0.25, 0, 0, 1);
+  }
+
+  .cta:hover {
+    background: linear-gradient(135deg, #a50000, #8b0000);
+    letter-spacing: 8px;
+    padding: 22px 78px;
+    border-color: rgba(197,160,89,0.3);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .cta:hover::before { left: 100%; }
+  .cta:hover::after { width: 80%; }
+
+  /* DIVIDER */
+  .divider {
+    padding: 50px 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .divider-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .divider-diamond {
+    width: 4px;
+    height: 4px;
+    background: rgba(197,160,89,0.2);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* BOTTOM QUOTE */
+  .bottom-quote-solo {
+    padding: 0 40px 45px;
+    text-align: center;
+  }
+
+  .bottom-quote-solo p {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.75;
+  }
+
+  .bottom-quote-solo .attr {
+    display: block;
+    margin-top: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-style: normal;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(197,160,89,0.4);
+  }
+
+  /* SECOND CTA */
+  .cta2-wrap {
+    text-align: center;
+    padding: 40px 40px 12px;
+  }
+
+  .cta2 {
+    display: inline-block;
+    padding: 18px 56px;
+    background: transparent;
+    color: #c5a059;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(197,160,89,0.2);
+    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    transition: width 0.6s ease;
+  }
+
+  .cta2:hover {
+    border-color: rgba(197,160,89,0.5);
+    background: rgba(197,160,89,0.04);
+    letter-spacing: 7px;
+    box-shadow: 0 0 40px rgba(197,160,89,0.08);
+  }
+
+  .cta2:hover::after { width: 70%; }
+
+  .cta2-note {
+    text-align: center;
+    padding: 10px 40px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 1px;
+  }
+
+  /* FEATURES */
+  .features {
+    padding: 40px 44px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .feat-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .feat-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(197,160,89,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .feat-text {
+    flex: 1;
+  }
+
+  .feat-text h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+
+  .feat-text p {
+    font-size: 11px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+
+  /* FOOTER */
+  .footer {
+    border-top: 1px solid rgba(197,160,89,0.06);
+    padding: 40px 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .footer::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+
+  .footer-brand {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.12);
+    margin-bottom: 10px;
+  }
+
+  .footer a {
+    font-size: 10px;
+    color: rgba(255,255,255,0.1);
+    text-decoration: none;
+    letter-spacing: 3px;
+    transition: color 0.4s ease;
+  }
+
+  .footer a:hover { color: #c5a059; }
+
+  /* MOBILE */
+  @media (max-width: 520px) {
+    .hero-single { height: 400px; }
+    .hero-title { font-size: 34px; }
+    .hero-content { padding: 0 26px 32px; }
+    .message { padding: 30px 20px 30px; }
+    .message p { font-size: 17px; line-height: 1.8; }
+    .msg-headline { font-size: 22px; letter-spacing: 2px; }
+    .msg-subline { font-size: 13px; letter-spacing: 1px; }
+    .challenge-strip { margin: 0 12px; padding: 22px 16px; }
+    .challenge-strip p { font-size: 14px; }
+    .live-counter { margin: 0 12px; padding: 26px 16px; }
+    .live-number { font-size: 44px; }
+    .reviews-section { padding: 0 12px; }
+    .review-card { padding: 22px 18px; }
+    .review-text { font-size: 15px; }
+    .dual-offer { padding: 30px 12px 0; gap: 14px; }
+    .card-number { font-size: 42px; }
+    .card-desc { font-size: 14px; }
+    .offer-card-inner { padding: 36px 20px 30px; }
+    .features { padding: 30px 20px 10px; gap: 16px; }
+    .feat-icon { width: 32px; height: 32px; font-size: 14px; }
+    .feat-text h4 { font-size: 15px; }
+    .feat-text p { font-size: 10px; }
+    .weekend-block { margin: 20px 12px 0; }
+    .weekend-block-inner { padding: 32px 18px; }
+    .offer-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 22px; }
+    .offer-quote { font-size: 20px; }
+    .cta-wrap { padding: 36px 20px 14px; }
+    .cta { padding: 18px 0; letter-spacing: 4px; font-size: 11px; width: 100%; display: block; text-align: center; }
+    .cta:hover { padding: 18px 0; letter-spacing: 5px; }
+    .cta2-wrap { padding: 30px 20px 10px; }
+    .cta2 { padding: 16px 0; letter-spacing: 3px; font-size: 10px; width: 100%; display: block; text-align: center; }
+    .cta2-note { font-size: 12px; padding: 8px 20px 0; }
+    .divider { padding: 36px 0; }
+    .bottom-quote-solo { padding: 0 20px 36px; }
+    .bottom-quote-solo p { font-size: 18px; }
+    .bottom-quote-solo .attr { font-size: 8px; letter-spacing: 4px; }
+    .gold-sep { padding: 28px 0 0; }
+    .footer { padding: 30px 20px; }
+    .footer-brand { font-size: 14px; letter-spacing: 6px; }
+  }
+</style>
+</head>
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero-single">
+    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/weekend-hero-1.jpg" alt="">
+    <div class="hero-gradient"></div>
+    <div class="hero-content">
+      <div class="hero-tag">Friday Night</div>
+      <h1 class="hero-title">Everyone's <em>free.</em><br>You won't be.</h1>
+      <p class="hero-sub">48 hours. No distractions. Just orders.</p>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="urgency-bar">
+    <div class="urgency-track">
+      <span class="urgency-item">weekend <span>orders</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">slots <span>filling</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">lock before <span>midnight</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>excuses</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">submit <span>tonight</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">weekend <span>orders</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">slots <span>filling</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">lock before <span>midnight</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>excuses</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">submit <span>tonight</span></span><span class="urgency-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- GOLD SEPARATOR -->
+  <div class="gold-sep">
+    <div class="gold-sep-line"></div>
+    <div class="gold-sep-diamond"></div>
+    <div class="gold-sep-line"></div>
+  </div>
+
+  <!-- MESSAGE -->
+  <div class="message">
+    <p>
+      <span class="msg-headline">The Weekend Test</span>
+      <span class="msg-subline">what you do when nobody's watching says everything.</span>
+      It's Friday. You made it through the week.<br><br>
+      Now comes the part where most men <strong>fall apart.</strong>
+      The routine breaks. The discipline disappears.
+      Two days of freedom and suddenly all that structure
+      you built is <em>gone.</em><br><br>
+      My subjects don't have that problem. They have <strong>orders.</strong>
+      They have tasks waiting for them Saturday morning.
+      They have a kneeling session at 7am and a check-in
+      by noon. While everyone else is recovering from
+      last night, they're already on their knees.<br><br>
+      That's not punishment. That's <em>advantage.</em>
+    </p>
+  </div>
+
+  <!-- LIVE COUNTER -->
+  <div class="live-counter">
+    <div class="live-label"><span class="live-dot"></span>Currently Active</div>
+    <div class="live-number">14</div>
+    <div class="live-sub">subjects under my control right now</div>
+  </div>
+
+  <!-- GOLD SEPARATOR -->
+  <div class="gold-sep">
+    <div class="gold-sep-line"></div>
+    <div class="gold-sep-diamond"></div>
+    <div class="gold-sep-line"></div>
+  </div>
+
+  <!-- CHALLENGE STRIP -->
+  <div class="challenge-strip">
+    <p>
+      While you're reading this, <strong>they're completing tasks.</strong>
+      Earning rank. Getting reviewed. Moving up.
+      Every weekend you waste is a weekend <strong>they don't.</strong>
+    </p>
+  </div>
+
+  <!-- REVIEWS -->
+  <div class="reviews-section">
+    <div class="reviews-header">
+      <h3>From the Throne</h3>
+      <p>What they say after the first week.</p>
+    </div>
+
+    <!-- Review 1 -->
+    <div class="review-card">
+      <p class="review-text">I thought I knew what discipline was. I didn't. The daily tasks changed how I structure my entire day. Not just the kneeling. Everything. I wake up earlier. I clean my space. I show up. This isn't what I expected. It's better.</p>
+      <div class="review-meta">
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/eb3f2d44-4b22-4dd6-805a-3574b4e2dbbf_1782947281573.jpg" class="review-avatar" alt="">
+        <div class="review-info">
+          <div class="review-name">Sweet60-er</div>
+          <div class="review-detail">Day 5 of Keyholder Program</div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      </div>
+    </div>
+
+    <!-- Review 2 -->
+    <div class="review-card">
+      <p class="review-text">13 kneeling sessions in one day. Not because she asked for 13. Because once you start, you don't want to stop. The app tracks everything. She sees everything. There's nowhere to hide and honestly? That's the point.</p>
+      <div class="review-meta">
+        <img src="https://auth.qkarin.com/storage/v1/object/public/media/avatars/rocky-av.jpg" class="review-avatar" alt="">
+        <div class="review-info">
+          <div class="review-name">Rocky</div>
+          <div class="review-detail">30-day member, 48k+ points</div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      </div>
+    </div>
+
+    <!-- Review 3 -->
+    <div class="review-card">
+      <p class="review-text">I've paid for dommes before. Paid for DMs, paid for "tasks" that were copy-pasted from a template. This is the first time someone actually built a system. Real tasks. Real tracking. Real consequences. Worth every cent.</p>
+      <div class="review-meta">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(197,160,89,0.2),rgba(139,0,0,0.2));border:1px solid rgba(197,160,89,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:12px;color:rgba(197,160,89,0.5);">V</div>
+        <div class="review-info">
+          <div class="review-name">Verified Member</div>
+          <div class="review-detail">7-day trial completed</div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      </div>
+    </div>
+
+    <!-- Review 4 -->
+    <div class="review-card">
+      <p class="review-text">The chastity program is insane. Not the "send me a photo" kind. An actual keyholder app with a live timer, daily check-ins, punishment games, and she personally reviews every submission. I didn't know this existed anywhere.</p>
+      <div class="review-meta">
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,rgba(197,160,89,0.2),rgba(139,0,0,0.2));border:1px solid rgba(197,160,89,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:12px;color:rgba(197,160,89,0.5);">D</div>
+        <div class="review-info">
+          <div class="review-name">Devoted Subject</div>
+          <div class="review-detail">Currently locked, day 12</div>
+        </div>
+        <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOLD SEPARATOR -->
+  <div class="gold-sep">
+    <div class="gold-sep-line"></div>
+    <div class="gold-sep-diamond"></div>
+    <div class="gold-sep-line"></div>
+  </div>
+
+  <!-- MAIN CTA -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com" class="cta" target="_blank">Join Before Midnight</a>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="features">
+    <div class="feat-row">
+      <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="feat-text"><h4>Weekend tasks are live by 6am Saturday</h4><p>Your orders will be waiting when you wake up</p></div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5" width="18" height="18"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <div class="feat-text"><h4>Every submission reviewed personally</h4><p>Not a bot. Not an auto-response. Me.</p></div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5" width="18" height="18"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+      <div class="feat-text"><h4>Direct chat access all weekend</h4><p>Ask permission. Report. Confess. I'm watching.</p></div>
+    </div>
+    <div class="feat-row">
+      <div class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5" width="18" height="18"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 3a4 4 0 00-4 4v4h8V7a4 4 0 00-4-4z"/></svg></div>
+      <div class="feat-text"><h4>Lock yourself before the weekend starts</h4><p>Keyholder applicants processed within hours</p></div>
+    </div>
+  </div>
+
+  <!-- THREE PROGRAM CARDS -->
+  <div class="dual-offer">
+
+    <!-- WEEK CARD -->
+    <div class="offer-card">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number">7</div>
+        <div class="card-label">Days of Obedience</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">
+          Start tonight. Wake up tomorrow with your first orders waiting.
+          Full app access, daily tasks, chat, livestream. Seven days
+          to prove you're not just another tourist.
+        </div>
+        <ul class="card-stats">
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg><div><span class="stat-title">Full Task Access</span><span class="stat-desc">Daily obedience tasks set by me personally</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div><span class="stat-title">Chat Access</span><span class="stat-desc">Direct messaging inside the app</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><div><span class="stat-title">Livestream Access</span><span class="stat-desc">Watch when I go live, no paywalls</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><span class="stat-title">Obedience Program</span><span class="stat-desc">Your entire week structured and tracked</span></div></li>
+        </ul>
+        <div class="card-price">&euro;55</div>
+        <a href="https://throne.qkarin.com/keyholder" class="card-cta gold" target="_blank">Start Tonight</a>
+      </div>
+    </div>
+
+    <!-- MONTH CARD -->
+    <div class="offer-card">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number">30</div>
+        <div class="card-label">Days of Transformation</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">
+          The full experience. Four phases of escalating control.
+          Tasks, chat, livestreams, and a complete obedience program
+          that builds on itself every single day. This is where
+          submissives become subjects.
+        </div>
+        <ul class="card-stats">
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg><div><span class="stat-title">Full Task Access</span><span class="stat-desc">Daily tasks that escalate over 30 days</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><div><span class="stat-title">Chat & Livestream</span><span class="stat-desc">Direct access to me and every live session</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div><span class="stat-title">Full Obedience Program</span><span class="stat-desc">Four phases. Obedience, Discipline, Endurance, Devotion.</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><span class="stat-title">Personally Reviewed</span><span class="stat-desc">By me. Not a bot. Not an algorithm.</span></div></li>
+        </ul>
+        <div class="card-price">&euro;99</div>
+        <a href="https://throne.qkarin.com/tribute" class="card-cta gold" target="_blank">Begin Training</a>
+      </div>
+    </div>
+
+    <!-- KEYHOLDER CARD -->
+    <div class="offer-card" style="border-color: rgba(139,0,0,0.2);">
+      <div class="corner corner-tl"></div>
+      <div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div>
+      <div class="corner corner-br"></div>
+      <div class="offer-card-inner">
+        <div class="card-number" style="background: linear-gradient(180deg, rgba(139,0,0,0.7) 0%, rgba(139,0,0,0.2) 100%); -webkit-background-clip: text; background-clip: text;">&#128274;</div>
+        <div class="card-label" style="color: rgba(139,0,0,0.6);">Keyholder Program</div>
+        <div class="card-rule" style="background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), transparent);"></div>
+        <div class="card-desc">
+          Lock yourself tonight. Wake up owned. A real keyholder app with
+          a live timer, daily chastity check-ins, punishment games,
+          and I personally control your lock. No other domme has this.
+          Because I built it myself.
+        </div>
+        <ul class="card-stats">
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div><span class="stat-title">Real Lock Timer</span><span class="stat-desc">Running live inside the app, not a screenshot</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><div><span class="stat-title">Daily Chastity Check-in</span><span class="stat-desc">Photo proof submitted through the app every morning</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg><div><span class="stat-title">Daily Orders</span><span class="stat-desc">Kneeling, writing, photo proof, punishment games. Every day.</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 3a4 4 0 00-4 4v4h8V7a4 4 0 00-4-4z"/></svg><div><span class="stat-title">I Control Your Lock</span><span class="stat-desc">I add or remove days based on your behavior</span></div></li>
+          <li><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><div><span class="stat-title">No Other Domme Has This</span><span class="stat-desc">Custom-built software, not a Lovense link</span></div></li>
+        </ul>
+        <a href="https://throne.qkarin.com/keyholder" class="card-cta red" target="_blank" style="background: linear-gradient(135deg, rgba(139,0,0,0.8), rgba(80,0,0,0.9)); border-color: rgba(139,0,0,0.3);">Give Me the Key</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- WEEKEND QUOTE BOX -->
+  <div class="weekend-block">
+    <div class="weekend-block-glow"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+    <div class="weekend-block-inner">
+      <div class="offer-label">Friday, 11pm</div>
+      <div class="offer-quote">
+        Right now, someone is locking themselves for the weekend.<br><br>
+        They'll wake up tomorrow with <strong>structure.</strong>
+        With purpose. With someone watching.<br><br>
+        You'll wake up with <strong>nothing.</strong><br><br>
+        Unless you fix that tonight.
+      </div>
+      <div class="offer-sig">Karin</div>
+    </div>
+  </div>
+
+  <!-- SECOND CTA -->
+  <div class="cta2-wrap">
+    <a href="https://throne.qkarin.com" class="cta2" target="_blank">Enter the Throne</a>
+  </div>
+  <div class="cta2-note">Your weekend starts when I say it starts.</div>
+
+  <!-- DIVIDER -->
+  <div class="divider" style="padding: 40px 0;">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- BOTTOM QUOTE -->
+  <div class="bottom-quote-solo">
+    <p>Most people waste their weekends. My subjects earn theirs. The ones who joined last Friday? They're already on day 7. Already ranked. Already ahead of you. The only question is whether you'll still be reading these emails next Friday. Or obeying them.</p>
+    <span class="attr">The clock is running.</span>
+  </div>
+
+  <!-- FOOTER DIVIDER -->
+  <div class="divider" style="padding: 40px 0;">
+    <div class="divider-line"></div>
+    <div class="divider-diamond"></div>
+    <div class="divider-line"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">QUEEN KARIN</div>
+    <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+  </div>
+
+</div>
+
+</body>
+</html>
