@@ -1076,11 +1076,19 @@
 <body bgcolor="#050505" style="background-color:#050505;">
 <div class="wrap">
 
-  <!-- HERO -->
-  <div class="hero-single">
-    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-1.jpg" alt="">
-    <div class="hero-gradient"></div>
-    <div class="hero-content">
+  <!-- HERO (split) -->
+  <div style="position:relative;width:100%;height:520px;overflow:hidden;background:#050505;display:flex;">
+    <div style="flex:1;overflow:hidden;position:relative;">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-1.jpg" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;filter:brightness(0.4) saturate(1.3) contrast(1.05);">
+    </div>
+    <div style="flex:1;overflow:hidden;position:relative;">
+      <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;filter:brightness(0.4) saturate(1.1) contrast(1.05);">
+    </div>
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0) 20%, rgba(5,5,5,0) 35%, rgba(5,5,5,0.5) 55%, rgba(5,5,5,0.9) 78%, #050505 100%);z-index:2;pointer-events:none;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, transparent 40%, rgba(5,5,5,0.5) 100%);z-index:2;pointer-events:none;"></div>
+    <!-- Center seam blend -->
+    <div style="position:absolute;top:0;bottom:0;left:50%;width:60px;transform:translateX(-50%);background:linear-gradient(90deg, transparent, rgba(5,5,5,0.4), transparent);z-index:1;pointer-events:none;"></div>
+    <div class="hero-content" style="position:absolute;bottom:0;left:0;right:0;padding:0 44px 44px;z-index:4;">
       <div class="hero-tag">Friday Night</div>
       <h1 class="hero-title">Everyone's <em>free.</em><br>You won't be.</h1>
       <p class="hero-sub">48 hours. No distractions. Just orders.</p>
@@ -1200,15 +1208,6 @@
         </div>
         <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
       </div>
-    </div>
-  </div>
-
-  <!-- SECOND IMAGE -->
-  <div style="position:relative;width:100%;height:420px;overflow:hidden;margin-top:30px;">
-    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;filter:brightness(0.45) saturate(1.1) contrast(1.05);">
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg, #050505 0%, transparent 15%, transparent 75%, #050505 100%);pointer-events:none;"></div>
-    <div style="position:absolute;bottom:30px;left:0;right:0;text-align:center;z-index:2;">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;font-style:italic;color:rgba(255,255,255,0.5);letter-spacing:1px;">This is what's waiting for you.</div>
     </div>
   </div>
 
