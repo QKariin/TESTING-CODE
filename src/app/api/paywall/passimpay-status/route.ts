@@ -14,11 +14,10 @@ export async function POST(req: Request) {
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
         if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
-        // Check order status — platform_id first (PHP SDK: not in params, so prepended)
+        // Check order status
         const params = { platform_id: platformId, order_id: orderId };
         const qs = new URLSearchParams(params).toString();
         const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
-
         const res = await fetch('https://api.passimpay.io/orderstatus', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -28,33 +27,15 @@ export async function POST(req: Request) {
         console.log('[passimpay-status]', orderId, data);
 
         const paid = data.result === 1 && data.status === 'paid';
+        if (!paid) return NextResponse.json({ paid: false, status: data.status });
 
-        if (paid) {
-            const profile = await findProfile(memberId, 'ID, name, parameters');
-            if (profile) {
-                const params = profile.parameters || {};
-                const updatedParams = { ...params };
-                delete updatedParams.paywall;
-                updatedParams.pendingCryptoPay = null;
-                updatedParams.purchaseHistory = [
-                    ...(params.purchaseHistory || []),
-                    {
-                        type: 'PAYWALL_TRIBUTE_CRYPTO',
-                        amount: params.paywall?.amount || 0,
-                        timestamp: new Date().toISOString(),
-                        memberId,
-                        name: profile.name || memberId,
-                        sessionId: orderId,
-                    },
-                ];
-                await supabaseAdmin.from('profiles').update({
-                    paywall: false,
-                    parameters: updatedParams,
-                }).eq('ID', profile.ID);
-            }
-        }
+        // Payment confirmed on PassimPay side.
+        // Do NOT clear paywall here — the webhook handles that.
+        // Just check if the webhook already processed it.
+        const profile = await findProfile(memberId, 'ID, paywall');
+        const paywallCleared = profile ? !profile.paywall : false;
 
-        return NextResponse.json({ paid, status: data.status });
+        return NextResponse.json({ paid: true, status: data.status, paywallCleared });
     } catch (err: any) {
         console.error('[passimpay-status] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

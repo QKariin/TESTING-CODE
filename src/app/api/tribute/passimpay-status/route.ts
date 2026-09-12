@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
-import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const { orderId, tierId } = await req.json();
+        const { orderId } = await req.json();
         if (!orderId) return NextResponse.json({ error: 'Missing orderId' }, { status: 400 });
-
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const apiKey = (process.env.PASSIMPAY_API_KEY || '').trim();
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
@@ -31,43 +26,16 @@ export async function POST(req: Request) {
         const paid = data.result === 1 && data.status === 'paid';
         if (!paid) return NextResponse.json({ paid: false });
 
-        // Payment confirmed — create profile if it doesn't exist yet
-        const identifier = user.email ||
-            (user.user_metadata?.provider_id ? `twitter_${user.user_metadata.provider_id}` : user.id);
+        // Payment confirmed on PassimPay side.
+        // Do NOT create profile or credit coins here — the webhook handles that.
+        // Just check if the webhook already processed it via payment_logs.
+        const { data: logRow } = await supabaseAdmin
+            .from('payment_logs')
+            .select('status')
+            .eq('order_id', orderId)
+            .maybeSingle();
 
-        const rawName = user.user_metadata?.full_name ||
-            user.user_metadata?.user_name ||
-            (user.email ? user.email.split('@')[0] : 'Subject');
-        const displayName = rawName.split(' ')[0];
-
-        const TIER_COINS: Record<string, number> = { weekly: 5000, monthly: 10000, yearly: 30000 };
-        const startingCoins = TIER_COINS[tierId] ?? 5000;
-
-        const { data: existing } = await supabaseAdmin
-            .from('profiles').select('ID').eq('ID', user.id).maybeSingle();
-
-        if (!existing) {
-            await supabaseAdmin.from('profiles').insert({
-                ID: user.id,
-                member_id: identifier,
-                name: displayName,
-                hierarchy: 'Hall Boy',
-                score: 0,
-                wallet: startingCoins,
-                parameters: { devotion: 100 },
-            });
-            await supabaseAdmin.from('tasks').insert({
-                ID: user.id,
-                member_id: identifier,
-                Name: displayName,
-                Status: 'idle',
-                Taskdom_History: '[]',
-                taskdom_active_task: null,
-                taskdom_pending_state: null,
-            });
-        }
-
-        return NextResponse.json({ paid: true, profileCreated: !existing });
+        return NextResponse.json({ paid: true, webhookProcessed: logRow?.status === 'paid' });
     } catch (err: any) {
         console.error('[tribute/passimpay-status] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

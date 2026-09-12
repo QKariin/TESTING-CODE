@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     try {
-        const { orderId, memberId, coins } = await req.json();
-        if (!orderId || !memberId || !coins) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
+        const { orderId, memberId } = await req.json();
+        if (!orderId || !memberId) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
 
         const apiKey = (process.env.PASSIMPAY_API_KEY || '').trim();
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
@@ -27,37 +27,14 @@ export async function POST(req: Request) {
         const paid = data.result === 1 && data.status === 'paid';
         if (!paid) return NextResponse.json({ paid: false });
 
-        // Payment confirmed — credit coins
+        // Payment confirmed on PassimPay side.
+        // Do NOT credit coins here — the webhook handles that.
+        // Just check if the webhook already processed it.
         const profile = await findProfile(memberId, 'ID, wallet, parameters');
-        if (!profile) return NextResponse.json({ paid: true, error: 'Profile not found' });
+        const processed = profile?.parameters?.processedCryptoOrders || [];
+        const alreadyProcessed = processed.includes(orderId);
 
-        const profileParams = profile.parameters || {};
-
-        // Idempotency: skip if this order was already processed
-        const processed: string[] = profileParams.processedCryptoOrders || [];
-        if (processed.includes(orderId)) {
-            return NextResponse.json({ paid: true, newWallet: profile.wallet, alreadyProcessed: true });
-        }
-        processed.push(orderId);
-        profileParams.processedCryptoOrders = processed;
-
-        const newWallet = (profile.wallet || 0) + coins;
-        const purchaseEntry = {
-            coins, memberId, orderId, method: 'passimpay',
-            timestamp: new Date().toISOString(),
-        };
-        const history: any[] = profileParams.purchaseHistory || [];
-        history.unshift(purchaseEntry);
-        if (history.length > 100) history.splice(100);
-        profileParams.purchaseHistory = history;
-        profileParams.pendingCoinsPay = null;
-        profileParams.latestPurchaseNotification = purchaseEntry;
-
-        await supabaseAdmin.from('profiles').update({
-            wallet: newWallet, parameters: profileParams,
-        }).eq('ID', profile.ID);
-
-        return NextResponse.json({ paid: true, newWallet });
+        return NextResponse.json({ paid: true, newWallet: profile?.wallet, alreadyProcessed });
     } catch (err: any) {
         console.error('[coins/passimpay-status] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
