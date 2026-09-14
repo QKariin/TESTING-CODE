@@ -28,6 +28,7 @@ interface PaymentModalProps {
     paypalBody?: { type: string; memberId: string; tierId?: string };
     paypalMeUrl?: string;
     patreonUrl?: string;
+    loyalfansUrl?: string;
     onSuccess?: () => void;
     onClose: () => void;
 }
@@ -45,6 +46,7 @@ export default function PaymentModal({
     paypalBody,
     paypalMeUrl,
     patreonUrl,
+    loyalfansUrl,
     onSuccess,
     onClose,
 }: PaymentModalProps) {
@@ -648,6 +650,14 @@ export default function PaymentModal({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="14" cy="9" r="5.5" stroke="rgba(255,66,77,0.8)" strokeWidth="1.5"/><rect x="3" y="3" width="3" height="18" rx="1" fill="rgba(255,66,77,0.8)"/></svg>
                         PATREON
                     </a>
+                    {/* LoyalFans */}
+                    {loyalfansUrl && (
+                        <a href={loyalfansUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ width: '100%', padding: '16px 20px', background: 'rgba(230,126,34,0.06)', border: '1px solid rgba(230,126,34,0.25)', borderRadius: 10, color: 'rgba(230,126,34,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="rgba(230,126,34,0.8)"/></svg>
+                            LOYALFANS
+                        </a>
+                    )}
                     {throneUrl && (
                         <button onClick={() => setCardStep('throne')}
                             style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12 }}>

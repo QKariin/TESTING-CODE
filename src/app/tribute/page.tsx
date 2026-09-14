@@ -1343,6 +1343,7 @@ export default function TributePage() {
                     : selectedTier.id === 'monthly'
                     ? 'https://www.patreon.com/xxxKARINxxx/posts/monthly-tier-169500869'
                     : undefined}
+                loyalfansUrl={selectedTier.id === 'weekly' ? 'https://tinylf.com/DdTCSpxW3' : undefined}
                 onSuccess={() => { window.location.href = '/onboarding'; }}
                 onClose={() => { setShowPayment(false); setShowTierPicker(true); }}
             />
