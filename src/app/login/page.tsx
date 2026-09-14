@@ -16,8 +16,6 @@ export default function LoginPage() {
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect');
         if (redirect) localStorage.setItem('post_login_redirect', redirect);
-        const tier = params.get('tier');
-        if (tier) localStorage.setItem('patreon_tier', tier);
 
         setMounted(true);
 

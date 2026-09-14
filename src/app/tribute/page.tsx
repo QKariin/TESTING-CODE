@@ -60,21 +60,6 @@ export default function TributePage() {
                         || `${user.app_metadata?.provider || 'oauth'}_${user.user_metadata?.provider_id || user.id}@${user.app_metadata?.provider || 'oauth'}.com`;
                     setUserEmail(fakeEmail);
 
-                    // Patreon auto-activate: if they came from a paid Patreon post
-                    const patreonTier = localStorage.getItem('patreon_tier');
-                    if (patreonTier) {
-                        localStorage.removeItem('patreon_tier');
-                        try {
-                            const res = await fetch('/api/patreon-activate', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ tier: patreonTier }),
-                            });
-                            const data = await res.json();
-                            if (data.success) { window.location.href = '/profile'; return; }
-                        } catch {}
-                    }
-
                     try { await (await fetch('/api/auth/link-profile', { method: 'POST' })).json(); } catch {}
                 }
             } catch {}
