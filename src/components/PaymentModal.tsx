@@ -345,39 +345,8 @@ export default function PaymentModal({
         </div>
     );
 
-    /* ── CARD STORY SCREENS ── */
-    if (cardStep === 'story') return (
-        <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-            <div style={BG} />
-            <div style={OVERLAY} />
-            <div style={{ ...CARD, maxWidth: 420 }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.45)', letterSpacing: 5, marginBottom: 20, textAlign: 'center' }}>A QUICK WORD</div>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.3rem', color: '#fff', fontWeight: 700, lineHeight: 1.45, marginBottom: 20, textAlign: 'center' }}>
-                    Stripe and I broke up.
-                </div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 12, textAlign: 'center' }}>
-                    I'm now using a new provider for card payments.
-                </div>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: '#fff', fontWeight: 700, lineHeight: 2, marginBottom: 8, textAlign: 'center', padding: '0 16px' }}>
-                    Use the same email you registered with<br/>so I can identify your payment.
-                </div>
-                <div style={{ background: 'rgba(197,160,89,0.06)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, padding: '14px 20px', marginBottom: 24, textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 3, marginBottom: 6 }}>ENTER THIS EXACT AMOUNT ON THE NEXT PAGE</div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '2rem', color: '#c5a059', fontWeight: 700 }}>€{Number(amountEur).toFixed(2)}</div>
-                </div>
-                <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer" className="coin-flip-btn" style={{ width: '100%', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
-                    <span style={{ fontFamily: 'Cinzel,serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: 2 }}>PAY WITH CARD</span>
-                </a>
-                <button onClick={() => setCardStep('options')} style={{ width: '100%', padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 3, cursor: 'pointer' }}>
-                    I'D RATHER USE CRYPTO
-                </button>
-                <button onClick={() => setCardStep(null)}
-                    style={{ width: '100%', padding: '14px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer', marginTop: 4 }}>
-                    BACK
-                </button>
-            </div>
-        </div>
-    );
+    /* ── CARD STORY SCREENS (card unavailable, redirect to options) ── */
+    if (cardStep === 'story') { setCardStep('options'); }
 
     if (cardStep === 'options') return (
         <div style={{ ...BASE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
@@ -690,12 +659,6 @@ export default function PaymentModal({
                             PAY WITH PAYPAL
                         </a>
                     )}
-                    {/* Card via Destream */}
-                    <a href="https://destream.net/live/QKarin/donate" target="_blank" rel="noopener noreferrer"
-                        style={{ width: '100%', padding: '18px', background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: 10, color: 'rgba(76,175,80,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(76,175,80,0.8)" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                        PAY WITH CARD
-                    </a>
                 </div>
                 <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
