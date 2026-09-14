@@ -640,11 +640,12 @@ export default function PaymentModal({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         PAY WITH CRYPTO
                     </button>
-                    <button onClick={() => setCardStep('revolut')}
-                        style={{ width: '100%', padding: '18px', background: 'rgba(0,100,224,0.06)', border: '1px solid rgba(0,100,224,0.25)', borderRadius: 10, color: 'rgba(0,100,224,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,100,224,0.8)" strokeWidth="1.5"><path d="M19 5h-2V3H7v2H5a2 2 0 00-2 2v1a5 5 0 004 4.9V17a2 2 0 002 2h6a2 2 0 002-2v-4.1A5 5 0 0021 8V7a2 2 0 00-2-2z"/></svg>
-                        PAY WITH REVOLUT
-                    </button>
+                    {/* Patreon */}
+                    <a href="https://www.patreon.com/cw/xxxKARINxxx/membership" target="_blank" rel="noopener noreferrer"
+                        style={{ width: '100%', padding: '18px', background: 'rgba(255,66,77,0.06)', border: '1px solid rgba(255,66,77,0.25)', borderRadius: 10, color: 'rgba(255,66,77,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="14" cy="9" r="5.5" stroke="rgba(255,66,77,0.8)" strokeWidth="1.5"/><rect x="3" y="3" width="3" height="18" rx="1" fill="rgba(255,66,77,0.8)"/></svg>
+                        PAY WITH PATREON
+                    </a>
                     {throneUrl && (
                         <button onClick={() => setCardStep('throne')}
                             style={{ width: '100%', padding: '18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -659,12 +660,12 @@ export default function PaymentModal({
                             PAY WITH PAYPAL
                         </a>
                     )}
-                    {/* Patreon */}
-                    <a href="https://www.patreon.com/cw/xxxKARINxxx/membership" target="_blank" rel="noopener noreferrer"
-                        style={{ width: '100%', padding: '18px', background: 'rgba(255,66,77,0.06)', border: '1px solid rgba(255,66,77,0.25)', borderRadius: 10, color: 'rgba(255,66,77,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textDecoration: 'none' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="14" cy="9" r="5.5" stroke="rgba(255,66,77,0.8)" strokeWidth="1.5"/><rect x="3" y="3" width="3" height="18" rx="1" fill="rgba(255,66,77,0.8)"/></svg>
-                        PAY WITH PATREON
-                    </a>
+                    {/* Revolut — bottom */}
+                    <button onClick={() => setCardStep('revolut')}
+                        style={{ width: '100%', padding: '18px', background: 'rgba(0,100,224,0.06)', border: '1px solid rgba(0,100,224,0.25)', borderRadius: 10, color: 'rgba(0,100,224,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,100,224,0.8)" strokeWidth="1.5"><path d="M19 5h-2V3H7v2H5a2 2 0 00-2 2v1a5 5 0 004 4.9V17a2 2 0 002 2h6a2 2 0 002-2v-4.1A5 5 0 0021 8V7a2 2 0 00-2-2z"/></svg>
+                        PAY WITH REVOLUT
+                    </button>
                 </div>
                 <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
