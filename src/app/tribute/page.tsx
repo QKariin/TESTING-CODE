@@ -44,7 +44,6 @@ export default function TributePage() {
     const TRIBUTE_TIERS = [
         { id: 'weekly',  label: '1 WEEK',  period: '7 DAYS',   price: 55,  desc: 'First step. Prove you are worthy of Her attention.' },
         { id: 'monthly', label: '1 MONTH', period: '30 DAYS',  price: 99,  desc: 'Full month under Her rule. Real commitment begins here.', badge: 'POPULAR' },
-        { id: 'yearly',  label: '1 YEAR',  period: '365 DAYS', price: 499, desc: 'Total surrender for a full year. No excuses. No exits.', badge: 'BEST VALUE' },
     ];
 
     useEffect(() => {
@@ -1339,6 +1338,11 @@ export default function TributePage() {
                 cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 throneUrl="https://throne.com/queenkarin"
+                patreonUrl={selectedTier.id === 'weekly'
+                    ? 'https://www.patreon.com/xxxKARINxxx/posts/week-tier-169500012'
+                    : selectedTier.id === 'monthly'
+                    ? 'https://www.patreon.com/xxxKARINxxx/posts/monthly-tier-169500869'
+                    : undefined}
                 onSuccess={() => { window.location.href = '/onboarding'; }}
                 onClose={() => { setShowPayment(false); setShowTierPicker(true); }}
             />

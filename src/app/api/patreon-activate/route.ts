@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
 const TIER_WALLETS: Record<string, number> = {
     weekly: 5500,
     monthly: 9900,
-    yearly: 30000,
 };
 
 export async function POST(req: Request) {
