@@ -13,11 +13,9 @@
     min-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #050505;
+    background: #030303;
     font-family: 'Inter', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
     color: #fff;
     overflow-x: hidden;
   }
@@ -27,29 +25,24 @@
     100% { background-position: 200% center; }
   }
 
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes breathe {
-    0%, 100% { opacity: 0.03; }
-    50% { opacity: 0.08; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
   }
 
-  @keyframes rotateGlow {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 30px rgba(139,0,0,0.15); }
+    50% { box-shadow: 0 0 50px rgba(139,0,0,0.3); }
   }
 
-  @keyframes borderGlow {
-    0%, 100% { border-color: rgba(139,0,0,0.1); }
-    50% { border-color: rgba(139,0,0,0.35); }
-  }
-
-  @keyframes countPulse {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 1; }
+  @keyframes priceGlow {
+    0%, 100% { text-shadow: 0 0 20px rgba(139,0,0,0.2); }
+    50% { text-shadow: 0 0 40px rgba(139,0,0,0.5); }
   }
 
   @keyframes tickerScroll {
@@ -57,876 +50,695 @@
     100% { transform: translateX(-50%); }
   }
 
-  .wrap {
+  .w {
     width: 100%;
     max-width: 620px;
     margin: 0 auto;
     overflow: hidden;
-    background: #050505;
-    position: relative;
+    background: #030303;
   }
 
-  .wrap::after {
-    content: '';
-    position: absolute;
-    top: 300px;
-    left: 50%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(ellipse, rgba(139,0,0,0.07) 0%, transparent 70%);
-    transform: translateX(-50%);
-    pointer-events: none;
-    animation: breathe 6s ease infinite;
-  }
-
-  /* HERO */
+  /* ═══ HERO ═══ */
   .hero {
     position: relative;
     width: 100%;
-    height: 560px;
+    height: 600px;
     overflow: hidden;
-    background: #050505;
   }
 
   .hero img {
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    object-fit: cover;
-    object-position: center top;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
     display: block;
-    filter: brightness(0.4) saturate(1.3) contrast(1.1);
+    filter: brightness(0.35) saturate(1.4) contrast(1.15);
   }
 
-  .hero-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg,
-      rgba(5,5,5,0.2) 0%,
-      rgba(5,5,5,0) 20%,
-      rgba(5,5,5,0) 30%,
-      rgba(5,5,5,0.4) 50%,
-      rgba(5,5,5,0.85) 72%,
-      #050505 100%);
-    z-index: 2;
-    pointer-events: none;
+  .hero-ov {
+    position: absolute; inset: 0; z-index: 2;
+    background:
+      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.2) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(3,3,3,0.1) 0%, transparent 25%, transparent 35%, rgba(3,3,3,0.6) 58%, rgba(3,3,3,0.95) 80%, #030303 100%);
   }
 
-  .hero-gradient::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, transparent 30%, rgba(5,5,5,0.6) 100%);
+  .hero-c {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 40px 48px; z-index: 4;
+    text-align: center;
   }
 
-  .hero-gradient::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center bottom, rgba(139,0,0,0.15) 0%, transparent 60%);
-    z-index: 1;
-  }
-
-  .hero-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0 44px 44px;
-    z-index: 4;
-  }
-
-  .hero-tag {
+  .hero-spots {
     display: inline-block;
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 5px;
-    text-transform: uppercase;
+    font-family: 'Cinzel', serif;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 5px; text-transform: uppercase;
     color: #fff;
-    background: linear-gradient(135deg, #8b0000, #6b0000, #8b0000);
-    background-size: 300% 100%;
-    animation: fadeInUp 1s ease 0.3s both, shimmer 4s ease infinite;
-    padding: 7px 20px;
-    margin-bottom: 22px;
-    border: 1px solid rgba(139,0,0,0.4);
+    background: linear-gradient(135deg, #8b0000 0%, #5a0000 100%);
+    padding: 8px 24px;
+    margin-bottom: 24px;
+    animation: fadeIn 0.8s ease 0.2s both, glow 3s ease infinite;
   }
 
-  .hero-title {
-    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-    font-size: 52px;
-    font-weight: 300;
-    line-height: 1.05;
-    color: #fff;
-    margin-bottom: 14px;
-    animation: fadeInUp 1s ease 0.5s both;
-    letter-spacing: 2px;
+  .hero-t {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 56px; font-weight: 300;
+    line-height: 1.0; color: #fff;
+    margin-bottom: 16px;
+    animation: fadeIn 0.8s ease 0.4s both;
   }
 
-  .hero-title em {
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(180,40,40,0.85);
+  .hero-t i {
+    font-weight: 300; font-style: italic;
+    color: rgba(180,40,40,0.9);
   }
 
   .hero-sub {
-    font-size: 13px;
-    font-weight: 200;
-    color: rgba(255,255,255,0.4);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    animation: fadeInUp 1s ease 0.7s both;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 200;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 3px; text-transform: uppercase;
+    animation: fadeIn 0.8s ease 0.6s both;
   }
 
-  /* URGENCY BAR */
-  .urgency-bar {
-    position: relative;
-    background: linear-gradient(180deg, rgba(12,6,6,1) 0%, rgba(8,4,4,1) 100%);
-    border-top: 1px solid rgba(139,0,0,0.1);
-    border-bottom: 1px solid rgba(139,0,0,0.1);
-    padding: 14px 0;
-    overflow: hidden;
-    white-space: nowrap;
+  /* ═══ TICKER ═══ */
+  .ticker {
+    background: rgba(139,0,0,0.06);
+    border-top: 1px solid rgba(139,0,0,0.12);
+    border-bottom: 1px solid rgba(139,0,0,0.12);
+    padding: 13px 0;
+    overflow: hidden; white-space: nowrap;
   }
 
-  .urgency-track {
+  .ticker-t {
     display: inline-block;
-    animation: tickerScroll 28s linear infinite;
+    animation: tickerScroll 22s linear infinite;
   }
 
-  .urgency-item {
-    display: inline-block;
+  .ticker-t span {
     font-family: 'Cinzel', serif;
-    font-size: 11px;
-    font-weight: 400;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
-    padding: 0 14px;
+    font-size: 10px; font-weight: 400;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    padding: 0 20px;
   }
 
-  .urgency-item span {
-    color: rgba(180,40,40,0.75);
+  .ticker-t span b {
+    color: rgba(180,40,40,0.65);
     font-weight: 600;
   }
 
-  .urgency-sep {
-    display: inline-block;
-    color: rgba(139,0,0,0.3);
-    font-size: 6px;
-    vertical-align: middle;
-    padding: 0 4px;
-  }
-
-  /* SEPARATOR */
-  .sep {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    padding: 40px 0 0;
-  }
-
-  .sep-line {
-    width: 60px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), transparent);
-  }
-
-  .sep-diamond {
-    width: 5px;
-    height: 5px;
-    background: rgba(139,0,0,0.35);
-    transform: rotate(45deg);
-  }
-
-  /* MESSAGE */
-  .message {
-    padding: 40px 44px 44px;
-  }
-
-  .message p {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 20px;
-    font-weight: 300;
-    line-height: 1.9;
-    color: rgba(255,255,255,0.55);
+  /* ═══ PRICE HERO ═══ */
+  .price-hero {
     text-align: center;
+    padding: 48px 30px 8px;
+  }
+
+  .price-tag {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 8px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase;
+    color: #030303;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%;
+    animation: shimmer 4s ease infinite;
+    padding: 6px 18px;
+    margin-bottom: 20px;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .price-old {
+    font-family: 'Cinzel', serif;
+    font-size: 28px; font-weight: 400;
+    color: rgba(255,255,255,0.15);
+    text-decoration: line-through;
+    text-decoration-color: rgba(180,40,40,0.4);
+  }
+
+  .price-new {
+    font-family: 'Cinzel', serif;
+    font-size: 72px; font-weight: 700;
+    line-height: 1; letter-spacing: -2px;
+    color: rgba(180,40,40,0.85);
+    animation: priceGlow 3s ease infinite;
+  }
+
+  .price-cur {
+    font-family: 'Inter', sans-serif;
+    font-size: 18px; font-weight: 300;
+    color: rgba(180,40,40,0.4);
+    margin-left: -4px;
+    align-self: flex-start;
+    margin-top: 14px;
+  }
+
+  .price-per {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.2);
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .price-save {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(197,160,89,0.7);
+    border: 1px solid rgba(197,160,89,0.2);
+    padding: 6px 16px;
+  }
+
+  .price-expires {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(180,40,40,0.35);
+    margin-top: 18px;
+    animation: pulse 3s ease infinite;
+  }
+
+  /* ═══ MAIN PITCH ═══ */
+  .pitch {
+    padding: 44px 40px 40px;
+    text-align: center;
+  }
+
+  .pitch h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 6px; text-transform: uppercase;
+    color: rgba(180,40,40,0.7);
+    margin-bottom: 20px;
+  }
+
+  .pitch p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 21px; font-weight: 300;
+    line-height: 1.85;
+    color: rgba(255,255,255,0.5);
+  }
+
+  .pitch strong { color: rgba(255,255,255,0.9); font-weight: 400; }
+  .pitch em { font-style: italic; color: rgba(180,40,40,0.6); }
+
+  /* ═══ BIG CTA ═══ */
+  .big-cta {
+    text-align: center;
+    padding: 10px 30px 0;
+  }
+
+  .big-cta a {
+    display: block;
+    padding: 24px 0;
+    background: linear-gradient(135deg, #8b0000, #5a0000);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 7px; text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.3);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .big-cta a:hover {
+    background: linear-gradient(135deg, #a50000, #7a0000);
+    letter-spacing: 9px;
+    box-shadow: 0 4px 40px rgba(139,0,0,0.35);
+  }
+
+  .big-cta a::after {
+    content: '';
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: width 0.5s ease;
+  }
+
+  .big-cta a:hover::after { width: 80%; }
+
+  .cta-below {
+    text-align: center;
+    padding: 12px 30px 0;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(180,40,40,0.35);
+    animation: pulse 3s ease infinite;
+  }
+
+  /* ═══ DIVIDER ═══ */
+  .div {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 44px 0;
+  }
+  .div-l { width: 70px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.18), transparent); }
+  .div-d { width: 4px; height: 4px; background: rgba(139,0,0,0.25); transform: rotate(45deg); }
+
+  /* ═══ WHAT'S INCLUDED ═══ */
+  .inc {
+    padding: 0 34px 10px;
+  }
+
+  .inc-item {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(139,0,0,0.05);
+  }
+
+  .inc-item:last-child { border-bottom: none; }
+
+  .inc-n {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 14px; font-weight: 700;
+    color: rgba(180,40,40,0.5);
+    border: 1px solid rgba(139,0,0,0.15);
+  }
+
+  .inc-text h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 4px;
+  }
+
+  .inc-text p {
+    font-size: 12px; font-weight: 300;
+    color: rgba(255,255,255,0.25);
+    line-height: 1.5;
     letter-spacing: 0.3px;
   }
 
-  .msg-headline {
-    display: block;
-    font-family: 'Cinzel', serif;
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    color: rgba(180,40,40,0.8);
-    margin-bottom: 6px;
-  }
-
-  .msg-subline {
-    display: block;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.3);
-    letter-spacing: 2px;
-    margin-bottom: 24px;
-  }
-
-  .message strong {
-    color: rgba(255,255,255,0.9);
-    font-weight: 400;
-  }
-
-  .message em {
-    font-style: italic;
-    color: rgba(180,40,40,0.65);
-  }
-
-  /* STRIP */
-  .strip {
-    margin: 0 30px;
-    padding: 28px 34px;
-    border-top: 1px solid rgba(139,0,0,0.08);
-    border-bottom: 1px solid rgba(139,0,0,0.08);
+  /* ═══ SPOTS BOX ═══ */
+  .spots-box {
+    margin: 10px 30px 0;
+    position: relative;
+    background: linear-gradient(165deg, rgba(20,6,6,1) 0%, rgba(8,3,3,1) 100%);
+    border: 1px solid rgba(139,0,0,0.18);
     text-align: center;
+    padding: 50px 36px;
+    animation: glow 5s ease infinite;
   }
 
-  .strip p {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 17px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.3);
-    line-height: 1.8;
-    letter-spacing: 0.5px;
+  .spots-box .corner {
+    position: absolute; width: 24px; height: 24px; pointer-events: none;
+  }
+  .spots-box .corner::before, .spots-box .corner::after {
+    content: ''; position: absolute; background: rgba(139,0,0,0.35);
+  }
+  .spots-box .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .spots-box .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .spots-box .c-tl { top: -1px; left: -1px; }
+  .spots-box .c-tr { top: -1px; right: -1px; transform: scaleX(-1); }
+  .spots-box .c-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .spots-box .c-br { bottom: -1px; right: -1px; transform: scale(-1); }
+
+  .spots-pre {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 8px;
   }
 
-  .strip strong {
-    color: rgba(255,255,255,0.65);
-    font-weight: 400;
-  }
-
-  /* SPOTS COUNTER */
-  .spots {
-    text-align: center;
-    padding: 44px 30px 10px;
-  }
-
-  .spots-number {
+  .spots-num {
     font-family: 'Cinzel', serif;
-    font-size: 100px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -4px;
-    background: linear-gradient(180deg, rgba(180,40,40,0.75) 0%, rgba(139,0,0,0.2) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 110px; font-weight: 700;
+    line-height: 1; letter-spacing: -5px;
+    background: linear-gradient(180deg, rgba(180,40,40,0.85) 0%, rgba(100,10,10,0.3) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .spots-label {
     font-family: 'Cinzel', serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    color: rgba(180,40,40,0.45);
-    margin-top: 2px;
-  }
-
-  .spots-sub {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.25);
-    margin-top: 18px;
-    line-height: 1.6;
-  }
-
-  /* FEATURES */
-  .features {
-    padding: 36px 44px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .feat-row {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-  }
-
-  .feat-icon {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(139,0,0,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: rgba(180,40,40,0.5);
-  }
-
-  .feat-text {
-    flex: 1;
-  }
-
-  .feat-text h4 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
-    font-weight: 400;
-    color: rgba(255,255,255,0.7);
-    letter-spacing: 1px;
-    margin-bottom: 3px;
-  }
-
-  .feat-text p {
-    font-size: 11px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.25);
-    letter-spacing: 0.5px;
-    line-height: 1.5;
-  }
-
-  /* OFFER BLOCK */
-  .offer {
-    margin: 30px 30px 0;
-    position: relative;
-    background: linear-gradient(165deg, rgba(18,8,8,1) 0%, rgba(10,5,5,1) 50%, rgba(18,8,8,1) 100%);
-    border: 1px solid rgba(139,0,0,0.15);
-    overflow: hidden;
-    animation: borderGlow 5s ease infinite;
-  }
-
-  .offer-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 400px;
-    height: 400px;
-    background: conic-gradient(from 0deg, transparent, rgba(139,0,0,0.05), transparent, rgba(139,0,0,0.08), transparent);
-    animation: rotateGlow 20s linear infinite;
-    pointer-events: none;
-  }
-
-  .offer .corner {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    pointer-events: none;
-  }
-  .offer .corner::before,
-  .offer .corner::after {
-    content: '';
-    position: absolute;
-    background: rgba(139,0,0,0.35);
-  }
-  .offer .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .offer .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .offer .corner-tl { top: -1px; left: -1px; }
-  .offer .corner-tr { top: -1px; right: -1px; transform: scaleX(-1); }
-  .offer .corner-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .offer .corner-br { bottom: -1px; right: -1px; transform: scale(-1); }
-
-  .offer-inner {
-    padding: 55px 44px;
-    text-align: center;
-    position: relative;
-    z-index: 1;
-  }
-
-  .offer-inner::before {
-    content: '';
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 350px;
-    height: 250px;
-    background: radial-gradient(ellipse, rgba(139,0,0,0.12) 0%, transparent 70%);
-    pointer-events: none;
-    animation: breathe 5s ease infinite;
-  }
-
-  .offer-label {
-    font-family: 'Cinzel', serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 8px;
-    text-transform: uppercase;
-    color: rgba(180,40,40,0.7);
-    margin-bottom: 30px;
-    position: relative;
-  }
-
-  .offer-quote {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 26px;
-    font-weight: 300;
-    font-style: italic;
-    line-height: 1.7;
-    color: rgba(255,255,255,0.5);
-    position: relative;
-    max-width: 420px;
-    margin: 0 auto;
-  }
-
-  .offer-quote strong {
-    color: rgba(255,255,255,0.85);
-    font-weight: 400;
-  }
-
-  .offer-sig {
-    margin-top: 28px;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-weight: 300;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(139,0,0,0.45);
-  }
-
-  /* CTA */
-  .cta-wrap {
-    text-align: center;
-    padding: 50px 40px 18px;
-  }
-
-  .cta {
-    display: inline-block;
-    padding: 22px 68px;
-    background: linear-gradient(135deg, #8b0000, #5a0000);
-    color: #fff;
-    text-decoration: none;
-    font-family: 'Cinzel', serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    border: 1px solid rgba(139,0,0,0.4);
-    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .cta::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-    transition: left 0.8s ease;
-  }
-
-  .cta::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(180,40,40,0.6), transparent);
-    transition: width 0.6s cubic-bezier(0.25, 0, 0, 1);
-  }
-
-  .cta:hover {
-    background: linear-gradient(135deg, #a50000, #8b0000);
-    letter-spacing: 8px;
-    padding: 22px 78px;
-    border-color: rgba(180,40,40,0.5);
-    box-shadow: 0 4px 30px rgba(139,0,0,0.3);
-  }
-
-  .cta:hover::before { left: 100%; }
-  .cta:hover::after { width: 80%; }
-
-  .cta-note {
-    text-align: center;
-    padding: 14px 40px 0;
-    font-size: 10px;
-    font-weight: 300;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 10px; text-transform: uppercase;
     color: rgba(180,40,40,0.4);
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    animation: countPulse 3s ease infinite;
+    margin-top: 4px;
   }
 
-  /* SECOND CTA */
-  .cta2-wrap {
+  .spots-why {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.25);
+    margin-top: 24px;
+    line-height: 1.7;
+    max-width: 380px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  /* ═══ QUOTE ═══ */
+  .q {
+    padding: 44px 40px;
     text-align: center;
-    padding: 40px 40px 12px;
   }
 
-  .cta2 {
+  .q-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px; line-height: 1;
+    color: rgba(139,0,0,0.15);
+    margin-bottom: -10px;
+  }
+
+  .q-text {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 24px; font-weight: 300; font-style: italic;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.45);
+    max-width: 440px; margin: 0 auto;
+  }
+
+  .q-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
+
+  .q-sig {
+    margin-top: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(139,0,0,0.4);
+  }
+
+  /* ═══ CLOSER ═══ */
+  .closer {
+    padding: 0 40px 44px;
+    text-align: center;
+  }
+
+  .closer p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.75;
+  }
+
+  .closer .attr {
+    display: block; margin-top: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px; font-style: normal;
+    letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(139,0,0,0.35);
+  }
+
+  /* ═══ GHOST CTA ═══ */
+  .ghost-cta {
+    text-align: center;
+    padding: 30px 30px 10px;
+  }
+
+  .ghost-cta a {
     display: inline-block;
     padding: 18px 56px;
     background: transparent;
-    color: rgba(180,40,40,0.7);
+    color: rgba(180,40,40,0.6);
     text-decoration: none;
     font-family: 'Cinzel', serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    border: 1px solid rgba(139,0,0,0.2);
-    transition: all 0.6s cubic-bezier(0.25, 0, 0, 1);
-    position: relative;
-    overflow: hidden;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase;
+    border: 1px solid rgba(139,0,0,0.18);
+    transition: all 0.5s ease;
   }
 
-  .cta2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.5), transparent);
-    transition: width 0.6s ease;
-  }
-
-  .cta2:hover {
-    border-color: rgba(139,0,0,0.45);
+  .ghost-cta a:hover {
+    border-color: rgba(139,0,0,0.4);
     background: rgba(139,0,0,0.04);
     letter-spacing: 7px;
   }
 
-  .cta2:hover::after { width: 70%; }
-
-  .cta2-note {
+  .ghost-note {
     text-align: center;
-    padding: 10px 40px 0;
+    padding: 10px 30px 0;
     font-family: 'Cormorant Garamond', serif;
-    font-size: 13px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.12);
-    letter-spacing: 1px;
-  }
-
-  /* DIVIDER */
-  .divider {
-    padding: 50px 0;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-  }
-
-  .divider-line {
-    width: 80px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.2), transparent);
-  }
-
-  .divider-diamond {
-    width: 4px;
-    height: 4px;
-    background: rgba(139,0,0,0.25);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
-
-  /* BOTTOM QUOTE */
-  .bottom-quote {
-    padding: 0 40px 45px;
-    text-align: center;
-  }
-
-  .bottom-quote p {
-    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-    font-size: 22px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.35);
-    line-height: 1.75;
-  }
-
-  .bottom-quote .attr {
-    display: block;
-    margin-top: 18px;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-style: normal;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(139,0,0,0.45);
-  }
-
-  /* FOOTER */
-  .footer {
-    border-top: 1px solid rgba(139,0,0,0.06);
-    padding: 40px 40px;
-    text-align: center;
-    position: relative;
-  }
-
-  .footer::before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.2), transparent);
-  }
-
-  .footer-brand {
-    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 8px;
-    color: rgba(255,255,255,0.12);
-    margin-bottom: 10px;
-  }
-
-  .footer a {
-    font-size: 10px;
+    font-size: 13px; font-weight: 300; font-style: italic;
     color: rgba(255,255,255,0.1);
-    text-decoration: none;
-    letter-spacing: 3px;
-    transition: color 0.4s ease;
   }
 
-  .footer a:hover { color: rgba(180,40,40,0.6); }
+  /* ═══ FOOTER ═══ */
+  .foot {
+    border-top: 1px solid rgba(139,0,0,0.05);
+    padding: 36px 40px;
+    text-align: center;
+    margin-top: 40px;
+  }
 
-  /* MOBILE */
+  .foot-brand {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 8px;
+    color: rgba(255,255,255,0.08);
+    margin-bottom: 8px;
+  }
+
+  .foot a {
+    font-size: 10px; color: rgba(255,255,255,0.06);
+    text-decoration: none; letter-spacing: 3px;
+  }
+
+  /* ═══ MOBILE ═══ */
   @media (max-width: 520px) {
-    .hero { height: 440px; }
-    .hero-title { font-size: 38px; }
-    .hero-content { padding: 0 26px 32px; }
-    .message { padding: 30px 20px 30px; }
-    .message p { font-size: 17px; line-height: 1.8; }
-    .msg-headline { font-size: 22px; letter-spacing: 2px; }
-    .msg-subline { font-size: 13px; letter-spacing: 1px; }
-    .strip { margin: 0 12px; padding: 22px 16px; }
-    .strip p { font-size: 14px; }
-    .spots { padding: 36px 20px 10px; }
-    .spots-number { font-size: 70px; }
-    .features { padding: 30px 20px 10px; gap: 16px; }
-    .feat-icon { width: 32px; height: 32px; font-size: 14px; }
-    .feat-text h4 { font-size: 15px; }
-    .feat-text p { font-size: 10px; }
-    .offer { margin: 20px 12px 0; }
-    .offer-inner { padding: 32px 18px; }
-    .offer-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 22px; }
-    .offer-quote { font-size: 20px; }
-    .cta-wrap { padding: 36px 20px 14px; }
-    .cta { padding: 18px 0; letter-spacing: 4px; font-size: 11px; width: 100%; display: block; text-align: center; }
-    .cta:hover { padding: 18px 0; letter-spacing: 5px; }
-    .cta-note { padding: 10px 20px 0; font-size: 9px; }
-    .cta2-wrap { padding: 30px 20px 10px; }
-    .cta2 { padding: 16px 0; letter-spacing: 3px; font-size: 10px; width: 100%; display: block; text-align: center; }
-    .cta2-note { font-size: 12px; padding: 8px 20px 0; }
-    .divider { padding: 36px 0; }
-    .bottom-quote { padding: 0 20px 36px; }
-    .bottom-quote p { font-size: 18px; }
-    .bottom-quote .attr { font-size: 8px; letter-spacing: 4px; }
-    .sep { padding: 28px 0 0; }
-    .footer { padding: 30px 20px; }
-    .footer-brand { font-size: 14px; letter-spacing: 6px; }
+    .hero { height: 480px; }
+    .hero-t { font-size: 40px; }
+    .hero-c { padding: 0 24px 36px; }
+    .price-hero { padding: 40px 20px 8px; }
+    .price-new { font-size: 56px; }
+    .price-old { font-size: 22px; }
+    .price-row { gap: 12px; }
+    .pitch { padding: 36px 22px 30px; }
+    .pitch h2 { font-size: 11px; letter-spacing: 4px; }
+    .pitch p { font-size: 18px; }
+    .big-cta { padding: 10px 16px 0; }
+    .big-cta a { font-size: 11px; letter-spacing: 5px; }
+    .inc { padding: 0 18px 10px; }
+    .spots-box { margin: 10px 16px 0; padding: 36px 20px; }
+    .spots-num { font-size: 80px; }
+    .q { padding: 36px 22px; }
+    .q-text { font-size: 20px; }
+    .closer { padding: 0 22px 36px; }
+    .closer p { font-size: 17px; }
+    .ghost-cta a { padding: 16px 0; width: 100%; display: block; letter-spacing: 3px; font-size: 10px; }
+    .div { padding: 34px 0; }
+    .foot { padding: 28px 20px; }
   }
 </style>
 </head>
-<body bgcolor="#050505" style="background-color:#050505;">
-<div class="wrap">
+<body bgcolor="#030303" style="background-color:#030303;">
+<div class="w">
 
-  <!-- HERO -->
+  <!-- ═══ HERO ═══ -->
   <div class="hero">
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
-    <div class="hero-gradient"></div>
-    <div class="hero-content">
-      <div class="hero-tag">7 Spots Left</div>
-      <h1 class="hero-title">I'm Taking<br><em>Your October.</em></h1>
-      <p class="hero-sub">31 days locked. Daily video tasks. No way out.</p>
+    <div class="hero-ov"></div>
+    <div class="hero-c">
+      <div class="hero-spots">Only 7 Spots</div>
+      <h1 class="hero-t">I'm Taking<br><i>Your October.</i></h1>
+      <p class="hero-sub">31 days locked. Daily video tasks. Personally reviewed.</p>
     </div>
   </div>
 
-  <!-- TICKER -->
-  <div class="urgency-bar">
-    <div class="urgency-track">
-      <span class="urgency-item">only <span>7</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">starts <span>oct 1</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">personally <span>reviewed</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">only <span>7</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">starts <span>oct 1</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">personally <span>reviewed</span></span><span class="urgency-sep">&diams;</span>
+  <!-- ═══ TICKER ═══ -->
+  <div class="ticker">
+    <div class="ticker-t">
+      <span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video tasks</b></span><span>no <b>release</b></span><span><b>&euro;111</b> early price</span><span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video tasks</b></span><span>no <b>release</b></span><span><b>&euro;111</b> early price</span>
     </div>
   </div>
 
-  <!-- SEPARATOR -->
-  <div class="sep">
-    <div class="sep-line"></div>
-    <div class="sep-diamond"></div>
-    <div class="sep-line"></div>
+  <!-- ═══ PRICE DROP ═══ -->
+  <div class="price-hero">
+    <div class="price-tag">Weekend Early Price</div>
+    <div class="price-row">
+      <span class="price-cur">&euro;</span>
+      <span class="price-new">111</span>
+      <span class="price-old">&euro;199</span>
+    </div>
+    <div class="price-per">for 31 days of real, personal control</div>
+    <div class="price-save">Save &euro;88 This Weekend Only</div>
+    <div class="price-expires">Price goes back to &euro;199 on Monday</div>
   </div>
 
-  <!-- MESSAGE 1 -->
-  <div class="message">
+  <!-- ═══ CTA 1 ═══ -->
+  <div class="big-cta" style="padding-top: 30px;">
+    <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
+  </div>
+  <div class="cta-below">3 of 7 spots already claimed</div>
+
+  <!-- ═══ DIVIDER ═══ -->
+  <div class="div">
+    <div class="div-l"></div>
+    <div class="div-d"></div>
+    <div class="div-l"></div>
+  </div>
+
+  <!-- ═══ PITCH ═══ -->
+  <div class="pitch">
+    <h2>Here's the Deal</h2>
     <p>
-      <span class="msg-headline">October Is Mine.</span>
-      <span class="msg-subline">and if you're reading this, it could be yours too.</span>
-      I'm locking <strong>7 men</strong> for the entire month of October.
-      31 days. No breaks. No early release. No negotiating.<br><br>
-      Every single day, you get a <strong>video task</strong> sent directly through my app.
-      I tell you what to film. You film it. You submit it. I review it.
-      If I don't like what I see, I add days.<br><br>
-      This is not some challenge you do alone in your bedroom hoping
-      motivation carries you through. <em>Motivation won't save you.</em>
-      I will. Because I'll be watching. Every. Single. Day.
+      I'm locking <strong>7 men</strong> for all of October.<br>
+      Every day you get a <strong>video task</strong> through my app.
+      I tell you what to film. You film it. You submit it.
+      <strong>I watch it.</strong><br><br>
+      If I don't like what I see, I add penalty days.
+      If you miss a day, I terminate your program.
+      If you beg for release, <em>I enjoy it and say no.</em><br><br>
+      31 days. Real tasks. Real accountability.
+      One woman actually watching every single thing you do.
     </p>
   </div>
 
-  <!-- CTA 1 -->
-  <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Give Me Your October</a>
+  <!-- ═══ CTA 2 ═══ -->
+  <div class="big-cta">
+    <a href="https://throne.qkarin.com/keyholder" target="_blank">Give Me Your October</a>
   </div>
-  <div class="cta-note" style="animation: countPulse 3s ease infinite;">7 spots. When they're gone, they're gone.</div>
+  <div class="cta-below">&euro;111 this weekend. &euro;199 after Monday.</div>
 
-  <!-- STRIP -->
-  <div class="strip" style="margin-top: 40px;">
-    <p>
-      You've spent every October scrolling past Locktober posts thinking <strong>"maybe next year."</strong> This is next year. And I'm not asking.
-    </p>
-  </div>
-
-  <!-- 7 SPOTS -->
-  <div class="spots">
-    <div class="spots-number">7</div>
-    <div class="spots-label">Spots Remaining</div>
-    <div class="spots-sub">
-      I personally review every video submission.<br>
-      That's why I will never take more than I can handle.
-    </div>
+  <!-- ═══ DIVIDER ═══ -->
+  <div class="div">
+    <div class="div-l"></div>
+    <div class="div-d"></div>
+    <div class="div-l"></div>
   </div>
 
-  <!-- SEPARATOR -->
-  <div class="sep" style="padding-bottom: 10px;">
-    <div class="sep-line"></div>
-    <div class="sep-diamond"></div>
-    <div class="sep-line"></div>
+  <!-- ═══ WHAT'S INCLUDED ═══ -->
+  <div style="text-align:center; padding: 0 30px 6px;">
+    <div style="font-family:'Cinzel',serif; font-size:10px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(180,40,40,0.5);">What You Get for &euro;111</div>
   </div>
 
-  <!-- WHAT YOU GET -->
-  <div style="text-align: center; padding: 30px 40px 0;">
-    <div style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: rgba(180,40,40,0.5);">What 31 Days Looks Like</div>
-  </div>
-
-  <div class="features">
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>A New Video Task Every Day</h4>
-        <p>Assigned through the app each morning. You film it. You submit it. I watch it.</p>
+  <div class="inc">
+    <div class="inc-item">
+      <div class="inc-n">1</div>
+      <div class="inc-text">
+        <h4>Daily Video Task</h4>
+        <p>A new assignment every morning. Sent through the app. Video proof required.</p>
       </div>
     </div>
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>Chastity Proof Every Morning</h4>
-        <p>You wake up, you prove you're locked. Miss a day and I end your program with a penalty.</p>
+    <div class="inc-item">
+      <div class="inc-n">2</div>
+      <div class="inc-text">
+        <h4>Morning Chastity Proof</h4>
+        <p>You wake up. You prove you're locked. Every single day for 31 days.</p>
       </div>
     </div>
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>Reviewed Personally by Me</h4>
-        <p>Not a bot. Not an auto-reply. I see everything you submit and I decide if it's good enough.</p>
+    <div class="inc-item">
+      <div class="inc-n">3</div>
+      <div class="inc-text">
+        <h4>Personally Reviewed by Me</h4>
+        <p>I watch everything you submit. Not a bot. Not automated. Me.</p>
       </div>
     </div>
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>My Keyholder App</h4>
-        <p>Live lock timer. Task dashboard. Streaks. Points. Progress. All inside one platform I built myself.</p>
+    <div class="inc-item">
+      <div class="inc-n">4</div>
+      <div class="inc-text">
+        <h4>Keyholder App Access</h4>
+        <p>Live lock timer. Task dashboard. Streaks. Points. Built by me.</p>
       </div>
     </div>
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>Tasks Get Harder Every Week</h4>
-        <p>Week 1 is warm-up. By week 4 you'll understand why most men don't make it to the end.</p>
+    <div class="inc-item">
+      <div class="inc-n">5</div>
+      <div class="inc-text">
+        <h4>Escalating Difficulty</h4>
+        <p>Starts manageable. Ends with you questioning everything. That's the point.</p>
       </div>
     </div>
-    <div class="feat-row">
-      <div class="feat-icon">&#9670;</div>
-      <div class="feat-text">
-        <h4>No Way Out</h4>
-        <p>You can beg. I'll enjoy reading it. But you're not getting released until I say so.</p>
+    <div class="inc-item">
+      <div class="inc-n">6</div>
+      <div class="inc-text">
+        <h4>No Early Release</h4>
+        <p>You can beg. I'll read it with my morning coffee. The answer is no.</p>
       </div>
     </div>
   </div>
 
-  <!-- QUOTE BOX -->
-  <div class="offer">
-    <div class="offer-glow"></div>
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
-    <div class="offer-inner">
-      <div class="offer-label">Hear Me</div>
-      <div class="offer-quote">
-        Most of you will read this and do nothing.
-        You'll save it. Think about it. Tell yourself
-        you'll <strong>come back later.</strong><br><br>
-        Later there will be no spots left.
-        And you'll spend October the same way
-        you spent every other month. Alone.
-        <strong>Unlocked. Unaccountable. Unchanged.</strong><br><br>
-        Or you take one of these 7 spots right now
-        and let me do what I do best.
-      </div>
-      <div class="offer-sig">Karin</div>
+  <!-- ═══ SPOTS BOX ═══ -->
+  <div class="spots-box">
+    <div class="corner c-tl"></div>
+    <div class="corner c-tr"></div>
+    <div class="corner c-bl"></div>
+    <div class="corner c-br"></div>
+    <div class="spots-pre">Only</div>
+    <div class="spots-num">7</div>
+    <div class="spots-label">Spots Total</div>
+    <div class="spots-why">
+      I review every video myself. Every task. Every proof.<br>
+      That takes time. So I keep the number small enough
+      that every single one of you gets my full attention.
     </div>
   </div>
 
-  <!-- CTA 2 -->
-  <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Claim Your Spot</a>
+  <!-- ═══ CTA 3 ═══ -->
+  <div class="big-cta" style="padding-top: 36px;">
+    <a href="https://throne.qkarin.com/keyholder" target="_blank">Claim Your Spot &mdash; &euro;111</a>
   </div>
-  <div class="cta-note">October 1st. 31 days. 7 men. That's it.</div>
+  <div class="cta-below">Weekend price. Gone Monday.</div>
 
-  <!-- DIVIDER -->
-  <div class="divider">
-    <div class="divider-line"></div>
-    <div class="divider-diamond"></div>
-    <div class="divider-line"></div>
+  <!-- ═══ DIVIDER ═══ -->
+  <div class="div">
+    <div class="div-l"></div>
+    <div class="div-d"></div>
+    <div class="div-l"></div>
   </div>
 
-  <!-- BOTTOM QUOTE -->
-  <div class="bottom-quote">
-    <p>You don't need another month of pretending you have discipline. You need someone who won't let you pretend anymore. I start October 1st. With or without you.</p>
+  <!-- ═══ QUEEN QUOTE ═══ -->
+  <div class="q">
+    <div class="q-mark">&ldquo;</div>
+    <div class="q-text">
+      Most of you will screenshot this and think about it for three days.
+      By then the spots will be gone and you'll spend October
+      <strong>exactly the way you spent September.</strong><br><br>
+      Scrolling. Unlocked. Alone.<br><br>
+      Or you take a spot right now and let me
+      make this the month you <strong>actually remember.</strong>
+    </div>
+    <div class="q-sig">Karin</div>
+  </div>
+
+  <!-- ═══ FINAL PRICE REMINDER ═══ -->
+  <div style="text-align:center; padding: 0 30px 10px;">
+    <div style="display:inline-block; border:1px solid rgba(139,0,0,0.12); padding: 20px 36px; background: rgba(139,0,0,0.03);">
+      <div style="font-family:'Inter',sans-serif; font-size:8px; font-weight:300; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-bottom:8px;">This weekend</div>
+      <div style="display:flex; align-items:baseline; justify-content:center; gap:10px;">
+        <span style="font-family:'Cinzel',serif; font-size:36px; font-weight:700; color:rgba(180,40,40,0.8);">&euro;111</span>
+        <span style="font-family:'Cinzel',serif; font-size:16px; color:rgba(255,255,255,0.12); text-decoration:line-through;">&euro;199</span>
+      </div>
+      <div style="font-family:'Inter',sans-serif; font-size:8px; font-weight:300; letter-spacing:3px; text-transform:uppercase; color:rgba(180,40,40,0.3); margin-top:8px;">Back to full price Monday</div>
+    </div>
+  </div>
+
+  <!-- ═══ CLOSER ═══ -->
+  <div class="closer" style="padding-top: 36px;">
+    <p>October 1st. 7 men. 31 days under my control. I start with or without you. But the ones who join now will not be the same men on November 1st.</p>
     <span class="attr">The key is in your hands. For now.</span>
   </div>
 
-  <!-- SECOND CTA -->
-  <div class="cta2-wrap">
-    <a href="https://throne.qkarin.com/keyholder" class="cta2" target="_blank">Enter the Throne</a>
+  <!-- ═══ FINAL CTA ═══ -->
+  <div class="big-cta">
+    <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
   </div>
-  <div class="cta2-note">Once spots fill, this page closes.</div>
+  <div class="cta-below">7 spots. Oct 1st. &euro;111 this weekend only.</div>
 
-  <!-- FOOTER DIVIDER -->
-  <div class="divider" style="padding: 40px 0;">
-    <div class="divider-line"></div>
-    <div class="divider-diamond"></div>
-    <div class="divider-line"></div>
+  <!-- ═══ GHOST CTA ═══ -->
+  <div class="ghost-cta" style="padding-top: 40px;">
+    <a href="https://throne.qkarin.com" target="_blank">Enter the Throne</a>
   </div>
+  <div class="ghost-note">throne.qkarin.com</div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-brand">QUEEN KARIN</div>
+  <!-- ═══ FOOTER ═══ -->
+  <div class="foot">
+    <div class="foot-brand">QUEEN KARIN</div>
     <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
   </div>
 
 </div>
-
 </body>
 </html>
