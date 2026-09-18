@@ -139,7 +139,7 @@ export default function LoctoberClient() {
                 <div style={{ animation: mounted ? 'locFadeIn 0.8s ease-out both' : 'none', marginBottom: 8 }}>
                     <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 6, color: 'rgba(197,160,89,0.35)', textTransform: 'uppercase', marginBottom: 12 }}>QUEEN KARIN PRESENTS</div>
                     <h1 style={{ position: 'relative', display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4rem)', color: '#fff', letterSpacing: 6, textTransform: 'uppercase', margin: 0, fontWeight: 700, lineHeight: 1 }}>
-                        LOCTOBER
+                        LOCKTOBER
                         <span style={{ position: 'absolute', right: 'clamp(-24px,-4vw,-40px)', top: 'clamp(-14px,-2vw,-20px)', fontFamily: 'Dancing Script,cursive', fontSize: 'clamp(1.4rem,5vw,2.2rem)', color: '#d4af6a', fontWeight: 400, letterSpacing: 0, textTransform: 'none', transform: 'rotate(-8deg)' }}>fest</span>
                     </h1>
                 </div>
