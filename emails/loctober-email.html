@@ -5,16 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Queen Karin — LOCKTOBER</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Subject: I'm locking 7 of you for all of October.
+  Preheader: 31 days. Daily video tasks. A real keyholder app. Only 7 spots at early pricing.
+-->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
     width: 100% !important;
+    min-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #030303;
+    background: #050505;
     font-family: 'Inter', -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
     color: #fff;
     overflow-x: hidden;
   }
@@ -23,268 +30,266 @@
     0% { background-position: -200% center; }
     100% { background-position: 200% center; }
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 30px rgba(139,0,0,0.2); }
-    50% { box-shadow: 0 0 60px rgba(139,0,0,0.4); }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.07; }
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(197,160,89,0.1); }
+    50% { border-color: rgba(197,160,89,0.3); }
   }
   @keyframes tickerScroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
 
-  .w { width: 100%; max-width: 620px; margin: 0 auto; overflow: hidden; background: #030303; }
+  .wrap {
+    width: 100%; max-width: 620px; margin: 0 auto;
+    overflow: hidden; background: #050505; position: relative;
+  }
+  .wrap::after {
+    content: '';
+    position: absolute; top: 300px; left: 50%;
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    transform: translateX(-50%); pointer-events: none;
+    animation: breathe 6s ease infinite;
+  }
 
-  /* ═══ HERO ═══ */
+  /* ── HERO ── */
   .hero {
-    position: relative; width: 100%; overflow: hidden; background: #030303;
+    position: relative; width: 100%; overflow: hidden; background: #050505;
   }
   .hero img {
     width: 100%; display: block;
-    filter: brightness(0.4) saturate(1.3) contrast(1.1);
+    filter: brightness(0.4) saturate(1.2) contrast(1.1);
   }
   .hero-ov {
     position: absolute; inset: 0; z-index: 2;
     background:
-      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.25) 0%, transparent 55%),
-      linear-gradient(180deg, rgba(3,3,3,0.1) 0%, transparent 20%, transparent 30%, rgba(3,3,3,0.55) 55%, rgba(3,3,3,0.95) 78%, #030303 100%);
+      radial-gradient(ellipse at center bottom, rgba(197,160,89,0.08) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(5,5,5,0.15) 0%, transparent 20%, transparent 35%, rgba(5,5,5,0.55) 58%, rgba(5,5,5,0.95) 80%, #050505 100%);
   }
   .hero-c {
     position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 0 36px 44px; z-index: 4; text-align: center;
+    padding: 0 44px 44px; z-index: 4; text-align: center;
   }
-  .hero-badge {
+  .hero-tag {
     display: inline-block;
-    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
-    letter-spacing: 5px; text-transform: uppercase; color: #fff;
-    background: linear-gradient(135deg, #8b0000, #5a0000);
-    padding: 8px 22px; margin-bottom: 20px;
-    animation: fadeIn 0.6s ease 0.2s both, glow 3s ease infinite;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase; color: #050505;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%;
+    animation: fadeInUp 1s ease 0.3s both, shimmer 4s ease infinite;
+    padding: 7px 20px; margin-bottom: 22px;
   }
   .hero-t {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 50px; font-weight: 300; line-height: 1.05; color: #fff;
-    margin-bottom: 12px; animation: fadeIn 0.6s ease 0.4s both;
+    margin-bottom: 14px; animation: fadeInUp 1s ease 0.5s both;
   }
-  .hero-t i { font-style: italic; color: rgba(180,40,40,0.9); }
+  .hero-t em { font-style: italic; color: #d4af6a; font-weight: 300; }
   .hero-sub {
-    font-size: 12px; font-weight: 200; color: rgba(255,255,255,0.35);
-    letter-spacing: 3px; text-transform: uppercase;
-    animation: fadeIn 0.6s ease 0.6s both;
+    font-size: 13px; font-weight: 200; color: rgba(255,255,255,0.4);
+    letter-spacing: 2px; text-transform: uppercase;
+    animation: fadeInUp 1s ease 0.7s both;
   }
 
-  /* ═══ TICKER ═══ */
+  /* ── TICKER ── */
   .ticker {
-    background: rgba(139,0,0,0.06);
-    border-top: 1px solid rgba(139,0,0,0.12);
-    border-bottom: 1px solid rgba(139,0,0,0.12);
-    padding: 12px 0; overflow: hidden; white-space: nowrap;
+    background: linear-gradient(180deg, rgba(12,10,8,1) 0%, rgba(8,6,4,1) 100%);
+    border-top: 1px solid rgba(197,160,89,0.1);
+    border-bottom: 1px solid rgba(197,160,89,0.1);
+    padding: 14px 0; overflow: hidden; white-space: nowrap;
   }
   .ticker-t {
-    display: inline-block; animation: tickerScroll 20s linear infinite;
+    display: inline-block; animation: tickerScroll 25s linear infinite;
   }
   .ticker-t span {
-    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 400;
+    display: inline-block;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400;
     letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(255,255,255,0.2); padding: 0 18px;
+    color: rgba(255,255,255,0.35); padding: 0 14px;
   }
-  .ticker-t span b { color: rgba(180,40,40,0.65); font-weight: 600; }
+  .ticker-t span b { color: #d4af6a; font-weight: 600; }
+  .ticker-sep {
+    display: inline-block; color: rgba(197,160,89,0.2);
+    font-size: 6px; vertical-align: middle; padding: 0 4px;
+  }
 
-  /* ═══ PRICE BLOCK ═══ */
-  .price-block {
-    margin: 36px 24px 0;
-    background: linear-gradient(165deg, rgba(20,6,6,1) 0%, rgba(8,3,3,1) 100%);
-    border: 1px solid rgba(139,0,0,0.2);
-    padding: 40px 28px 36px;
-    text-align: center;
+  /* ── SEPARATOR ── */
+  .sep {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 40px 0;
+  }
+  .sep-l { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent); }
+  .sep-d { width: 4px; height: 4px; background: rgba(197,160,89,0.2); transform: rotate(45deg); flex-shrink: 0; }
+
+  /* ── TEXT SECTIONS ── */
+  .txt {
+    padding: 0 44px; text-align: center;
+  }
+  .txt-head {
+    display: block;
+    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 600;
+    letter-spacing: 3px; color: #d4af6a; margin-bottom: 6px;
+  }
+  .txt-subhead {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.35); letter-spacing: 2px; margin-bottom: 24px;
+  }
+  .txt p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px; font-weight: 300; line-height: 1.9;
+    color: rgba(255,255,255,0.55); text-align: center;
+  }
+  .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
+  .txt em { font-style: italic; color: rgba(232,201,122,0.7); }
+
+  /* ── FEATURE CARDS ── */
+  .features {
+    padding: 0 30px;
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .feat {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 28px 24px;
+    border-bottom: 1px solid rgba(197,160,89,0.06);
+  }
+  .feat:last-child { border-bottom: none; }
+  .feat-ico {
+    flex-shrink: 0; width: 40px; height: 40px;
+    border: 1px solid rgba(197,160,89,0.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .feat-ico svg { width: 20px; height: 20px; opacity: 0.5; }
+  .feat-body { flex: 1; }
+  .feat-body h4 {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.75); margin-bottom: 6px;
+  }
+  .feat-body p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.35); line-height: 1.6;
+  }
+
+  /* ── PRICE BLOCK ── */
+  .price-card {
+    margin: 0 30px;
     position: relative;
-    animation: glow 5s ease infinite;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
   }
-  .price-block .cn { position: absolute; width: 20px; height: 20px; pointer-events: none; }
-  .price-block .cn::before, .price-block .cn::after { content: ''; position: absolute; background: rgba(139,0,0,0.4); }
-  .price-block .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .price-block .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .price-block .cn1 { top: -1px; left: -1px; }
-  .price-block .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
-  .price-block .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .price-block .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
-
-  .pb-weekend {
+  .price-card .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+  .price-card .cn::before, .price-card .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
+  .price-card .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .price-card .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .price-card .cn1 { top: -1px; left: -1px; }
+  .price-card .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .price-card .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .price-card .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
+  .price-inner {
+    padding: 48px 36px 40px; text-align: center; position: relative; z-index: 1;
+  }
+  .price-inner::before {
+    content: '';
+    position: absolute; top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 200px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.05) 0%, transparent 70%);
+    pointer-events: none; animation: breathe 5s ease infinite;
+  }
+  .price-tag {
     display: inline-block;
     font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase; color: #030303;
+    letter-spacing: 5px; text-transform: uppercase; color: #050505;
     background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
     background-size: 300% 100%; animation: shimmer 4s ease infinite;
-    padding: 5px 16px; margin-bottom: 18px;
+    padding: 5px 16px; margin-bottom: 22px;
   }
-  .pb-row {
+  .price-row {
     display: flex; align-items: baseline; justify-content: center; gap: 14px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
-  .pb-old {
+  .price-cur {
+    font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300;
+    color: rgba(197,160,89,0.5); align-self: flex-start; margin-top: 12px;
+  }
+  .price-num {
+    font-family: 'Cinzel', serif; font-size: 72px; font-weight: 700;
+    line-height: 1; letter-spacing: -2px; color: #d4af6a;
+  }
+  .price-old {
     font-family: 'Cinzel', serif; font-size: 26px; font-weight: 400;
     color: rgba(255,255,255,0.12);
-    text-decoration: line-through; text-decoration-color: rgba(180,40,40,0.5);
+    text-decoration: line-through; text-decoration-color: rgba(197,160,89,0.35);
   }
-  .pb-new {
-    font-family: 'Cinzel', serif; font-size: 68px; font-weight: 700;
-    line-height: 1; letter-spacing: -2px; color: rgba(180,40,40,0.9);
-  }
-  .pb-cur {
-    font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300;
-    color: rgba(180,40,40,0.45); align-self: flex-start; margin-top: 12px;
-  }
-  .pb-for {
+  .price-for {
     font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300;
-    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 14px;
+    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 16px;
   }
-  .pb-save {
+  .price-save {
     display: inline-block;
     font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
     letter-spacing: 4px; text-transform: uppercase;
     color: rgba(197,160,89,0.8);
-    border: 1px solid rgba(197,160,89,0.25);
+    border: 1px solid rgba(197,160,89,0.2);
     padding: 7px 18px; margin-bottom: 14px;
   }
-  .pb-deadline {
+  .price-note {
     font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 300;
     letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(180,40,40,0.4); animation: pulse 3s ease infinite;
+    color: rgba(197,160,89,0.35); animation: pulse 3s ease infinite;
   }
 
-  /* ═══ CTA ═══ */
-  .cta {
-    text-align: center; padding: 28px 24px 0;
-  }
-  .cta a {
-    display: block; padding: 22px 0;
-    background: linear-gradient(135deg, #8b0000, #5a0000);
-    color: #fff; text-decoration: none;
-    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
+  /* ── CTA ── */
+  .cta-wrap { text-align: center; padding: 30px 30px 0; }
+  .cta-btn {
+    display: block; padding: 22px 0; text-decoration: none;
+    background: linear-gradient(135deg, #c5a059, #a8884a);
+    color: #050505;
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
     letter-spacing: 6px; text-transform: uppercase;
-    border: 1px solid rgba(139,0,0,0.3);
+    border: 1px solid rgba(197,160,89,0.3);
     transition: all 0.5s ease;
   }
-  .cta a:hover {
-    background: linear-gradient(135deg, #a50000, #7a0000);
+  .cta-btn:hover {
+    background: linear-gradient(135deg, #d4af6a, #c5a059);
     letter-spacing: 8px;
-    box-shadow: 0 4px 40px rgba(139,0,0,0.35);
+    box-shadow: 0 4px 40px rgba(197,160,89,0.2);
   }
   .cta-sub {
-    text-align: center; padding: 10px 24px 0;
-    font-size: 9px; font-weight: 300; letter-spacing: 3px;
-    text-transform: uppercase; color: rgba(180,40,40,0.3);
-    animation: pulse 3s ease infinite;
+    text-align: center; padding: 12px 30px 0;
+    font-size: 10px; font-weight: 300; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(197,160,89,0.3);
   }
 
-  /* ═══ DIVIDER ═══ */
-  .dv {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
-    padding: 40px 0;
-  }
-  .dv-l { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.18), transparent); }
-  .dv-d { width: 4px; height: 4px; background: rgba(139,0,0,0.25); transform: rotate(45deg); }
-
-  /* ═══ TEXT ═══ */
-  .txt {
-    padding: 0 36px;
-    text-align: center;
-  }
-  .txt h2 {
-    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
-    letter-spacing: 6px; text-transform: uppercase;
-    color: rgba(180,40,40,0.65); margin-bottom: 18px;
-  }
-  .txt p {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 20px; font-weight: 300; line-height: 1.85;
-    color: rgba(255,255,255,0.5);
-  }
-  .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
-  .txt em { font-style: italic; color: rgba(180,40,40,0.6); }
-
-  /* ═══ VALUE STACK ═══ */
-  .stack {
-    margin: 0 24px;
-    border: 1px solid rgba(139,0,0,0.1);
-    background: rgba(139,0,0,0.02);
-  }
-  .stack-head {
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(139,0,0,0.08);
-    text-align: center;
-    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
-    letter-spacing: 5px; text-transform: uppercase;
-    color: rgba(180,40,40,0.55);
-  }
-  .stack-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 20px;
-    border-bottom: 1px solid rgba(139,0,0,0.05);
-  }
-  .stack-row:last-child { border-bottom: none; }
-  .stack-row .s-what {
-    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 300;
-    color: rgba(255,255,255,0.5); letter-spacing: 0.5px;
-  }
-  .stack-row .s-val {
-    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
-    color: rgba(255,255,255,0.2); letter-spacing: 1px;
-  }
-  .stack-total {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 20px;
-    background: rgba(139,0,0,0.04);
-    border-top: 1px solid rgba(139,0,0,0.12);
-  }
-  .stack-total .s-what {
-    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
-    letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-  }
-  .stack-total .s-val {
-    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
-    letter-spacing: 1px;
-    color: rgba(255,255,255,0.2);
-    text-decoration: line-through; text-decoration-color: rgba(180,40,40,0.4);
-  }
-  .stack-you-pay {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 18px 20px;
-    background: rgba(139,0,0,0.08);
-    border-top: 1px solid rgba(139,0,0,0.15);
-  }
-  .stack-you-pay .s-what {
-    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
-    letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(180,40,40,0.8);
-  }
-  .stack-you-pay .s-val {
-    font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700;
-    color: rgba(180,40,40,0.9); letter-spacing: -1px;
-  }
-
-  /* ═══ SPOTS ═══ */
-  .spots {
-    text-align: center; padding: 36px 30px 0;
-  }
+  /* ── SPOTS ── */
+  .spots { text-align: center; padding: 36px 30px 0; }
   .spots-n {
-    font-family: 'Cinzel', serif; font-size: 90px; font-weight: 700;
+    font-family: 'Cinzel', serif; font-size: 100px; font-weight: 700;
     line-height: 1; letter-spacing: -4px;
-    background: linear-gradient(180deg, rgba(180,40,40,0.8) 0%, rgba(100,10,10,0.25) 100%);
+    background: linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.12) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
   .spots-l {
     font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
     letter-spacing: 8px; text-transform: uppercase;
-    color: rgba(180,40,40,0.35); margin-top: 4px;
+    color: rgba(197,160,89,0.4); margin-top: 4px;
   }
   .spots-p {
     font-family: 'Cormorant Garamond', serif; font-size: 15px;
@@ -292,220 +297,303 @@
     color: rgba(255,255,255,0.2); margin-top: 14px; line-height: 1.7;
   }
 
-  /* ═══ QUOTE ═══ */
-  .q {
-    padding: 40px 36px; text-align: center;
+  /* ── QUOTE BOX ── */
+  .quote-box {
+    margin: 0 30px;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden; animation: borderGlow 5s ease infinite;
   }
-  .q-mark {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 50px; line-height: 1; color: rgba(139,0,0,0.15);
-    margin-bottom: -8px;
+  .quote-box .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+  .quote-box .cn::before, .quote-box .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
+  .quote-box .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .quote-box .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .quote-box .cn1 { top: -1px; left: -1px; }
+  .quote-box .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .quote-box .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .quote-box .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
+  .quote-inner {
+    padding: 48px 36px; text-align: center; position: relative; z-index: 1;
   }
-  .q-text {
+  .quote-inner::before {
+    content: '';
+    position: absolute; top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px; height: 250px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    pointer-events: none; animation: breathe 5s ease infinite;
+  }
+  .quote-label {
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+    letter-spacing: 8px; text-transform: uppercase;
+    color: #d4af6a; margin-bottom: 28px; position: relative;
+  }
+  .quote-text {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 23px; font-weight: 300; font-style: italic;
     line-height: 1.75; color: rgba(255,255,255,0.4);
-    max-width: 440px; margin: 0 auto;
+    max-width: 440px; margin: 0 auto; position: relative;
   }
-  .q-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
-  .q-sig {
-    margin-top: 20px; font-family: 'Inter', sans-serif;
+  .quote-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
+  .quote-sig {
+    margin-top: 24px; font-family: 'Inter', sans-serif;
     font-size: 9px; font-weight: 300; letter-spacing: 5px;
-    text-transform: uppercase; color: rgba(139,0,0,0.4);
+    text-transform: uppercase; color: rgba(197,160,89,0.4);
   }
 
-  /* ═══ FOOTER ═══ */
-  .foot {
-    border-top: 1px solid rgba(139,0,0,0.05);
-    padding: 32px 40px; text-align: center; margin-top: 30px;
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid rgba(197,160,89,0.06);
+    padding: 40px 40px; text-align: center; position: relative;
   }
-  .foot-b {
+  .footer::before {
+    content: '';
+    position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+  .footer-b {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 14px; font-weight: 600; letter-spacing: 8px;
-    color: rgba(255,255,255,0.07); margin-bottom: 6px;
+    font-size: 16px; font-weight: 600; letter-spacing: 8px;
+    color: rgba(255,255,255,0.12); margin-bottom: 10px;
   }
-  .foot a { font-size: 10px; color: rgba(255,255,255,0.05); text-decoration: none; letter-spacing: 3px; }
+  .footer a {
+    font-size: 10px; color: rgba(255,255,255,0.1); text-decoration: none;
+    letter-spacing: 3px; transition: color 0.4s ease;
+  }
+  .footer a:hover { color: #c5a059; }
 
-  /* ═══ MOBILE ═══ */
+  /* ── MOBILE ── */
   @media (max-width: 520px) {
     .hero-t { font-size: 38px; }
     .hero-c { padding: 0 22px 32px; }
-    .price-block { margin: 28px 14px 0; padding: 32px 18px 28px; }
-    .pb-new { font-size: 52px; }
-    .pb-old { font-size: 20px; }
-    .cta { padding: 20px 14px 0; }
-    .cta a { font-size: 11px; letter-spacing: 4px; }
     .txt { padding: 0 20px; }
-    .txt p { font-size: 17px; }
-    .stack { margin: 0 14px; }
-    .stack-row { padding: 12px 16px; }
-    .spots-n { font-size: 70px; }
-    .q { padding: 32px 20px; }
-    .q-text { font-size: 19px; }
-    .dv { padding: 32px 0; }
-    .foot { padding: 24px 20px; }
+    .txt p { font-size: 17px; line-height: 1.8; }
+    .txt-head { font-size: 22px; letter-spacing: 2px; }
+    .features { padding: 0 14px; }
+    .feat { padding: 22px 16px; gap: 16px; }
+    .feat-ico { width: 34px; height: 34px; }
+    .feat-body h4 { font-size: 10px; letter-spacing: 2px; }
+    .feat-body p { font-size: 14px; }
+    .price-card { margin: 0 14px; }
+    .price-inner { padding: 36px 20px 32px; }
+    .price-num { font-size: 56px; }
+    .price-old { font-size: 20px; }
+    .cta-wrap { padding: 24px 14px 0; }
+    .cta-btn { font-size: 11px; letter-spacing: 4px; }
+    .spots-n { font-size: 76px; }
+    .quote-box { margin: 0 14px; }
+    .quote-inner { padding: 32px 20px; }
+    .quote-text { font-size: 19px; }
+    .sep { padding: 32px 0; }
+    .footer { padding: 30px 20px; }
   }
 </style>
 </head>
-<body bgcolor="#030303" style="background-color:#030303;">
-<div class="w">
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
 
-  <!-- ═══ HERO ═══ -->
+  <!-- ── HERO ── -->
   <div class="hero">
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
     <div class="hero-ov"></div>
     <div class="hero-c">
-      <div class="hero-badge">Only 7 Spots</div>
-      <h1 class="hero-t">I'm Taking<br><i>Your October.</i></h1>
-      <p class="hero-sub">31 days locked. Daily video tasks. No way out.</p>
+      <div class="hero-tag">Only 7 Spots</div>
+      <h1 class="hero-t">I'm Taking<br><em>Your October.</em></h1>
+      <p class="hero-sub">31 days locked. No way out.</p>
     </div>
   </div>
 
-  <!-- ═══ TICKER ═══ -->
+  <!-- ── TICKER ── -->
   <div class="ticker">
     <div class="ticker-t">
-      <span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video</b> tasks</span><span><b>&euro;111</b> this weekend</span><span>no <b>release</b></span><span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video</b> tasks</span><span><b>&euro;111</b> this weekend</span><span>no <b>release</b></span>
+      <span><b>7</b> spots</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>daily <b>video</b> tasks</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span><span>no <b>release</b></span><span class="ticker-sep">&diams;</span><span><b>7</b> spots</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>daily <b>video</b> tasks</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span><span>no <b>release</b></span><span class="ticker-sep">&diams;</span>
     </div>
   </div>
 
-  <!-- ═══ PRICE BLOCK ═══ -->
-  <div class="price-block">
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── INTRO ── -->
+  <div class="txt">
+    <span class="txt-head">Locktober.</span>
+    <span class="txt-subhead">and i built an entire app for it.</span>
+    <p>
+      I'm not some girl who asks you to send a selfie and calls it "keyholding."<br><br>
+      I built a <strong>real keyholder application.</strong> A platform where I control your lock,
+      assign daily video tasks, review every submission personally,
+      and track your obedience across 31 days.<br><br>
+      This October, I'm taking <strong>7 men</strong> through the entire month.
+      Locked from day one. No breaks. No mercy. No early release.<br><br>
+      Here is exactly how it works.
+    </p>
+  </div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── KEYHOLDER FEATURES ── -->
+  <div class="features">
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Live Lock Timer</h4>
+        <p>A real countdown running inside the app. You see it every time you log in. Days, hours, minutes. Ticking. No way to skip it, no way to pause it. I set the duration. You watch it run.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Daily Video Tasks</h4>
+        <p>Every single morning, a new task appears in your dashboard. I tell you what to film. You record it and submit it through the app. Kneeling, confessions, proof of obedience. 31 days of it.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Personal Review by Me</h4>
+        <p>I watch every submission. Not an algorithm. Not a chatbot. I personally review your task, approve it or reject it, and decide your fate for the next day. You are accountable to a real woman.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Your Personal Dashboard</h4>
+        <p>Streaks, completion rate, points, task history. Everything tracked in one place. You see exactly where you stand and how far you have left. I see exactly how obedient you have been.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><path d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.75-2.95L13.75 4.1a2 2 0 00-3.5 0L3.32 16.05A2 2 0 005.07 19z"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Penalty System</h4>
+        <p>Miss a task? I add penalty days to your lock. Submit something lazy? Rejected. Do it again. Skip a day entirely? I decide if you even deserve to continue. There are consequences for everything.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 3a4 4 0 00-4 4v4h8V7a4 4 0 00-4-4z"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>I Control Your Lock</h4>
+        <p>This is not a self-managed timer you can reset whenever it gets hard. I hold the key inside the app. I add days. I remove days. Your release date is mine to decide. Not yours.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>Daily Chastity Check-in</h4>
+        <p>Every morning, before anything else, you prove you are still locked. Photo proof submitted through the app. No check-in means no task. No task means penalty. Simple.</p>
+      </div>
+    </div>
+
+    <div class="feat">
+      <div class="feat-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="feat-body">
+        <h4>No Other Domme Has This</h4>
+        <p>This is not a Lovense link. Not a shared Google sheet. Not DMs on Instagram. This is custom-built keyholder software with a real dashboard, real tracking, and real control. I built it. Nobody else has it.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── CTA 1 ── -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/keyholder" class="cta-btn" target="_blank">Lock Up for October</a>
+  </div>
+  <div class="cta-sub">7 spots. 31 days. Starts October 1st.</div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── PRICE ── -->
+  <div class="price-card">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
-    <div class="pb-weekend">This Weekend Only</div>
-    <div class="pb-row">
-      <span class="pb-cur">&euro;</span>
-      <span class="pb-new">111</span>
-      <span class="pb-old">&euro;199</span>
-    </div>
-    <div class="pb-for">31 days of personal control. Daily video tasks. Reviewed by me.</div>
-    <div class="pb-save">Save &euro;88</div>
-    <div class="pb-deadline">Goes back to &euro;199 Monday morning</div>
-  </div>
-
-  <!-- ═══ CTA 1 ═══ -->
-  <div class="cta">
-    <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
-  </div>
-  <div class="cta-sub">3 of 7 spots already claimed</div>
-
-  <!-- ═══ DIVIDER ═══ -->
-  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
-
-  <!-- ═══ PITCH ═══ -->
-  <div class="txt">
-    <h2>Here's What Happens</h2>
-    <p>
-      October 1st, you lock up.<br>
-      Every morning, I send you a <strong>video task</strong> through my app.
-      I tell you what to film. You do it. You submit it. <strong>I watch it personally.</strong><br><br>
-      Miss a task? I add penalty days. Skip a day? <em>I end your program.</em>
-      Beg for release? I read it and laugh.<br><br>
-      This is <strong>31 days of real accountability</strong> with a real woman
-      watching every single thing you do. Not a chatbot. Not a timer on your phone.
-      <strong>Me.</strong>
-    </p>
-  </div>
-
-  <!-- ═══ DIVIDER ═══ -->
-  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
-
-  <!-- ═══ VALUE STACK ═══ -->
-  <div class="stack">
-    <div class="stack-head">What You're Getting</div>
-    <div class="stack-row">
-      <span class="s-what">31 daily video tasks, personally assigned</span>
-      <span class="s-val">&euro;93</span>
-    </div>
-    <div class="stack-row">
-      <span class="s-what">31 morning chastity check-ins, reviewed by me</span>
-      <span class="s-val">&euro;62</span>
-    </div>
-    <div class="stack-row">
-      <span class="s-what">Full keyholder app access (lock timer, dashboard)</span>
-      <span class="s-val">&euro;49</span>
-    </div>
-    <div class="stack-row">
-      <span class="s-what">Personal task review + penalty system</span>
-      <span class="s-val">&euro;75</span>
-    </div>
-    <div class="stack-row">
-      <span class="s-what">Escalating 4-week program (custom built)</span>
-      <span class="s-val">&euro;60</span>
-    </div>
-    <div class="stack-total">
-      <span class="s-what">Total Value</span>
-      <span class="s-val">&euro;339</span>
-    </div>
-    <div class="stack-you-pay">
-      <span class="s-what">You Pay</span>
-      <span class="s-val">&euro;111</span>
+    <div class="price-inner">
+      <div class="price-tag">This Weekend Only</div>
+      <div class="price-row">
+        <span class="price-cur">&euro;</span>
+        <span class="price-num">111</span>
+        <span class="price-old">&euro;199</span>
+      </div>
+      <div class="price-for">31 days of real control. Daily tasks. Personal review. Full app access.</div>
+      <div class="price-save">Save &euro;88</div>
+      <div class="price-note">Price goes back to &euro;199 Monday morning</div>
     </div>
   </div>
 
-  <!-- ═══ CTA 2 ═══ -->
-  <div class="cta" style="padding-top: 24px;">
-    <a href="https://throne.qkarin.com/keyholder" target="_blank">Give Me Your October</a>
+  <!-- ── CTA 2 ── -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/keyholder" class="cta-btn" target="_blank">Claim Your Spot</a>
   </div>
-  <div class="cta-sub">&euro;111 this weekend. &euro;199 after Monday. No exceptions.</div>
+  <div class="cta-sub">&euro;111 this weekend only. &euro;199 after Monday.</div>
 
-  <!-- ═══ DIVIDER ═══ -->
-  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ═══ WHY NOW ═══ -->
-  <div class="txt">
-    <h2>Why This Weekend</h2>
-    <p>
-      <strong>Because Monday it's &euro;199.</strong> That's not a marketing trick.
-      I'm offering the early price to fill spots before October starts.
-      Once I have my 7, this closes.<br><br>
-      3 spots are already taken.
-      That leaves <strong>4 spots at &euro;111.</strong><br><br>
-      When those 4 fill, the next person pays full price.
-      <em>If there's even a spot left.</em>
-    </p>
-  </div>
-
-  <!-- ═══ SPOTS ═══ -->
+  <!-- ── SPOTS ── -->
   <div class="spots">
-    <div class="spots-n">4</div>
-    <div class="spots-l">Spots at &euro;111</div>
-    <div class="spots-p">3 already claimed. Once these fill, early pricing is gone forever.</div>
+    <div class="spots-n">7</div>
+    <div class="spots-l">Spots Available</div>
+    <div class="spots-p">Once I have my 7, enrollment closes. No waitlist. No exceptions.</div>
   </div>
 
-  <!-- ═══ CTA 3 ═══ -->
-  <div class="cta" style="padding-top: 28px;">
-    <a href="https://throne.qkarin.com/keyholder" target="_blank">Claim Your Spot &mdash; &euro;111</a>
-  </div>
-  <div class="cta-sub">Starts October 1st. Price rises Monday.</div>
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ═══ DIVIDER ═══ -->
-  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
-
-  <!-- ═══ QUEEN QUOTE ═══ -->
-  <div class="q">
-    <div class="q-mark">&ldquo;</div>
-    <div class="q-text">
-      You'll screenshot this. Think about it. Tell yourself
-      you'll <strong>decide later.</strong><br><br>
-      Later, the spots are gone. The price is higher.
-      And you'll spend October <strong>exactly how you spent September.</strong>
-      Scrolling. Unlocked. Alone. Unchanged.<br><br>
-      Or you take one of these 4 remaining spots right now,
-      for &euro;111, and let me turn October into the month
-      you <strong>actually remember.</strong>
+  <!-- ── QUEEN QUOTE ── -->
+  <div class="quote-box">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="quote-inner">
+      <div class="quote-label">Listen</div>
+      <div class="quote-text">
+        You have thought about Locktober every single year.
+        And every single year, you did <strong>nothing.</strong><br><br>
+        You scrolled past it. You told yourself you would try it
+        <strong>next time.</strong> You spent October the same way
+        you spent September. Unlocked. Alone. Unchanged.<br><br>
+        This year, I am offering you something different.
+        A real app. A real keyholder. A real 31-day program
+        with daily tasks, personal review, and zero way out.<br><br>
+        <strong>7 spots. This price disappears Monday.</strong>
+      </div>
+      <div class="quote-sig">Karin</div>
     </div>
-    <div class="q-sig">Karin</div>
   </div>
 
-  <!-- ═══ FINAL CTA ═══ -->
-  <div class="cta">
-    <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
+  <!-- ── FINAL CTA ── -->
+  <div class="cta-wrap" style="padding-top: 40px;">
+    <a href="https://throne.qkarin.com/keyholder" class="cta-btn" target="_blank">Give Me Your October</a>
   </div>
-  <div class="cta-sub">7 spots. 4 left at early price. Oct 1st.</div>
+  <div class="cta-sub">7 spots. &euro;111 this weekend. Starts Oct 1st.</div>
 
-  <!-- ═══ FOOTER ═══ -->
-  <div class="foot">
-    <div class="foot-b">QUEEN KARIN</div>
+  <!-- ── SEPARATOR ── -->
+  <div class="sep" style="padding: 40px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-b">QUEEN KARIN</div>
     <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
   </div>
 
