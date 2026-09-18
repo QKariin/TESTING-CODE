@@ -659,11 +659,12 @@ export default function PaymentModal({
                         </a>
                     )}
                     {throneUrl && (
-                        <button onClick={() => setCardStep('throne')}
-                            style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12 }}>
+                        <a href={throneUrl} target="_blank" rel="noopener noreferrer"
+                            onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: label }) }); } catch {} }}
+                            style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 19h20v2H2v-2zm2-3l2-8 4 4 2-6 2 6 4-4 2 8H4z" fill="rgba(255,255,255,0.35)"/></svg>
                             THRONE
-                        </button>
+                        </a>
                     )}
                     {paypalMeUrl && (
                         <a href={paypalMeUrl} target="_blank" rel="noopener noreferrer"
