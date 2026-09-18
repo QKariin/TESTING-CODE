@@ -55,11 +55,14 @@ export default function LoctoberClient() {
     }, []);
 
     useEffect(() => {
+        const els = () => document.querySelectorAll('.loc-r');
+        // Fallback: if observer never fires, force all visible after 2s
+        const fallback = setTimeout(() => els().forEach((el) => el.classList.add('loc-vis')), 2000);
         const obs = new IntersectionObserver((entries) => {
             entries.forEach((e) => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('loc-vis'); obs.unobserve(e.target); } });
-        }, { threshold: 0.06 });
-        const t = setTimeout(() => document.querySelectorAll('.loc-r').forEach((el) => obs.observe(el)), 150);
-        return () => { clearTimeout(t); obs.disconnect(); };
+        }, { threshold: 0.01, rootMargin: '100px' });
+        const t = setTimeout(() => els().forEach((el) => obs.observe(el)), 100);
+        return () => { clearTimeout(t); clearTimeout(fallback); obs.disconnect(); };
     }, []);
 
     const handleCheckout = () => {
@@ -90,9 +93,9 @@ export default function LoctoberClient() {
             </div>
         </div>
 
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
         <style>{`
             html, body { overflow-x:hidden; background:#020202!important; }
-            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap');
             @keyframes locFadeUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
             @keyframes locFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes locShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
@@ -104,8 +107,9 @@ export default function LoctoberClient() {
             @keyframes locTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
             @keyframes locCtaShine{0%{left:-100%}50%,100%{left:100%}}
             @keyframes locGlowPulse{0%,100%{box-shadow:0 0 20px rgba(197,160,89,0.05)}50%{box-shadow:0 0 40px rgba(197,160,89,0.15)}}
-            .loc-r{opacity:0;transform:translateY(30px);transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),transform 0.8s cubic-bezier(0.16,1,0.3,1)}
-            .loc-vis{opacity:1;transform:translateY(0)}
+            @keyframes locRevealFallback{to{opacity:1;transform:translateY(0)}}
+            .loc-r{opacity:0;transform:translateY(30px);transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),transform 0.8s cubic-bezier(0.16,1,0.3,1);animation:locRevealFallback 0.8s ease-out 1.5s forwards}
+            .loc-vis{opacity:1!important;transform:translateY(0)!important;animation:none!important}
             .loc-divider{width:100%;display:flex;align-items:center;gap:20px;padding:100px 0}
             .loc-divider::before,.loc-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.2),rgba(197,160,89,0.05))}
             .loc-divider::after{background:linear-gradient(90deg,rgba(197,160,89,0.05),rgba(197,160,89,0.2),transparent)}
