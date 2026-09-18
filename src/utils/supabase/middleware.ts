@@ -27,7 +27,7 @@ export async function updateSession(request: NextRequest) {
 
     if (pathname.startsWith('/auth') || pathname.startsWith('/api/paywall/') || pathname.startsWith('/api/webhooks/') || pathname === '/api/debug-chat' || pathname === '/api/chat/history' || pathname === '/api/push') return supabaseResponse
 
-    if (!user && !pathname.startsWith('/login')) {
+    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/loctober')) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
