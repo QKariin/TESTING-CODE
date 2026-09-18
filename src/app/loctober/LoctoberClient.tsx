@@ -55,14 +55,11 @@ export default function LoctoberClient() {
     }, []);
 
     useEffect(() => {
-        const els = () => document.querySelectorAll('.loc-r');
-        // Fallback: if observer never fires, force all visible after 2s
-        const fallback = setTimeout(() => els().forEach((el) => el.classList.add('loc-vis')), 2000);
         const obs = new IntersectionObserver((entries) => {
-            entries.forEach((e) => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('loc-vis'); obs.unobserve(e.target); } });
-        }, { threshold: 0.01, rootMargin: '100px' });
-        const t = setTimeout(() => els().forEach((el) => obs.observe(el)), 100);
-        return () => { clearTimeout(t); clearTimeout(fallback); obs.disconnect(); };
+            entries.forEach((e) => { if (e.isIntersecting) { (e.target as HTMLElement).style.animation = 'locFadeUp 0.7s ease-out forwards'; obs.unobserve(e.target); } });
+        }, { threshold: 0.01, rootMargin: '50px' });
+        document.querySelectorAll('.loc-anim').forEach((el) => obs.observe(el));
+        return () => obs.disconnect();
     }, []);
 
     const handleCheckout = () => {
@@ -96,7 +93,7 @@ export default function LoctoberClient() {
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
         <style>{`
             html, body { overflow-x:hidden; background:#020202!important; }
-            @keyframes locFadeUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+            @keyframes locFadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
             @keyframes locFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes locShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
             @keyframes locFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -104,12 +101,8 @@ export default function LoctoberClient() {
             @keyframes locPulse{0%,100%{opacity:1}50%{opacity:0.4}}
             @keyframes locRing{0%{transform:scale(0.95);opacity:0.3}50%{transform:scale(1.06);opacity:0.7}100%{transform:scale(0.95);opacity:0.3}}
             @keyframes locBorder{0%,100%{border-color:rgba(197,160,89,0.08);box-shadow:0 0 30px rgba(197,160,89,0.03)}50%{border-color:rgba(197,160,89,0.25);box-shadow:0 0 50px rgba(197,160,89,0.08)}}
-            @keyframes locTicker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
             @keyframes locCtaShine{0%{left:-100%}50%,100%{left:100%}}
             @keyframes locGlowPulse{0%,100%{box-shadow:0 0 20px rgba(197,160,89,0.05)}50%{box-shadow:0 0 40px rgba(197,160,89,0.15)}}
-            @keyframes locRevealFallback{to{opacity:1;transform:translateY(0)}}
-            .loc-r{opacity:0;transform:translateY(30px);transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),transform 0.8s cubic-bezier(0.16,1,0.3,1);animation:locRevealFallback 0.8s ease-out 1.5s forwards}
-            .loc-vis{opacity:1!important;transform:translateY(0)!important;animation:none!important}
             .loc-divider{width:100%;display:flex;align-items:center;gap:20px;padding:100px 0}
             .loc-divider::before,.loc-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.2),rgba(197,160,89,0.05))}
             .loc-divider::after{background:linear-gradient(90deg,rgba(197,160,89,0.05),rgba(197,160,89,0.2),transparent)}
@@ -121,8 +114,6 @@ export default function LoctoberClient() {
             .loc-cta-btn:active{transform:scale(0.98)}
             .loc-need-item{transition:background 0.3s ease}
             .loc-need-item:hover{background:rgba(197,160,89,0.02)}
-            .loc-grow{opacity:0;transform:scale(0.92);transition:opacity 0.6s ease-out,transform 0.6s ease-out}
-            .loc-vis .loc-grow,.loc-grow.loc-vis{opacity:1;transform:scale(1)}
             *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
             @media(min-width:769px){
                 .loc-container{max-width:1000px!important;padding-left:60px!important;padding-right:60px!important}
@@ -167,7 +158,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>WHAT YOU NEED</span></div>
 
             {/* ════ PREREQUISITES ════ */}
-            <div className="loc-section loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 32px', textAlign: 'center' }}>Before you lock up.</h2>
                 <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 0 }}>
                     {[
@@ -176,7 +167,7 @@ export default function LoctoberClient() {
                         { num: '03', title: 'A phone with a camera', text: 'Daily check-in photos. Video task submissions. This is how I monitor you. No photos, no trust. No trust, no program.' },
                         { num: '04', title: 'The willingness to obey', text: 'The only item on this list that cannot be purchased. You either want to be held accountable, or you do not. If you are not ready to follow rules, do not apply.' },
                     ].map((item, i) => (
-                        <div key={i} className="loc-need-item loc-r" style={{ display: 'flex', gap: 20, padding: '24px 0', borderBottom: i < 3 ? '1px solid rgba(197,160,89,0.06)' : 'none', transitionDelay: `${i*0.1}s` }}>
+                        <div key={i} className="loc-need-item" style={{ display: 'flex', gap: 20, padding: '24px 0', borderBottom: i < 3 ? '1px solid rgba(197,160,89,0.06)' : 'none', transitionDelay: `${i*0.1}s` }}>
                             <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 4, border: '1px solid rgba(197,160,89,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', background: 'rgba(197,160,89,0.04)' }}>{item.num}</div>
                             <div>
                                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.05rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>{item.title}</div>
@@ -190,7 +181,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>THE APP</span></div>
 
             {/* ════ INTRO + VIDEO ════ */}
-            <div className="loc-section loc-section-alt loc-r" style={{ paddingTop: 60, paddingBottom: 60 }}>
+            <div className="loc-section loc-section-alt" style={{ paddingTop: 60, paddingBottom: 60 }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
                     <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1rem,3vw,1.6rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 20px', lineHeight: 1.3 }}>I built an entire keyholder application.</h2>
                     <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7, maxWidth: 460, margin: '0 auto' }}>
@@ -205,7 +196,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>HOW IT WORKS</span></div>
 
             {/* ════ 3-STEP TIMELINE ════ */}
-            <div className="loc-section loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 40px', textAlign: 'center' }}>Three steps. No way back.</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0, maxWidth: 480, margin: '0 auto', width: '100%' }}>
                     {[
@@ -213,7 +204,7 @@ export default function LoctoberClient() {
                         { num: '02', title: 'Serve daily for 31 days', text: 'Every morning: chastity check-in photo. Then your video task appears. You film it, submit it, I review it. Miss one and I add penalty days to your sentence.' },
                         { num: '03', title: 'Survive or suffer', text: 'Complete all 31 days and you have earned something real. Fail, and the consequences are mine to decide. There is no quitting halfway. There is no begging for release.' },
                     ].map((s, i) => (
-                        <div key={i} className="loc-r" style={{ display: 'flex', gap: 24, position: 'relative', transitionDelay: `${i*0.12}s` }}>
+                        <div key={i} className="loc-anim" style={{ display: 'flex', gap: 24, position: 'relative', transitionDelay: `${i*0.12}s` }}>
                             {i < 2 && <div style={{ position: 'absolute', left: 19, top: 44, bottom: -4, width: 1, background: 'linear-gradient(180deg,rgba(197,160,89,0.3),rgba(197,160,89,0.05))' }} />}
                             <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Cinzel,serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.5)', background: 'rgba(197,160,89,0.06)' }}>{s.num}</div>
                             <div style={{ paddingBottom: 40 }}>
@@ -228,7 +219,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>EVERY FEATURE</span></div>
 
             {/* ════ 8 FEATURES ════ */}
-            <div className="loc-section loc-section-alt loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section loc-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 12px', textAlign: 'center' }}>What the app does.</h2>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 40 }}>every function of the keyholder platform</div>
                 <div style={{ maxWidth: 520, margin: '0 auto' }}>
@@ -242,7 +233,7 @@ export default function LoctoberClient() {
                         { icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>, title: 'Daily Chastity Check-in', text: 'Every morning, you prove you are still locked. Photo proof through the app. No check-in means no task. No task means penalty.' },
                         { icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, title: 'No Other Domme Has This', text: 'Not a Lovense link. Not DMs on Instagram. Custom-built keyholder software with real tracking and real control. I built it. Nobody else has it.' },
                     ].map((f, i) => (
-                        <div key={i} className="loc-r" style={{ display: 'flex', gap: 20, padding: '24px 0', borderBottom: i < 7 ? '1px solid rgba(197,160,89,0.06)' : 'none', transitionDelay: `${i*0.05}s` }}>
+                        <div key={i} className="loc-anim" style={{ display: 'flex', gap: 20, padding: '24px 0', borderBottom: i < 7 ? '1px solid rgba(197,160,89,0.06)' : 'none', transitionDelay: `${i*0.05}s` }}>
                             <div style={{ flexShrink: 0, width: 44, height: 44, borderRadius: 4, border: '1px solid rgba(197,160,89,0.15)', background: 'rgba(197,160,89,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <div style={{ width: 20, height: 20 }}>{f.icon}</div>
                             </div>
@@ -256,7 +247,7 @@ export default function LoctoberClient() {
             </div>
 
             {/* ════ CTA ════ */}
-            <div className="loc-r" style={{ textAlign: 'center', padding: '50px 0' }}>
+            <div className="loc-anim" style={{ textAlign: 'center', padding: '50px 0' }}>
                 <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '20px 60px', background: 'linear-gradient(135deg,#c5a059,#a8884a)', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(197,160,89,0.2)' }}>
                     <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                     Claim Your Spot &euro;{PRICE}
@@ -266,7 +257,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>THE DIFFERENCE</span></div>
 
             {/* ════ BEFORE vs AFTER ════ */}
-            <div className="loc-section loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <div className="loc-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                     <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4 }}>
                         <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
@@ -286,7 +277,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>THE 4 WEEKS</span></div>
 
             {/* ════ WEEKLY BREAKDOWN ════ */}
-            <div className="loc-section loc-section-alt loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section loc-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 12px', textAlign: 'center' }}>31 days. 4 phases.</h2>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 40 }}>each week escalates. there is no plateau.</div>
                 <div className="loc-week-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, maxWidth: 560, margin: '0 auto' }}>
@@ -296,7 +287,7 @@ export default function LoctoberClient() {
                         { week: 'WEEK 3', title: 'Endurance', desc: 'The cravings hit. The cage is no longer new. This is where most men fail. My penalty system makes sure you do not.', color: 'rgba(197,160,89,0.55)' },
                         { week: 'WEEK 4', title: 'Total Surrender', desc: 'By now, you are not locked because of the cage. You are locked because I told you to be. The final week breaks what is left of resistance.', color: 'rgba(197,160,89,0.7)' },
                     ].map((w, i) => (
-                        <div key={i} className="loc-r" style={{ padding: 'clamp(20px,3vw,28px)', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4, position: 'relative', overflow: 'hidden', transitionDelay: `${i*0.1}s` }}>
+                        <div key={i} className="loc-anim" style={{ padding: 'clamp(20px,3vw,28px)', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(197,160,89,0.08)', borderRadius: 4, position: 'relative', overflow: 'hidden', transitionDelay: `${i*0.1}s` }}>
                             <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: w.color }} />
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.45rem', color: w.color, letterSpacing: 4, marginBottom: 8 }}>{w.week}</div>
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 8 }}>{w.title}</div>
@@ -309,7 +300,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>THE PSYCHOLOGY</span></div>
 
             {/* ════ PSYCHOLOGY ════ */}
-            <div className="loc-section loc-r" style={{ paddingTop: 40, paddingBottom: 60 }}>
+            <div className="loc-section" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 32px', textAlign: 'center', lineHeight: 1.3 }}>Why men lock themselves<br/>for a woman they barely know.</h2>
                 <div style={{ maxWidth: 520, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32 }}>
                     {[
@@ -317,7 +308,7 @@ export default function LoctoberClient() {
                         { title: 'The body remembers what the mind forgets.', text: 'A locked device is not a toy. It is a constant physical reminder that someone else holds power over your most private instinct. Every hour you wear it, anticipation sharpens. Dopamine builds with no release. You stop thinking about what you want and start thinking about what She wants.' },
                         { title: 'Accountability changes behavior.', text: 'Self-locking fails because you hold the exit. A keyholder removes the exit. Daily check-ins, video submissions, obedience tasks. Someone is watching. Someone who does not accept excuses. That structure does not just keep you locked. It makes you better.' },
                     ].map((p, i) => (
-                        <div key={i} className="loc-r" style={{ transitionDelay: `${i*0.1}s` }}>
+                        <div key={i} className="loc-anim" style={{ transitionDelay: `${i*0.1}s` }}>
                             <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 10 }}>{p.title}</div>
                             <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.5)', lineHeight: 1.8 }}>{p.text}</div>
                         </div>
@@ -328,7 +319,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>PRICING</span></div>
 
             {/* ════ PRICE + COUNTDOWN ════ */}
-            <div className="loc-section loc-section-alt loc-r" style={{ paddingTop: 70, paddingBottom: 70 }}>
+            <div className="loc-section loc-section-alt" style={{ paddingTop: 70, paddingBottom: 70 }}>
                 <div style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
                     <div style={{ display: 'inline-block', fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 5, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '5px 16px', marginBottom: 28, textTransform: 'uppercase' }}>This Weekend Only</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
@@ -353,7 +344,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>7 SPOTS</span></div>
 
             {/* ════ SPOTS ════ */}
-            <div className="loc-r" style={{ textAlign: 'center', paddingBottom: 20 }}>
+            <div className="loc-anim" style={{ textAlign: 'center', paddingBottom: 20 }}>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(5rem,18vw,8rem)', fontWeight: 700, lineHeight: 1, letterSpacing: -4, background: 'linear-gradient(180deg,rgba(212,175,106,0.6) 0%,rgba(197,160,89,0.06) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'locFloat 4s ease infinite' }}>7</div>
                 <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 600, letterSpacing: 8, color: 'rgba(197,160,89,0.4)', marginTop: 4, textTransform: 'uppercase' }}>Spots Available</div>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.2)', marginTop: 16, lineHeight: 1.7 }}>Once I have my 7, enrollment closes. No waitlist. No exceptions.</div>
@@ -362,7 +353,7 @@ export default function LoctoberClient() {
             <div className="loc-divider"><span>STILL THINKING?</span></div>
 
             {/* ════ QUEEN QUOTE ════ */}
-            <div className="loc-section loc-section-alt loc-r" style={{ paddingTop: 70, paddingBottom: 70, animation: 'locBorder 5s ease infinite' }}>
+            <div className="loc-section loc-section-alt" style={{ paddingTop: 70, paddingBottom: 70, animation: 'locBorder 5s ease infinite' }}>
                 <div style={{ textAlign: 'center', maxWidth: 500, margin: '0 auto', position: 'relative', zIndex: 1 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', fontWeight: 600, letterSpacing: 8, color: '#d4af6a', marginBottom: 28, textTransform: 'uppercase' }}>From the Queen</div>
                     <div style={{ fontFamily: 'Cormorant Garamond,Georgia,serif', fontSize: 'clamp(1.2rem,3.5vw,1.5rem)', fontStyle: 'italic', fontWeight: 300, lineHeight: 1.85, color: 'rgba(255,255,255,0.4)' }}>
@@ -376,7 +367,7 @@ export default function LoctoberClient() {
             </div>
 
             {/* ════ FINAL CTA ════ */}
-            <div className="loc-r" style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 20 }}>
+            <div className="loc-anim" style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 20 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>October 1st.</h2>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>Your lock starts. Your excuses end.</div>
                 <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 64px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: 6, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.25)' }}>
