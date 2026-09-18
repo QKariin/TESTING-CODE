@@ -645,7 +645,7 @@ export default function PaymentModal({
                         CRYPTO
                     </button>
                     {/* Patreon */}
-                    <a href={patreonUrl || "https://www.patreon.com/cw/xxxKARINxxx/membership"} target="_blank" rel="noopener noreferrer"
+                    <a href={patreonUrl || "https://www.patreon.com/QKArin/membership"} target="_blank" rel="noopener noreferrer"
                         style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,66,77,0.06)', border: '1px solid rgba(255,66,77,0.25)', borderRadius: 10, color: 'rgba(255,66,77,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="14" cy="9" r="5.5" stroke="rgba(255,66,77,0.8)" strokeWidth="1.5"/><rect x="3" y="3" width="3" height="18" rx="1" fill="rgba(255,66,77,0.8)"/></svg>
                         PATREON

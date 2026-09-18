@@ -111,7 +111,7 @@ export default function LoctoberClient() {
             .loc-section{position:relative;margin-left:calc(-1*clamp(20px,5vw,40px));margin-right:calc(-1*clamp(20px,5vw,40px));padding-left:clamp(20px,5vw,40px);padding-right:clamp(20px,5vw,40px);border-top:1px solid rgba(197,160,89,0.04);border-bottom:1px solid rgba(197,160,89,0.04);background:rgba(0,0,0,0.5)}
             .loc-section-alt{background:rgba(0,0,0,0.85);border-top:1px solid rgba(197,160,89,0.08);border-bottom:1px solid rgba(197,160,89,0.08)}
             .loc-cta-btn{position:relative;overflow:hidden;transition:all 0.4s cubic-bezier(0.16,1,0.3,1)}
-            .loc-cta-btn:hover{transform:scale(1.02);box-shadow:0 8px 60px rgba(197,160,89,0.25)!important}
+            .loc-cta-btn:hover{background:rgba(197,160,89,0.08)!important;border-color:rgba(197,160,89,0.7)!important;box-shadow:0 0 30px rgba(197,160,89,0.1)!important}
             .loc-cta-btn:active{transform:scale(0.98)}
             .loc-need-item{transition:background 0.3s ease}
             .loc-need-item:hover{background:rgba(197,160,89,0.02)}
@@ -157,12 +157,11 @@ export default function LoctoberClient() {
                     <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1rem', fontWeight: 300, color: 'rgba(255,255,255,0.15)', textDecoration: 'line-through', textDecorationColor: 'rgba(255,255,255,0.2)' }}>&euro;{REGULAR}</span>
                     <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.6rem', fontWeight: 600, color: '#8b0000', marginLeft: 10, letterSpacing: 1 }}>SAVE &euro;{REGULAR - PRICE}</span>
                 </div>
-                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.48rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 32 }}>31 days &middot; daily tasks &middot; personal review &middot; full app</div>
+                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.48rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', marginBottom: 32, lineHeight: 2.2 }}>31 videos &middot; 93 tasks &middot; rewards &middot; personal review &middot; full app access</div>
 
-                {/* ── CTA — big, gold, action ── */}
+                {/* ── CTA — elegant, outlined ── */}
                 <div style={{ animation: mounted ? 'locFadeUp 0.7s ease-out 0.6s both' : 'none', marginBottom: 24 }}>
-                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 72px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.7rem', fontWeight: 700, letterSpacing: 7, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.3), 0 0 80px rgba(197,160,89,0.1)' }}>
-                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '18px 64px', background: 'transparent', color: '#d4af6a', border: '1px solid rgba(197,160,89,0.4)', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', fontWeight: 600, letterSpacing: 7, textTransform: 'uppercase', transition: 'all 0.4s ease' }}>
                         LOCK UP NOW
                     </button>
                 </div>
@@ -242,12 +241,22 @@ export default function LoctoberClient() {
                 </div>
             </div>
 
-            <div className="loc-divider"><span>EVERY FEATURE</span></div>
+            {/* ── Stats bar ── */}
+            <div className="loc-anim" style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(24px,6vw,48px)', padding: '50px 0', flexWrap: 'wrap' }}>
+                {[{ num: '31', label: 'Videos' }, { num: '93', label: 'Tasks' }, { num: '1', label: 'Lock' }, { num: '∞', label: 'Rewards' }].map((s) => (
+                    <div key={s.label} style={{ textAlign: 'center' }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.8rem,5vw,2.6rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1 }}>{s.num}</div>
+                        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.4rem', fontWeight: 500, letterSpacing: 4, color: 'rgba(197,160,89,0.35)', marginTop: 6, textTransform: 'uppercase' }}>{s.label}</div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="loc-divider"><span>WHAT YOU GET</span></div>
 
             {/* ════ 8 FEATURES ════ */}
             <div className="loc-section loc-section-alt" style={{ paddingTop: 40, paddingBottom: 60 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 12px', textAlign: 'center' }}>What the app does.</h2>
-                <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 40 }}>every function of the keyholder platform</div>
+                <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.3)', textAlign: 'center', marginBottom: 40 }}>lock, tasks, rewards, mechanisms — all inside one app</div>
                 <div style={{ maxWidth: 520, margin: '0 auto' }}>
                     {[
                         { icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: 'Live Lock Timer', text: 'A real countdown running inside the app. Days, hours, minutes. You see it every time you log in. I set the duration. You watch it tick.' },
@@ -274,8 +283,7 @@ export default function LoctoberClient() {
 
             {/* ════ CTA ════ */}
             <div className="loc-anim" style={{ textAlign: 'center', padding: '50px 0' }}>
-                <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '20px 60px', background: 'linear-gradient(135deg,#c5a059,#a8884a)', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(197,160,89,0.2)' }}>
-                    <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '18px 56px', background: 'transparent', color: '#d4af6a', border: '1px solid rgba(197,160,89,0.35)', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.55rem', fontWeight: 600, letterSpacing: 6, textTransform: 'uppercase' }}>
                     Claim Your Spot &euro;{PRICE}
                 </button>
             </div>
@@ -342,8 +350,7 @@ export default function LoctoberClient() {
             <div className="loc-anim" style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 20 }}>
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>October 1st.</h2>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>Your lock starts. Your excuses end.</div>
-                <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 64px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: 6, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.25)' }}>
-                    <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '18px 64px', background: 'transparent', color: '#d4af6a', border: '1px solid rgba(197,160,89,0.4)', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', fontWeight: 600, letterSpacing: 7, textTransform: 'uppercase' }}>
                     Lock Up for &euro;{PRICE}
                 </button>
                 <div style={{ marginTop: 14, fontFamily: 'Inter,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.25)', letterSpacing: 3, animation: 'locPulse 3s ease infinite' }}>7 spots. &euro;{PRICE} this weekend. Starts Oct 1st.</div>
@@ -356,7 +363,7 @@ export default function LoctoberClient() {
                     <a href="https://discord.gg/yaZdtReeyX" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, opacity: 0.5 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></a>
                     <a href="https://x.com/QKarin_com" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, opacity: 0.5 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
                     <a href="https://www.loyalfans.com/qkarin" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, opacity: 0.5 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 14.93V17a1 1 0 01-2 0v-.07A7.06 7.06 0 015 10a1 1 0 012 0 5 5 0 005 5 5 5 0 005-5 1 1 0 012 0 7.06 7.06 0 01-6 6.93zM12 9a1 1 0 111-1 1 1 0 01-1 1z"/></svg></a>
-                    <a href="https://www.patreon.com/QKarin/posts/locktober-169936709?source=storefront" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, opacity: 0.5 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M14.82 2.41c3.96 0 7.18 3.24 7.18 7.21 0 3.96-3.22 7.18-7.18 7.18-3.97 0-7.21-3.22-7.21-7.18 0-3.97 3.24-7.21 7.21-7.21M2 21.6h3.5V2.41H2V21.6z"/></svg></a>
+                    <a href="https://www.patreon.com/QKArin/posts/locktober-169936709?source=storefront" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 6, opacity: 0.5 }}><svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(255,255,255,0.6)"><path d="M14.82 2.41c3.96 0 7.18 3.24 7.18 7.21 0 3.96-3.22 7.18-7.18 7.18-3.97 0-7.21-3.22-7.21-7.18 0-3.97 3.24-7.21 7.21-7.21M2 21.6h3.5V2.41H2V21.6z"/></svg></a>
                 </div>
                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.08em' }}>&copy; 2023-2026 All rights reserved by Queen Karin.</div>
                 <a href="/privacy" style={{ display: 'inline-block', marginTop: 14, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', textTransform: 'uppercase', textDecoration: 'none' }}>Privacy Policy</a>

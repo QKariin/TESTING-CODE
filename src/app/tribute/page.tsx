@@ -1324,9 +1324,9 @@ export default function TributePage() {
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
                 throneUrl="https://throne.com/queenkarin"
                 patreonUrl={selectedTier.id === 'weekly'
-                    ? 'https://www.patreon.com/xxxKARINxxx/posts/week-tier-169500012'
+                    ? 'https://www.patreon.com/QKArin/posts/week-tier-169500012'
                     : selectedTier.id === 'monthly'
-                    ? 'https://www.patreon.com/xxxKARINxxx/posts/monthly-tier-169500869'
+                    ? 'https://www.patreon.com/QKArin/posts/monthly-tier-169500869'
                     : undefined}
                 loyalfansUrl={selectedTier.id === 'weekly' ? 'https://tinylf.com/DdTCSpxW3' : selectedTier.id === 'monthly' ? 'https://tinylf.com/RRnRNEye' : undefined}
                 onSuccess={() => { window.location.href = '/onboarding'; }}
