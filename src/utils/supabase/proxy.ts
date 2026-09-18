@@ -39,7 +39,7 @@ export async function updateSession(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user && pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/home') && !pathname.startsWith('/blog') && !pathname.startsWith('/privacy') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
+    if (!user && pathname !== '/' && !pathname.startsWith('/login') && !pathname.startsWith('/apply') && !pathname.startsWith('/keyholder') && !pathname.startsWith('/loctober') && !pathname.startsWith('/home') && !pathname.startsWith('/blog') && !pathname.startsWith('/privacy') && !pathname.startsWith('/test') && pathname !== '/sitemap.xml' && pathname !== '/robots.txt') {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
@@ -165,11 +165,12 @@ export async function updateSession(request: NextRequest) {
 
         const isApplyPage = pathname.startsWith('/apply');
         const isKeyholderPage = pathname.startsWith('/keyholder');
+        const isLoctoberPage = pathname.startsWith('/loctober');
         const isHomePage = pathname.startsWith('/home');
         const isBlogPage = pathname.startsWith('/blog');
         const isPrivacyPage = pathname.startsWith('/privacy');
         const isRootPage = pathname === '/';
-        if (!isRootPage && !isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isHomePage && !isBlogPage && !isPrivacyPage) {
+        if (!isRootPage && !isTributePage && !isApiPage && !isAuthPage && !isApplyPage && !isKeyholderPage && !isLoctoberPage && !isHomePage && !isBlogPage && !isPrivacyPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
