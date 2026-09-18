@@ -383,6 +383,7 @@ export default function LoctoberClient() {
                 cryptoStatusBody={{ tierId: 'loctober' }}
                 confirmMessage="PAYMENT CONFIRMED. SEE YOU OCTOBER 1ST."
                 throneUrl="https://throne.com/queenkarin/item/52b32815-98d6-47da-97ed-85ac83d16e58"
+                patreonUrl="https://www.patreon.com/QKarin/posts/locktoberfest-169936709?source=storefront"
                 onSuccess={() => { window.location.href = '/profile'; }}
                 onClose={() => setShowPayment(false)}
             />
