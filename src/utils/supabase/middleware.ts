@@ -27,7 +27,7 @@ export async function updateSession(request: NextRequest) {
 
     if (pathname.startsWith('/auth') || pathname.startsWith('/api/paywall/') || pathname.startsWith('/api/webhooks/') || pathname === '/api/debug-chat' || pathname === '/api/chat/history' || pathname === '/api/push') return supabaseResponse
 
-    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/loctober')) {
+    if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/locktober')) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
         const isTributePage = pathname.startsWith('/tribute')
         const isApiPage = pathname.startsWith('/api')
         const isAuthPage = pathname.startsWith('/auth')
-        const isLoctoberPage = pathname.startsWith('/loctober')
+        const isLoctoberPage = pathname.startsWith('/locktober')
 
         // 🛡️ ADMIN CLIENT FOR BOUNCER (Edge-Compatible)
         const adminSupabase = createServerClient(

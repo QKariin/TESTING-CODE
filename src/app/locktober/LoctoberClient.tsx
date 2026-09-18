@@ -29,7 +29,7 @@ export default function LoctoberClient() {
     useEffect(() => {
         if (userEmail && typeof window !== 'undefined') {
             const p = new URLSearchParams(window.location.search);
-            if (p.get('pay') === '1') { window.history.replaceState({}, '', '/loctober'); setShowPayment(true); }
+            if (p.get('pay') === '1') { window.history.replaceState({}, '', '/locktober'); setShowPayment(true); }
         }
     }, [userEmail]);
 
@@ -64,7 +64,7 @@ export default function LoctoberClient() {
     }, []);
 
     const handleCheckout = () => {
-        if (!userEmail) { window.location.href = `https://throne.qkarin.com/login?redirect=${encodeURIComponent('/loctober?pay=1')}`; return; }
+        if (!userEmail) { window.location.href = `https://throne.qkarin.com/login?redirect=${encodeURIComponent('/locktober?pay=1')}`; return; }
         setShowPayment(true);
     };
 
