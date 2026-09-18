@@ -36,6 +36,7 @@ export async function updateSession(request: NextRequest) {
         const isTributePage = pathname.startsWith('/tribute')
         const isApiPage = pathname.startsWith('/api')
         const isAuthPage = pathname.startsWith('/auth')
+        const isLoctoberPage = pathname.startsWith('/loctober')
 
         // 🛡️ ADMIN CLIENT FOR BOUNCER (Edge-Compatible)
         const adminSupabase = createServerClient(
@@ -138,7 +139,7 @@ export async function updateSession(request: NextRequest) {
             return supabaseResponse;
         }
 
-        if (!isTributePage && !isApiPage && !isAuthPage) {
+        if (!isTributePage && !isApiPage && !isAuthPage && !isLoctoberPage) {
             return NextResponse.redirect(new URL('/tribute', request.url))
         }
     }
