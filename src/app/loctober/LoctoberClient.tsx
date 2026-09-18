@@ -126,32 +126,51 @@ export default function LoctoberClient() {
         <div className="loc-container" style={{ position: 'relative', maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
             {/* ════ HERO ════ */}
-            <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
-                <div style={{ animation: mounted ? 'locFadeIn 1.2s ease-out both' : 'none' }}>
-                    <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 36px' }}>
-                        <div style={{ position: 'absolute', inset: -12, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'locRing 4s ease-in-out infinite' }} />
-                        <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.1)', animation: 'locRing 4s ease-in-out infinite 0.7s' }} />
-                        <div style={{ position: 'absolute', inset: -36, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.05)', animation: 'locRing 4s ease-in-out infinite 1.4s' }} />
-                        <div style={{ width: 120, height: 120, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.3)', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.1)' }}>
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.2" style={{ filter: 'drop-shadow(0 0 15px rgba(197,160,89,0.3))' }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#c5a059"/></svg>
+            <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: '60px 0 40px' }}>
+                {/* Lock icon — compact */}
+                <div style={{ animation: mounted ? 'locFadeIn 1s ease-out both' : 'none', marginBottom: 28 }}>
+                    <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
+                        <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.15)', animation: 'locRing 4s ease-in-out infinite' }} />
+                        <div style={{ width: 80, height: 80, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.25)', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#c5a059"/></svg>
                         </div>
                     </div>
                 </div>
-                <div style={{ animation: mounted ? 'locFadeUp 1s ease-out 0.4s both' : 'none' }}>
-                    <div style={{ display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 6, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '7px 24px', marginBottom: 24, textTransform: 'uppercase' }}>Only 7 Spots</div>
-                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.4rem,8vw,4rem)', color: '#fff', letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 8px', fontWeight: 700, lineHeight: 1.05 }}>LOCKTOBER</h1>
-                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(1.3rem,4vw,1.8rem)', fontStyle: 'italic', color: '#d4af6a', fontWeight: 300, marginBottom: 20, letterSpacing: 2 }}>I'm taking your October.</div>
-                    <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg,transparent,rgba(197,160,89,0.5),transparent)', margin: '0 auto 20px' }} />
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(255,255,255,0.35)', letterSpacing: 2, marginBottom: 36 }}>31 DAYS LOCKED. DAILY VIDEO TASKS. NO WAY OUT.</div>
-                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '18px 56px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(197,160,89,0.2)' }}>
-                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
-                        LOCK UP FOR &euro;{PRICE}
-                    </button>
-                    <div style={{ marginTop: 12, fontFamily: 'Inter,sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.3)', letterSpacing: 3 }}>
-                        <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.12)' }}>&euro;{REGULAR}</span>&nbsp; This weekend only
+
+                <div style={{ animation: mounted ? 'locFadeUp 0.8s ease-out 0.3s both' : 'none' }}>
+                    {/* Title */}
+                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4.2rem)', color: '#fff', letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 6px', fontWeight: 700, lineHeight: 1 }}>LOCKTOBER</h1>
+                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(1.1rem,3.5vw,1.5rem)', fontStyle: 'italic', color: '#d4af6a', fontWeight: 300, marginBottom: 24, letterSpacing: 1 }}>The only Locktober with a real keyholder app.</div>
+
+                    {/* Price block */}
+                    <div style={{ marginBottom: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10 }}>
+                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(3rem,10vw,4.5rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1, letterSpacing: -2 }}>&euro;{PRICE}</span>
+                            <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1.2rem', fontWeight: 300, color: 'rgba(255,255,255,0.15)', textDecoration: 'line-through', textDecorationColor: 'rgba(197,160,89,0.3)' }}>&euro;{REGULAR}</span>
+                        </div>
+                        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.55rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', marginTop: 6, textTransform: 'uppercase' }}>31 days &middot; daily tasks &middot; personal review &middot; full app access</div>
                     </div>
+
+                    {/* Countdown */}
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(16px,5vw,32px)', marginBottom: 28 }}>
+                        {[{ v: pad(countdown.d), l: 'Days' }, { v: pad(countdown.h), l: 'Hrs' }, { v: pad(countdown.m), l: 'Min' }, { v: pad(countdown.s), l: 'Sec' }].map((u) => (
+                            <div key={u.l} style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5vw,2.2rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1 }}>{u.v}</div>
+                                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.4rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(197,160,89,0.3)', marginTop: 4, textTransform: 'uppercase' }}>{u.l}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.35)', marginBottom: 24, textTransform: 'uppercase' }}>Price rises to &euro;{REGULAR} when timer hits zero</div>
+
+                    {/* CTA */}
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '20px 60px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: 6, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(197,160,89,0.2)' }}>
+                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                        LOCK UP NOW
+                    </button>
+
+                    {/* Spots badge */}
+                    <div style={{ marginTop: 16, display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: '0.45rem', fontWeight: 600, letterSpacing: 5, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '6px 20px', textTransform: 'uppercase' }}>Only 7 Spots Left</div>
                 </div>
-                <div style={{ position: 'absolute', bottom: 30, right: 0, fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.25)', letterSpacing: 2, animation: mounted ? 'locFadeIn 1.5s ease-out 1.2s both' : 'none' }}>{countdown.d}d {pad(countdown.h)}h {pad(countdown.m)}m</div>
             </div>
 
             <div className="loc-divider"><span>WHAT YOU NEED</span></div>
@@ -293,40 +312,6 @@ export default function LoctoberClient() {
                         </div>
                     ))}
                 </div>
-            </div>
-
-            <div className="loc-divider"><span>PRICING</span></div>
-
-            {/* ════ PRICE + COUNTDOWN ════ */}
-            <div className="loc-section loc-section-alt" style={{ paddingTop: 70, paddingBottom: 70 }}>
-                <div style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-                    <div style={{ display: 'inline-block', fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 5, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '5px 16px', marginBottom: 28, textTransform: 'uppercase' }}>This Weekend Only</div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
-                        <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1.3rem', fontWeight: 300, color: 'rgba(197,160,89,0.5)', alignSelf: 'flex-start', marginTop: 14 }}>&euro;</span>
-                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(4rem,12vw,5.5rem)', fontWeight: 700, lineHeight: 1, letterSpacing: -2, color: '#d4af6a', animation: 'locGlow 5s ease infinite' }}>{PRICE}</span>
-                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', fontWeight: 400, color: 'rgba(255,255,255,0.1)', textDecoration: 'line-through', textDecorationColor: 'rgba(197,160,89,0.3)' }}>&euro;{REGULAR}</span>
-                    </div>
-                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 20 }}>31 days of real control. Daily tasks. Personal review. Full app access.</div>
-                    <div style={{ display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 4, color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.2)', padding: '8px 20px', marginBottom: 36, textTransform: 'uppercase' }}>Save &euro;{REGULAR - PRICE}</div>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(197,160,89,0.35)', marginBottom: 16, textTransform: 'uppercase' }}>Price rises in</div>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(12px,4vw,28px)' }}>
-                        {[{ v: pad(countdown.d), l: 'Days' }, { v: pad(countdown.h), l: 'Hours' }, { v: pad(countdown.m), l: 'Min' }, { v: pad(countdown.s), l: 'Sec' }].map((u) => (
-                            <div key={u.l} style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2rem,6vw,2.8rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1, animation: 'locGlow 4s ease infinite' }}>{u.v}</div>
-                                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.3)', marginTop: 6, textTransform: 'uppercase' }}>{u.l}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="loc-divider"><span>7 SPOTS</span></div>
-
-            {/* ════ SPOTS ════ */}
-            <div className="loc-anim" style={{ textAlign: 'center', paddingBottom: 20 }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(5rem,18vw,8rem)', fontWeight: 700, lineHeight: 1, letterSpacing: -4, background: 'linear-gradient(180deg,rgba(212,175,106,0.6) 0%,rgba(197,160,89,0.06) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'locFloat 4s ease infinite' }}>7</div>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 600, letterSpacing: 8, color: 'rgba(197,160,89,0.4)', marginTop: 4, textTransform: 'uppercase' }}>Spots Available</div>
-                <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.2)', marginTop: 16, lineHeight: 1.7 }}>Once I have my 7, enrollment closes. No waitlist. No exceptions.</div>
             </div>
 
             <div className="loc-divider"><span>STILL THINKING?</span></div>
