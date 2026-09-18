@@ -5,90 +5,69 @@ import { createClient } from '@/utils/supabase/client';
 import PaymentModal from '@/components/PaymentModal';
 
 const PRICE = 111;
-const REGULAR_PRICE = 199;
+const REGULAR = 199;
 
 const FEATURES = [
     {
+        num: '01',
         title: 'Live Lock Timer',
-        desc: 'A real countdown running inside the app. Days, hours, minutes. Ticking. No way to skip it, no way to pause it. I set the duration. You watch it run.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-            </svg>
-        ),
+        text: 'A real countdown running inside the app. Days, hours, minutes. You see it every time you log in. I set the duration. You watch it tick. No way to skip it. No way to pause it.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
     },
     {
+        num: '02',
         title: 'Daily Video Tasks',
-        desc: 'Every morning, a new task appears in your dashboard. I tell you what to film. You record it and submit it through the app. 31 days of it.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" />
-            </svg>
-        ),
+        text: 'Every single morning, a new task appears in your dashboard. I tell you what to film. You record it and submit through the app. Kneeling, confessions, proof. 31 days of it.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
     },
     {
+        num: '03',
         title: 'Personal Review by Me',
-        desc: 'I watch every submission. Not an algorithm. Not a chatbot. I personally review your task, approve or reject it, and decide your fate for the next day.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-        ),
+        text: 'I watch every submission. Not an algorithm. Not a chatbot. I personally review your task, approve it or reject it, and decide your fate for the next day.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
     },
     {
+        num: '04',
         title: 'Your Personal Dashboard',
-        desc: 'Streaks, completion rate, points, task history. Everything tracked in one place. You see where you stand. I see how obedient you have been.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
-            </svg>
-        ),
+        text: 'Streaks, completion rate, points, task history. Everything tracked in one place. You see exactly where you stand. I see exactly how obedient you have been.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
     },
     {
+        num: '05',
         title: 'Penalty System',
-        desc: 'Miss a task? I add penalty days. Submit something lazy? Rejected. Do it again. Skip a day entirely? I decide if you even deserve to continue.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <path d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.75-2.95L13.75 4.1a2 2 0 00-3.5 0L3.32 16.05A2 2 0 005.07 19z" />
-            </svg>
-        ),
+        text: 'Miss a task? I add penalty days to your lock. Submit something lazy? Rejected. Do it again. Skip a day entirely? I decide if you even deserve to continue.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><path d="M12 9v2m0 4h.01M5.07 19H19a2 2 0 001.75-2.95L13.75 4.1a2 2 0 00-3.5 0L3.32 16.05A2 2 0 005.07 19z"/></svg>,
     },
     {
+        num: '06',
         title: 'I Control Your Lock',
-        desc: 'This is not a self-managed timer you can reset when it gets hard. I hold the key inside the app. I add days. I remove days. Your release date is mine.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M12 3a4 4 0 00-4 4v4h8V7a4 4 0 00-4-4z" />
-            </svg>
-        ),
+        text: 'This is not a self-managed timer you can reset when it gets hard. I hold the key inside the app. I add days. I remove days. Your release date is mine to decide.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 3a4 4 0 00-4 4v4h8V7a4 4 0 00-4-4z"/></svg>,
     },
     {
+        num: '07',
         title: 'Daily Chastity Check-in',
-        desc: 'Every morning, before anything else, you prove you are still locked. Photo proof submitted through the app. No check-in means penalty.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
-            </svg>
-        ),
+        text: 'Every morning, before anything else, you prove you are still locked. Photo proof submitted through the app. No check-in means no task. No task means penalty.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>,
     },
     {
+        num: '08',
         title: 'No Other Domme Has This',
-        desc: 'This is not a Lovense link. Not DMs on Instagram. This is custom-built keyholder software with a real dashboard, real tracking, and real control.',
-        icon: (
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.55)" strokeWidth="1.5">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-        ),
+        text: 'This is not a Lovense link. Not DMs on Instagram. This is custom-built keyholder software with a real dashboard, real tracking, and real control. I built it. Nobody else has it.',
+        icon: <svg viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.5)" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
     },
 ];
 
 export default function LoctoberClient() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [showPayment, setShowPayment] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [showSticky, setShowSticky] = useState(false);
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
-    const sectionsRef = useRef<(HTMLDivElement | null)[]>([]);
 
-    // Get user session
+    useEffect(() => { setMounted(true); }, []);
+
+    // Auth
     useEffect(() => {
         (async () => {
             try {
@@ -99,17 +78,27 @@ export default function LoctoberClient() {
         })();
     }, []);
 
-    // Countdown to Monday midnight (end of weekend pricing)
+    // Auto-open payment from redirect
+    useEffect(() => {
+        if (userEmail && typeof window !== 'undefined') {
+            const p = new URLSearchParams(window.location.search);
+            if (p.get('pay') === '1') {
+                window.history.replaceState({}, '', '/loctober');
+                setShowPayment(true);
+            }
+        }
+    }, [userEmail]);
+
+    // Countdown to Monday
     useEffect(() => {
         const getTarget = () => {
             const now = new Date();
-            const day = now.getDay(); // 0=Sun
-            let daysUntilMon = (8 - day) % 7; // days until next Monday
-            if (daysUntilMon === 0) daysUntilMon = 7;
-            const target = new Date(now);
-            target.setDate(now.getDate() + daysUntilMon);
-            target.setHours(0, 0, 0, 0);
-            return target.getTime();
+            let d = (8 - now.getDay()) % 7;
+            if (d === 0) d = 7;
+            const t = new Date(now);
+            t.setDate(now.getDate() + d);
+            t.setHours(0, 0, 0, 0);
+            return t.getTime();
         };
         const tick = () => {
             const diff = Math.max(0, getTarget() - Date.now());
@@ -125,23 +114,25 @@ export default function LoctoberClient() {
         return () => clearInterval(iv);
     }, []);
 
-    // Scroll-reveal observer
+    // Sticky header
     useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((e) => {
-                    if (e.isIntersecting) {
-                        (e.target as HTMLElement).classList.add('loc-visible');
-                        observer.unobserve(e.target);
-                    }
-                });
-            },
-            { threshold: 0.08 }
-        );
-        const t = setTimeout(() => {
-            document.querySelectorAll('.loc-reveal').forEach((el) => observer.observe(el));
-        }, 100);
-        return () => { clearTimeout(t); observer.disconnect(); };
+        const fn = () => setShowSticky(window.scrollY > window.innerHeight * 0.75);
+        window.addEventListener('scroll', fn, { passive: true });
+        return () => window.removeEventListener('scroll', fn);
+    }, []);
+
+    // Scroll reveal
+    useEffect(() => {
+        const obs = new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+                if (e.isIntersecting) {
+                    (e.target as HTMLElement).classList.add('loc-vis');
+                    obs.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.06 });
+        const t = setTimeout(() => document.querySelectorAll('.loc-r').forEach((el) => obs.observe(el)), 150);
+        return () => { clearTimeout(t); obs.disconnect(); };
     }, []);
 
     const handleCheckout = () => {
@@ -152,661 +143,349 @@ export default function LoctoberClient() {
         setShowPayment(true);
     };
 
-    // Auto-open payment if redirected from login
-    useEffect(() => {
-        if (userEmail && typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('pay') === '1') {
-                window.history.replaceState({}, '', '/loctober');
-                setShowPayment(true);
-            }
-        }
-    }, [userEmail]);
-
     const pad = (n: number) => String(n).padStart(2, '0');
 
-    return (
-        <>
-            <style>{`
-                /* ── BASE ── */
-                html, body { background: #050505 !important; margin: 0; padding: 0; overflow-x: hidden; }
-                *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    const s: Record<string, React.CSSProperties> = {
+        section: { position: 'relative', marginLeft: 'calc(-1 * clamp(20px,5vw,40px))', marginRight: 'calc(-1 * clamp(20px,5vw,40px))', paddingLeft: 'clamp(20px,5vw,40px)', paddingRight: 'clamp(20px,5vw,40px)', borderTop: '1px solid rgba(197,160,89,0.04)', borderBottom: '1px solid rgba(197,160,89,0.04)', background: 'rgba(0,0,0,0.5)' },
+        sectionAlt: { background: 'rgba(0,0,0,0.85)', borderTop: '1px solid rgba(197,160,89,0.08)', borderBottom: '1px solid rgba(197,160,89,0.08)' },
+        h2: { fontFamily: 'Cinzel, serif', fontSize: 'clamp(1.4rem,4vw,2.2rem)', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 3, margin: '0 0 12px', textAlign: 'center' as const, lineHeight: 1.3 },
+        sub: { fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 'clamp(0.95rem,2.5vw,1.15rem)', fontStyle: 'italic' as const, color: 'rgba(255,255,255,0.3)', textAlign: 'center' as const, marginBottom: 40, letterSpacing: 1 },
+        body: { fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 'clamp(1.1rem,3vw,1.3rem)', fontWeight: 300, lineHeight: 1.9, color: 'rgba(255,255,255,0.5)', textAlign: 'center' as const, maxWidth: 520, margin: '0 auto' },
+        gold: { color: '#d4af6a' },
+        white: { color: 'rgba(255,255,255,0.9)', fontWeight: 400 },
+        em: { fontStyle: 'italic' as const, color: 'rgba(232,201,122,0.7)' },
+    };
 
-                .loc-wrap {
-                    width: 100%; max-width: 720px; margin: 0 auto;
-                    font-family: 'Inter', -apple-system, sans-serif;
-                    color: #fff; -webkit-font-smoothing: antialiased;
-                    position: relative; overflow: hidden;
-                }
+    return (<>
+        {/* ── FIXED BACKGROUNDS ── */}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: -50, background: "url('https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg') center 20%/cover no-repeat", filter: 'brightness(0.25) saturate(1.2)', opacity: 0.5 }} />
+        </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: -50, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 65%)' }} />
+        </div>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden', opacity: 0.02 }}>
+            <div style={{ position: 'absolute', inset: -50, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
+        </div>
 
-                /* ── ANIMATIONS ── */
-                @keyframes locShimmer {
-                    0% { background-position: -200% center; }
-                    100% { background-position: 200% center; }
-                }
-                @keyframes locFadeUp {
-                    from { opacity: 0; transform: translateY(40px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes locBorderGlow {
-                    0%, 100% { border-color: rgba(197,160,89,0.08); }
-                    50% { border-color: rgba(197,160,89,0.25); }
-                }
-                @keyframes locPulse {
-                    0%, 100% { opacity: 0.35; }
-                    50% { opacity: 1; }
-                }
-                @keyframes locTicker {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
-                }
-                @keyframes locCountGlow {
-                    0%, 100% { text-shadow: 0 0 30px rgba(197,160,89,0.15); }
-                    50% { text-shadow: 0 0 60px rgba(197,160,89,0.35); }
-                }
-                @keyframes locFloat {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-6px); }
-                }
+        {/* ── STICKY HEADER ── */}
+        <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px',
+            background: 'rgba(4,4,6,0.7)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(197,160,89,0.1)',
+            transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease',
+            transform: showSticky ? 'translateY(0)' : 'translateY(-100%)',
+            opacity: showSticky ? 1 : 0,
+            pointerEvents: showSticky ? 'auto' : 'none',
+        }}>
+            <div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(197,160,89,0.5)', textTransform: 'uppercase' }}>LOCKTOBER</div>
+                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.1rem', fontWeight: 700, color: '#d4af6a', letterSpacing: 1 }}>
+                    &euro;{PRICE} <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.15)', textDecoration: 'line-through', marginLeft: 6 }}>&euro;{REGULAR}</span>
+                </div>
+            </div>
+            <button onClick={handleCheckout} style={{
+                padding: '10px 28px', background: 'linear-gradient(135deg, #c5a059, #a8884a)',
+                color: '#050505', border: 'none', cursor: 'pointer',
+                fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 700,
+                letterSpacing: 4, textTransform: 'uppercase',
+            }}>Lock Up Now</button>
+        </div>
 
-                /* ── SCROLL REVEAL ── */
-                .loc-reveal {
-                    opacity: 0; transform: translateY(40px);
-                    transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
-                }
-                .loc-visible { opacity: 1; transform: translateY(0); }
+        <style>{`
+            html, body { overflow-x: hidden; background: #020202 !important; }
+            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&display=swap');
+            @keyframes locFadeUp { from { opacity:0; transform:translateY(50px); } to { opacity:1; transform:translateY(0); } }
+            @keyframes locFadeIn { from { opacity:0; } to { opacity:1; } }
+            @keyframes locShimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+            @keyframes locFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+            @keyframes locGlow { 0%,100% { text-shadow: 0 0 30px rgba(197,160,89,0.15); } 50% { text-shadow: 0 0 60px rgba(197,160,89,0.4); } }
+            @keyframes locPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+            @keyframes locRing { 0% { transform:scale(0.95); opacity:0.3; } 50% { transform:scale(1.06); opacity:0.7; } 100% { transform:scale(0.95); opacity:0.3; } }
+            @keyframes locBorder { 0%,100% { border-color:rgba(197,160,89,0.08); box-shadow:0 0 30px rgba(197,160,89,0.03); } 50% { border-color:rgba(197,160,89,0.25); box-shadow:0 0 50px rgba(197,160,89,0.08); } }
+            @keyframes locTicker { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+            @keyframes locCtaShine { 0% { left:-100%; } 50%,100% { left:100%; } }
+            .loc-r { opacity:0; transform:translateY(30px); transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1); }
+            .loc-vis { opacity:1; transform:translateY(0); }
+            .loc-divider { width:100%; display:flex; align-items:center; gap:20px; padding:100px 0; }
+            .loc-divider::before, .loc-divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg, transparent, rgba(197,160,89,0.2), rgba(197,160,89,0.05)); }
+            .loc-divider::after { background:linear-gradient(90deg, rgba(197,160,89,0.05), rgba(197,160,89,0.2), transparent); }
+            .loc-divider span { font-family:Cinzel,serif; font-size:0.6rem; color:rgba(197,160,89,0.4); letter-spacing:6px; white-space:nowrap; }
+            .loc-feat-card { transition:all 0.3s cubic-bezier(0.16,1,0.3,1); }
+            .loc-feat-card:hover { transform:translateY(-4px); border-color:rgba(197,160,89,0.2) !important; background:rgba(197,160,89,0.03) !important; }
+            .loc-cta-btn { position:relative; overflow:hidden; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); }
+            .loc-cta-btn:hover { transform:scale(1.02); box-shadow:0 8px 60px rgba(197,160,89,0.25) !important; }
+            .loc-cta-btn:active { transform:scale(0.98); }
+            * { scrollbar-width:none; }
+            *::-webkit-scrollbar { display:none; }
+            @media (min-width: 769px) {
+                .loc-container { max-width:1000px !important; padding-left:60px !important; padding-right:60px !important; }
+                .loc-section-full { margin-left:calc(-50vw + 50%); margin-right:calc(-50vw + 50%); padding-left:calc(50vw - 50% + 60px); padding-right:calc(50vw - 50% + 60px); }
+                .loc-features-grid { grid-template-columns:1fr 1fr !important; }
+            }
+        `}</style>
 
-                /* ── HERO ── */
-                .loc-hero {
-                    position: relative; width: 100%; height: 85vh; min-height: 560px; max-height: 800px;
-                    overflow: hidden; background: #050505;
-                }
-                .loc-hero img {
-                    width: 100%; height: 100%; object-fit: cover; object-position: center top;
-                    filter: brightness(0.35) saturate(1.3) contrast(1.1);
-                }
-                .loc-hero-ov {
-                    position: absolute; inset: 0; z-index: 2;
-                    background:
-                        radial-gradient(ellipse at center bottom, rgba(197,160,89,0.06) 0%, transparent 55%),
-                        linear-gradient(180deg, rgba(5,5,5,0.1) 0%, transparent 25%, transparent 40%, rgba(5,5,5,0.6) 62%, rgba(5,5,5,0.95) 82%, #050505 100%);
-                }
-                .loc-hero-c {
-                    position: absolute; bottom: 0; left: 0; right: 0;
-                    padding: 0 44px 56px; z-index: 4; text-align: center;
-                }
-                .loc-hero-tag {
-                    display: inline-block;
-                    font-size: 9px; font-weight: 600; letter-spacing: 6px;
-                    text-transform: uppercase; color: #050505;
-                    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
-                    background-size: 300% 100%;
-                    animation: locFadeUp 1s ease 0.3s both, locShimmer 4s ease infinite;
-                    padding: 8px 24px; margin-bottom: 24px;
-                    font-family: 'Cinzel', serif;
-                }
-                .loc-hero-title {
-                    font-family: 'Cormorant Garamond', Georgia, serif;
-                    font-size: 56px; font-weight: 300; line-height: 1.05; color: #fff;
-                    margin-bottom: 16px; animation: locFadeUp 1s ease 0.5s both;
-                }
-                .loc-hero-title em {
-                    font-style: italic; color: #d4af6a; font-weight: 300;
-                }
-                .loc-hero-sub {
-                    font-size: 13px; font-weight: 200; color: rgba(255,255,255,0.4);
-                    letter-spacing: 3px; text-transform: uppercase;
-                    animation: locFadeUp 1s ease 0.7s both;
-                }
+        <div style={{ position: 'relative', zIndex: 1, color: '#fff' }}>
+            <div className="loc-container" style={{ position: 'relative', maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
-                /* ── TICKER ── */
-                .loc-ticker {
-                    background: linear-gradient(180deg, rgba(12,10,8,1) 0%, rgba(8,6,4,1) 100%);
-                    border-top: 1px solid rgba(197,160,89,0.1);
-                    border-bottom: 1px solid rgba(197,160,89,0.1);
-                    padding: 14px 0; overflow: hidden; white-space: nowrap;
-                }
-                .loc-ticker-track {
-                    display: inline-block; animation: locTicker 25s linear infinite;
-                }
-                .loc-ticker-track span {
-                    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400;
-                    letter-spacing: 4px; text-transform: uppercase;
-                    color: rgba(255,255,255,0.3); padding: 0 16px;
-                }
-                .loc-ticker-track b { color: #d4af6a; font-weight: 600; }
+                {/* ════ HERO ════ */}
+                <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative' }}>
+                    <div style={{ animation: mounted ? 'locFadeIn 1.2s ease-out both' : 'none' }}>
+                        {/* Lock icon with rings */}
+                        <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 36px' }}>
+                            <div style={{ position: 'absolute', inset: -12, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.2)', animation: 'locRing 4s ease-in-out infinite' }} />
+                            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.1)', animation: 'locRing 4s ease-in-out infinite 0.7s' }} />
+                            <div style={{ position: 'absolute', inset: -36, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.05)', animation: 'locRing 4s ease-in-out infinite 1.4s' }} />
+                            <div style={{ width: 120, height: 120, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.3)', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(197,160,89,0.1)' }}>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.2" style={{ filter: 'drop-shadow(0 0 15px rgba(197,160,89,0.3))' }}>
+                                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#c5a059"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
 
-                /* ── SEPARATOR ── */
-                .loc-sep {
-                    display: flex; align-items: center; justify-content: center; gap: 14px;
-                    padding: 48px 0;
-                }
-                .loc-sep-l { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent); }
-                .loc-sep-d { width: 5px; height: 5px; background: rgba(197,160,89,0.25); transform: rotate(45deg); flex-shrink: 0; }
+                    <div style={{ animation: mounted ? 'locFadeUp 1s ease-out 0.4s both' : 'none' }}>
+                        <div style={{ display: 'inline-block', fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 6, color: '#050505', background: 'linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '7px 24px', marginBottom: 24, textTransform: 'uppercase' }}>
+                            Only 7 Spots
+                        </div>
 
-                /* ── SECTION TEXT ── */
-                .loc-txt {
-                    padding: 0 48px; text-align: center;
-                }
-                .loc-txt-head {
-                    display: block;
-                    font-family: 'Cinzel', serif; font-size: 30px; font-weight: 600;
-                    letter-spacing: 3px; color: #d4af6a; margin-bottom: 8px;
-                }
-                .loc-txt-sub {
-                    display: block;
-                    font-family: 'Cormorant Garamond', serif;
-                    font-size: 16px; font-weight: 300; font-style: italic;
-                    color: rgba(255,255,255,0.3); letter-spacing: 2px; margin-bottom: 28px;
-                }
-                .loc-txt p {
-                    font-family: 'Cormorant Garamond', Georgia, serif;
-                    font-size: 21px; font-weight: 300; line-height: 1.9;
-                    color: rgba(255,255,255,0.5);
-                }
-                .loc-txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
-                .loc-txt em { font-style: italic; color: rgba(232,201,122,0.7); }
-
-                /* ── FEATURE GRID ── */
-                .loc-features {
-                    padding: 0 36px;
-                    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
-                }
-                .loc-feat {
-                    background: rgba(197,160,89,0.02);
-                    border: 1px solid rgba(197,160,89,0.06);
-                    padding: 32px 24px; text-align: center;
-                    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
-                }
-                .loc-feat:hover {
-                    background: rgba(197,160,89,0.04);
-                    border-color: rgba(197,160,89,0.15);
-                    transform: translateY(-2px);
-                }
-                .loc-feat-ico {
-                    width: 36px; height: 36px; margin: 0 auto 16px;
-                }
-                .loc-feat-ico svg { width: 100%; height: 100%; }
-                .loc-feat h4 {
-                    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
-                    letter-spacing: 3px; text-transform: uppercase;
-                    color: rgba(255,255,255,0.75); margin-bottom: 10px;
-                }
-                .loc-feat p {
-                    font-family: 'Cormorant Garamond', serif;
-                    font-size: 15px; font-weight: 300; font-style: italic;
-                    color: rgba(255,255,255,0.3); line-height: 1.6;
-                }
-
-                /* ── COUNTDOWN ── */
-                .loc-countdown {
-                    display: flex; justify-content: center; gap: 20px;
-                    padding: 8px 0 0;
-                }
-                .loc-cd-unit { text-align: center; }
-                .loc-cd-num {
-                    font-family: 'Cinzel', serif; font-size: 42px; font-weight: 700;
-                    color: #d4af6a; line-height: 1;
-                    animation: locCountGlow 4s ease infinite;
-                }
-                .loc-cd-label {
-                    font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 400;
-                    letter-spacing: 4px; text-transform: uppercase;
-                    color: rgba(197,160,89,0.35); margin-top: 6px;
-                }
-
-                /* ── PRICE CARD ── */
-                .loc-price {
-                    margin: 0 36px;
-                    position: relative;
-                    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
-                    border: 1px solid rgba(197,160,89,0.1);
-                    overflow: hidden;
-                    animation: locBorderGlow 5s ease infinite;
-                }
-                .loc-price-inner {
-                    padding: 52px 40px 44px; text-align: center; position: relative; z-index: 1;
-                }
-                .loc-price-inner::before {
-                    content: '';
-                    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-                    width: 300px; height: 200px;
-                    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
-                    pointer-events: none;
-                }
-                .loc-price-tag {
-                    display: inline-block;
-                    font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 500;
-                    letter-spacing: 5px; text-transform: uppercase; color: #050505;
-                    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
-                    background-size: 300% 100%; animation: locShimmer 4s ease infinite;
-                    padding: 6px 18px; margin-bottom: 24px;
-                }
-                .loc-price-row {
-                    display: flex; align-items: baseline; justify-content: center; gap: 14px;
-                    margin-bottom: 10px;
-                }
-                .loc-price-cur {
-                    font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 300;
-                    color: rgba(197,160,89,0.5); align-self: flex-start; margin-top: 14px;
-                }
-                .loc-price-num {
-                    font-family: 'Cinzel', serif; font-size: 76px; font-weight: 700;
-                    line-height: 1; letter-spacing: -2px; color: #d4af6a;
-                    animation: locCountGlow 5s ease infinite;
-                }
-                .loc-price-old {
-                    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 400;
-                    color: rgba(255,255,255,0.1);
-                    text-decoration: line-through; text-decoration-color: rgba(197,160,89,0.3);
-                }
-                .loc-price-desc {
-                    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 300;
-                    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 18px;
-                }
-                .loc-price-save {
-                    display: inline-block;
-                    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
-                    letter-spacing: 4px; text-transform: uppercase;
-                    color: rgba(197,160,89,0.8);
-                    border: 1px solid rgba(197,160,89,0.2); padding: 8px 20px;
-                }
-
-                /* ── CTA BUTTON ── */
-                .loc-cta-wrap { text-align: center; padding: 32px 36px 0; }
-                .loc-cta {
-                    display: block; width: 100%; padding: 22px 0;
-                    background: linear-gradient(135deg, #c5a059, #a8884a);
-                    color: #050505; text-decoration: none;
-                    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
-                    letter-spacing: 6px; text-transform: uppercase;
-                    border: none; cursor: pointer;
-                    transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
-                    position: relative; overflow: hidden;
-                }
-                .loc-cta:hover {
-                    background: linear-gradient(135deg, #d4af6a, #c5a059);
-                    letter-spacing: 8px;
-                    box-shadow: 0 4px 40px rgba(197,160,89,0.2);
-                }
-                .loc-cta::after {
-                    content: ''; position: absolute;
-                    top: 0; left: -100%; width: 100%; height: 100%;
-                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-                    transition: left 0.6s ease;
-                }
-                .loc-cta:hover::after { left: 100%; }
-                .loc-cta-sub {
-                    text-align: center; padding: 14px 36px 0;
-                    font-size: 10px; font-weight: 300; letter-spacing: 3px;
-                    text-transform: uppercase; color: rgba(197,160,89,0.3);
-                }
-
-                /* ── SPOTS ── */
-                .loc-spots { text-align: center; padding: 40px 36px 0; }
-                .loc-spots-n {
-                    font-family: 'Cinzel', serif; font-size: 110px; font-weight: 700;
-                    line-height: 1; letter-spacing: -4px;
-                    background: linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.08) 100%);
-                    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-                    animation: locFloat 4s ease infinite;
-                }
-                .loc-spots-label {
-                    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
-                    letter-spacing: 8px; text-transform: uppercase;
-                    color: rgba(197,160,89,0.4); margin-top: 4px;
-                }
-                .loc-spots-p {
-                    font-family: 'Cormorant Garamond', serif; font-size: 16px;
-                    font-weight: 300; font-style: italic;
-                    color: rgba(255,255,255,0.2); margin-top: 16px; line-height: 1.7;
-                }
-
-                /* ── QUOTE BOX ── */
-                .loc-quote {
-                    margin: 0 36px;
-                    position: relative;
-                    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
-                    border: 1px solid rgba(197,160,89,0.1);
-                    overflow: hidden; animation: locBorderGlow 5s ease infinite;
-                }
-                .loc-quote-inner {
-                    padding: 52px 40px; text-align: center; position: relative; z-index: 1;
-                }
-                .loc-quote-label {
-                    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
-                    letter-spacing: 8px; text-transform: uppercase;
-                    color: #d4af6a; margin-bottom: 28px;
-                }
-                .loc-quote-text {
-                    font-family: 'Cormorant Garamond', Georgia, serif;
-                    font-size: 24px; font-weight: 300; font-style: italic;
-                    line-height: 1.8; color: rgba(255,255,255,0.4);
-                    max-width: 480px; margin: 0 auto;
-                }
-                .loc-quote-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
-                .loc-quote-sig {
-                    margin-top: 24px; font-family: 'Inter', sans-serif;
-                    font-size: 9px; font-weight: 300; letter-spacing: 5px;
-                    text-transform: uppercase; color: rgba(197,160,89,0.4);
-                }
-
-                /* ── CORNER MARKS ── */
-                .loc-cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-                .loc-cn::before, .loc-cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
-                .loc-cn::before { height: 1px; width: 100%; top: 0; left: 0; }
-                .loc-cn::after { width: 1px; height: 100%; top: 0; left: 0; }
-                .loc-cn-tl { top: -1px; left: -1px; }
-                .loc-cn-tr { top: -1px; right: -1px; transform: scaleX(-1); }
-                .loc-cn-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
-                .loc-cn-br { bottom: -1px; right: -1px; transform: scale(-1); }
-
-                /* ── FOOTER ── */
-                .loc-footer {
-                    border-top: 1px solid rgba(197,160,89,0.06);
-                    padding: 40px; text-align: center; position: relative;
-                }
-                .loc-footer::before {
-                    content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-                    width: 200px; height: 1px;
-                    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
-                }
-                .loc-footer-brand {
-                    font-family: 'Cormorant Garamond', Georgia, serif;
-                    font-size: 16px; font-weight: 600; letter-spacing: 8px;
-                    color: rgba(255,255,255,0.1); margin-bottom: 10px;
-                }
-                .loc-footer a {
-                    font-size: 10px; color: rgba(255,255,255,0.08); text-decoration: none; letter-spacing: 3px;
-                }
-
-                /* ── STICKY HEADER ── */
-                .loc-sticky {
-                    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-                    background: rgba(5,5,5,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-                    border-bottom: 1px solid rgba(197,160,89,0.1);
-                    padding: 12px 20px;
-                    display: flex; align-items: center; justify-content: space-between;
-                    transform: translateY(-100%);
-                    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-                }
-                .loc-sticky.show { transform: translateY(0); }
-                .loc-sticky-price {
-                    font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700;
-                    color: #d4af6a; letter-spacing: 1px;
-                }
-                .loc-sticky-old {
-                    font-size: 12px; color: rgba(255,255,255,0.15);
-                    text-decoration: line-through; margin-left: 8px;
-                }
-                .loc-sticky-btn {
-                    padding: 10px 28px;
-                    background: linear-gradient(135deg, #c5a059, #a8884a);
-                    color: #050505; border: none; cursor: pointer;
-                    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700;
-                    letter-spacing: 4px; text-transform: uppercase;
-                    transition: all 0.3s ease;
-                }
-                .loc-sticky-btn:hover {
-                    background: linear-gradient(135deg, #d4af6a, #c5a059);
-                }
-
-                /* ── MOBILE ── */
-                @media (max-width: 600px) {
-                    .loc-hero { height: 75vh; min-height: 480px; }
-                    .loc-hero-title { font-size: 40px; }
-                    .loc-hero-c { padding: 0 24px 40px; }
-                    .loc-txt { padding: 0 24px; }
-                    .loc-txt-head { font-size: 24px; }
-                    .loc-txt p { font-size: 18px; line-height: 1.8; }
-                    .loc-features { grid-template-columns: 1fr; padding: 0 20px; }
-                    .loc-feat { padding: 28px 20px; }
-                    .loc-price { margin: 0 20px; }
-                    .loc-price-inner { padding: 40px 24px 36px; }
-                    .loc-price-num { font-size: 58px; }
-                    .loc-price-old { font-size: 22px; }
-                    .loc-cta-wrap { padding: 24px 20px 0; }
-                    .loc-cta { font-size: 11px; letter-spacing: 4px; }
-                    .loc-spots-n { font-size: 84px; }
-                    .loc-quote { margin: 0 20px; }
-                    .loc-quote-inner { padding: 36px 24px; }
-                    .loc-quote-text { font-size: 20px; }
-                    .loc-countdown { gap: 14px; }
-                    .loc-cd-num { font-size: 32px; }
-                    .loc-sep { padding: 36px 0; }
-                    .loc-footer { padding: 30px 20px; }
-                }
-            `}</style>
-
-            <div className="loc-wrap">
-
-                {/* ── HERO ── */}
-                <div className="loc-hero">
-                    <img
-                        src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg"
-                        alt=""
-                    />
-                    <div className="loc-hero-ov" />
-                    <div className="loc-hero-c">
-                        <div className="loc-hero-tag">Only 7 Spots</div>
-                        <h1 className="loc-hero-title">
-                            I'm Taking<br /><em>Your October.</em>
+                        <h1 style={{ fontFamily: 'Cinzel, serif', fontSize: 'clamp(2.4rem,8vw,4rem)', color: '#fff', letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 8px', fontWeight: 700, lineHeight: 1.05 }}>
+                            LOCKTOBER
                         </h1>
-                        <p className="loc-hero-sub">31 days locked. Daily video tasks. No way out.</p>
+                        <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.3rem,4vw,1.8rem)', fontStyle: 'italic', color: '#d4af6a', fontWeight: 300, marginBottom: 20, letterSpacing: 2 }}>
+                            I'm taking your October.
+                        </div>
+                        <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.5), transparent)', margin: '0 auto 20px' }} />
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.8rem', fontWeight: 300, color: 'rgba(255,255,255,0.35)', letterSpacing: 2, marginBottom: 36 }}>
+                            31 DAYS LOCKED. DAILY VIDEO TASKS. NO WAY OUT.
+                        </div>
+
+                        <button className="loc-cta-btn" onClick={handleCheckout} style={{
+                            padding: '18px 56px', background: 'linear-gradient(135deg, #c5a059 0%, #a8884a 50%, #c5a059 100%)', backgroundSize: '200% auto',
+                            color: '#050505', border: 'none', cursor: 'pointer',
+                            fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase',
+                            boxShadow: '0 4px 30px rgba(197,160,89,0.2)',
+                        }}>
+                            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
+                            LOCK UP FOR &euro;{PRICE}
+                        </button>
+                        <div style={{ marginTop: 12, fontFamily: 'Inter, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.3)', letterSpacing: 3 }}>
+                            <span style={{ textDecoration: 'line-through', color: 'rgba(255,255,255,0.12)' }}>&euro;{REGULAR}</span> &nbsp; This weekend only
+                        </div>
+                    </div>
+
+                    {/* Corner countdown */}
+                    <div style={{ position: 'absolute', bottom: 30, right: 0, fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.25)', letterSpacing: 2, animation: mounted ? 'locFadeIn 1.5s ease-out 1.2s both' : 'none' }}>
+                        {countdown.d}d {pad(countdown.h)}h {pad(countdown.m)}m
                     </div>
                 </div>
 
-                {/* ── TICKER ── */}
-                <div className="loc-ticker">
-                    <div className="loc-ticker-track">
-                        <span><b>7</b> spots</span>
-                        <span><b>31</b> days locked</span>
-                        <span>daily <b>video</b> tasks</span>
-                        <span>real <b>keyholder</b> app</span>
-                        <span>no <b>release</b></span>
-                        <span><b>7</b> spots</span>
-                        <span><b>31</b> days locked</span>
-                        <span>daily <b>video</b> tasks</span>
-                        <span>real <b>keyholder</b> app</span>
-                        <span>no <b>release</b></span>
-                    </div>
-                </div>
+                {/* ════ DIVIDER ════ */}
+                <div className="loc-divider"><span>THE APP</span></div>
 
-                {/* ── INTRO ── */}
-                <div className="loc-sep"><div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" /></div>
-
-                <div className="loc-txt loc-reveal">
-                    <span className="loc-txt-head">Locktober.</span>
-                    <span className="loc-txt-sub">and i built an entire app for it.</span>
-                    <p>
-                        I'm not some girl who asks you to send a selfie and calls it "keyholding."<br /><br />
-                        I built a <strong>real keyholder application.</strong> A platform where I control your lock,
+                {/* ════ INTRO ════ */}
+                <div className="loc-r loc-section-full" style={{ ...s.section, paddingTop: 60, paddingBottom: 60 }}>
+                    <h2 style={s.h2}>I built an entire app for this.</h2>
+                    <div style={s.sub}>this is not what you think keyholding is.</div>
+                    <div style={s.body}>
+                        I'm not some girl who asks you to send a selfie and calls it "keyholding."<br/><br/>
+                        I built a <strong style={s.white}>real keyholder application.</strong> A platform where I control your lock,
                         assign daily video tasks, review every submission personally,
-                        and track your obedience across 31 days.<br /><br />
-                        This October, I'm taking <strong>7 men</strong> through the entire month.
-                        Locked from day one. No breaks. No mercy. No early release.
-                    </p>
+                        and track your obedience across 31 days.<br/><br/>
+                        This October, I'm taking <strong style={s.white}>7 men</strong> through the entire month.
+                        Locked from day one. No breaks. No mercy. <span style={s.em}>No early release.</span>
+                    </div>
                 </div>
 
-                {/* ── CTA 1 ── */}
-                <div className="loc-cta-wrap loc-reveal">
-                    <button className="loc-cta" onClick={handleCheckout}>
-                        Lock Up for &euro;{PRICE}
-                    </button>
-                </div>
-                <div className="loc-cta-sub">7 spots. 31 days. Starts October 1st.</div>
+                {/* ════ DIVIDER ════ */}
+                <div className="loc-divider"><span>HOW IT WORKS</span></div>
 
-                {/* ── FEATURES ── */}
-                <div className="loc-sep"><div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" /></div>
-
-                <div className="loc-txt loc-reveal" style={{ marginBottom: 32 }}>
-                    <span className="loc-txt-head">How It Works</span>
-                    <span className="loc-txt-sub">every feature of the keyholder app</span>
+                {/* ════ FEATURES ════ */}
+                <div className="loc-r" style={{ paddingBottom: 20 }}>
+                    <h2 style={s.h2}>Every feature. Every function.</h2>
+                    <div style={s.sub}>what happens inside the keyholder app for 31 days</div>
                 </div>
 
-                <div className="loc-features">
+                <div className="loc-features-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 0, maxWidth: 600, margin: '0 auto' }}>
                     {FEATURES.map((f, i) => (
-                        <div key={i} className="loc-feat loc-reveal" style={{ transitionDelay: `${i * 0.06}s` }}>
-                            <div className="loc-feat-ico">{f.icon}</div>
-                            <h4>{f.title}</h4>
-                            <p>{f.desc}</p>
+                        <div key={i} className="loc-feat-card loc-r" style={{
+                            display: 'flex', gap: 20, padding: '28px 0',
+                            borderBottom: i < FEATURES.length - 1 ? '1px solid rgba(197,160,89,0.06)' : 'none',
+                            transitionDelay: `${i * 0.05}s`,
+                        }}>
+                            <div style={{
+                                flexShrink: 0, width: 48, height: 48, borderRadius: 4,
+                                border: '1px solid rgba(197,160,89,0.15)', background: 'rgba(197,160,89,0.03)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <div style={{ width: 22, height: 22 }}>{f.icon}</div>
+                            </div>
+                            <div>
+                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '1rem', color: 'rgba(255,255,255,0.85)', fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>{f.title}</div>
+                                <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, fontWeight: 300 }}>{f.text}</div>
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {/* ── CTA 2 ── */}
-                <div className="loc-cta-wrap loc-reveal" style={{ paddingTop: 40 }}>
-                    <button className="loc-cta" onClick={handleCheckout}>
+                {/* ════ CTA ════ */}
+                <div className="loc-r" style={{ textAlign: 'center', paddingTop: 50 }}>
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{
+                        padding: '20px 60px', background: 'linear-gradient(135deg, #c5a059, #a8884a)',
+                        color: '#050505', border: 'none', cursor: 'pointer',
+                        fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 700,
+                        letterSpacing: 5, textTransform: 'uppercase',
+                        boxShadow: '0 4px 30px rgba(197,160,89,0.2)',
+                    }}>
+                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                         Claim Your Spot
                     </button>
+                    <div style={{ marginTop: 12, fontFamily: 'Inter,sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.3)', letterSpacing: 3 }}>
+                        &euro;{PRICE} this weekend. &euro;{REGULAR} after Monday.
+                    </div>
                 </div>
-                <div className="loc-cta-sub">&euro;{PRICE} this weekend. &euro;{REGULAR_PRICE} after Monday.</div>
 
-                {/* ── PRICE + COUNTDOWN ── */}
-                <div className="loc-sep"><div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" /></div>
+                {/* ════ DIVIDER ════ */}
+                <div className="loc-divider"><span>PRICING</span></div>
 
-                <div className="loc-price loc-reveal">
-                    <div className="loc-cn loc-cn-tl" /><div className="loc-cn loc-cn-tr" /><div className="loc-cn loc-cn-bl" /><div className="loc-cn loc-cn-br" />
-                    <div className="loc-price-inner">
-                        <div className="loc-price-tag">This Weekend Only</div>
-                        <div className="loc-price-row">
-                            <span className="loc-price-cur">&euro;</span>
-                            <span className="loc-price-num">{PRICE}</span>
-                            <span className="loc-price-old">&euro;{REGULAR_PRICE}</span>
+                {/* ════ PRICE + COUNTDOWN ════ */}
+                <div className="loc-r loc-section-full" style={{ ...s.section, ...s.sectionAlt, paddingTop: 70, paddingBottom: 70 }}>
+                    <div style={{ textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+                        <div style={{ display: 'inline-block', fontFamily: 'Inter, sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 5, color: '#050505', background: 'linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '5px 16px', marginBottom: 28, textTransform: 'uppercase' }}>
+                            This Weekend Only
                         </div>
-                        <div className="loc-price-desc">31 days of real control. Daily tasks. Personal review. Full app access.</div>
-                        <div className="loc-price-save">Save &euro;{REGULAR_PRICE - PRICE}</div>
 
-                        <div style={{ marginTop: 28 }}>
-                            <div style={{
-                                fontFamily: 'Cinzel, serif', fontSize: 9, fontWeight: 600,
-                                letterSpacing: 5, textTransform: 'uppercase' as const,
-                                color: 'rgba(197,160,89,0.4)', marginBottom: 12,
-                            }}>
-                                Price rises in
-                            </div>
-                            <div className="loc-countdown">
-                                <div className="loc-cd-unit">
-                                    <div className="loc-cd-num">{pad(countdown.d)}</div>
-                                    <div className="loc-cd-label">Days</div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 14, marginBottom: 10 }}>
+                            <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1.3rem', fontWeight: 300, color: 'rgba(197,160,89,0.5)', alignSelf: 'flex-start', marginTop: 14 }}>&euro;</span>
+                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(4rem,12vw,5.5rem)', fontWeight: 700, lineHeight: 1, letterSpacing: -2, color: '#d4af6a', animation: 'locGlow 5s ease infinite' }}>{PRICE}</span>
+                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: '1.6rem', fontWeight: 400, color: 'rgba(255,255,255,0.1)', textDecoration: 'line-through', textDecorationColor: 'rgba(197,160,89,0.3)' }}>&euro;{REGULAR}</span>
+                        </div>
+
+                        <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.05rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 20 }}>
+                            31 days of real control. Daily tasks. Personal review. Full app access.
+                        </div>
+
+                        <div style={{ display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 4, color: 'rgba(197,160,89,0.8)', border: '1px solid rgba(197,160,89,0.2)', padding: '8px 20px', marginBottom: 36, textTransform: 'uppercase' }}>
+                            Save &euro;{REGULAR - PRICE}
+                        </div>
+
+                        {/* Countdown */}
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(197,160,89,0.35)', marginBottom: 16, textTransform: 'uppercase' }}>
+                            Price rises in
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(12px,4vw,28px)' }}>
+                            {[
+                                { v: pad(countdown.d), l: 'Days' },
+                                { v: pad(countdown.h), l: 'Hours' },
+                                { v: pad(countdown.m), l: 'Min' },
+                                { v: pad(countdown.s), l: 'Sec' },
+                            ].map((u) => (
+                                <div key={u.l} style={{ textAlign: 'center' }}>
+                                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2rem,6vw,2.8rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1, animation: 'locGlow 4s ease infinite' }}>{u.v}</div>
+                                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.3)', marginTop: 6, textTransform: 'uppercase' }}>{u.l}</div>
                                 </div>
-                                <div className="loc-cd-unit">
-                                    <div className="loc-cd-num">{pad(countdown.h)}</div>
-                                    <div className="loc-cd-label">Hours</div>
-                                </div>
-                                <div className="loc-cd-unit">
-                                    <div className="loc-cd-num">{pad(countdown.m)}</div>
-                                    <div className="loc-cd-label">Min</div>
-                                </div>
-                                <div className="loc-cd-unit">
-                                    <div className="loc-cd-num">{pad(countdown.s)}</div>
-                                    <div className="loc-cd-label">Sec</div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
 
-                {/* ── CTA 3 ── */}
-                <div className="loc-cta-wrap loc-reveal">
-                    <button className="loc-cta" onClick={handleCheckout}>
+                {/* ════ DIVIDER ════ */}
+                <div className="loc-divider"><span>7 SPOTS</span></div>
+
+                {/* ════ SPOTS ════ */}
+                <div className="loc-r" style={{ textAlign: 'center', paddingBottom: 20 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(5rem,18vw,8rem)', fontWeight: 700, lineHeight: 1, letterSpacing: -4, background: 'linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.06) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', animation: 'locFloat 4s ease infinite' }}>7</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 600, letterSpacing: 8, color: 'rgba(197,160,89,0.4)', marginTop: 4, textTransform: 'uppercase' }}>Spots Available</div>
+                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.2)', marginTop: 16, lineHeight: 1.7 }}>
+                        Once I have my 7, enrollment closes. No waitlist. No exceptions.
+                    </div>
+                </div>
+
+                {/* ════ CTA ════ */}
+                <div className="loc-r" style={{ textAlign: 'center', paddingTop: 30 }}>
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{
+                        padding: '20px 60px', background: 'linear-gradient(135deg, #c5a059, #a8884a)',
+                        color: '#050505', border: 'none', cursor: 'pointer',
+                        fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 700,
+                        letterSpacing: 5, textTransform: 'uppercase',
+                        boxShadow: '0 4px 30px rgba(197,160,89,0.2)',
+                    }}>
+                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                         Give Me Your October
                     </button>
                 </div>
-                <div className="loc-cta-sub">&euro;{PRICE} this weekend only. &euro;{REGULAR_PRICE} after Monday.</div>
 
-                {/* ── SPOTS ── */}
-                <div className="loc-sep"><div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" /></div>
+                {/* ════ DIVIDER ════ */}
+                <div className="loc-divider"><span>LISTEN</span></div>
 
-                <div className="loc-spots loc-reveal">
-                    <div className="loc-spots-n">7</div>
-                    <div className="loc-spots-label">Spots Available</div>
-                    <div className="loc-spots-p">Once I have my 7, enrollment closes. No waitlist. No exceptions.</div>
-                </div>
-
-                {/* ── QUEEN QUOTE ── */}
-                <div className="loc-sep"><div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" /></div>
-
-                <div className="loc-quote loc-reveal">
-                    <div className="loc-cn loc-cn-tl" /><div className="loc-cn loc-cn-tr" /><div className="loc-cn loc-cn-bl" /><div className="loc-cn loc-cn-br" />
-                    <div className="loc-quote-inner">
-                        <div className="loc-quote-label">Listen</div>
-                        <div className="loc-quote-text">
+                {/* ════ QUEEN QUOTE ════ */}
+                <div className="loc-r loc-section-full" style={{ ...s.section, ...s.sectionAlt, paddingTop: 70, paddingBottom: 70, position: 'relative', animation: 'locBorder 5s ease infinite' }}>
+                    <div style={{ textAlign: 'center', maxWidth: 500, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.7rem', fontWeight: 600, letterSpacing: 8, color: '#d4af6a', marginBottom: 28, textTransform: 'uppercase' }}>From the Queen</div>
+                        <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: 'clamp(1.2rem,3.5vw,1.5rem)', fontStyle: 'italic', fontWeight: 300, lineHeight: 1.85, color: 'rgba(255,255,255,0.4)' }}>
                             You have thought about Locktober every single year.
-                            And every single year, you did <strong>nothing.</strong><br /><br />
+                            And every single year, you did <strong style={s.white}>nothing.</strong><br/><br/>
                             You scrolled past it. You told yourself you would try it
-                            <strong> next time.</strong> You spent October the same way
-                            you spent September. Unlocked. Alone. Unchanged.<br /><br />
+                            <strong style={s.white}> next time.</strong> You spent October the same way
+                            you spent September. Unlocked. Alone. Unchanged.<br/><br/>
                             This year, I am offering you something different.
                             A real app. A real keyholder. A real 31-day program
-                            with daily tasks, personal review, and zero way out.<br /><br />
-                            <strong>7 spots. This price disappears Monday.</strong>
+                            with daily tasks, personal review, and zero way out.<br/><br/>
+                            <strong style={{ color: '#d4af6a', fontWeight: 400 }}>7 spots. This price disappears Monday.</strong>
                         </div>
-                        <div className="loc-quote-sig">Karin</div>
+                        <div style={{ marginTop: 28, fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 300, letterSpacing: 5, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>Karin</div>
                     </div>
                 </div>
 
-                {/* ── FINAL CTA ── */}
-                <div className="loc-cta-wrap loc-reveal" style={{ paddingTop: 44 }}>
-                    <button className="loc-cta" onClick={handleCheckout}>
+                {/* ════ FINAL CTA ════ */}
+                <div className="loc-r" style={{ textAlign: 'center', paddingTop: 80, paddingBottom: 20 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>
+                        October 1st.
+                    </div>
+                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>
+                        Your lock starts. Your excuses end.
+                    </div>
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{
+                        padding: '22px 64px', background: 'linear-gradient(135deg, #c5a059 0%, #a8884a 50%, #c5a059 100%)', backgroundSize: '200% auto',
+                        color: '#050505', border: 'none', cursor: 'pointer',
+                        fontFamily: 'Cinzel, serif', fontSize: '0.65rem', fontWeight: 700,
+                        letterSpacing: 6, textTransform: 'uppercase',
+                        boxShadow: '0 4px 40px rgba(197,160,89,0.25)',
+                    }}>
+                        <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                         Lock Up for &euro;{PRICE}
                     </button>
+                    <div style={{ marginTop: 14, fontFamily: 'Inter,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.25)', letterSpacing: 3, animation: 'locPulse 3s ease infinite' }}>
+                        7 spots. &euro;{PRICE} this weekend. Starts Oct 1st.
+                    </div>
                 </div>
-                <div className="loc-cta-sub">7 spots. &euro;{PRICE} this weekend. Starts Oct 1st.</div>
 
-                {/* ── FOOTER ── */}
-                <div className="loc-sep" style={{ paddingBottom: 0 }}>
-                    <div className="loc-sep-l" /><div className="loc-sep-d" /><div className="loc-sep-l" />
-                </div>
-                <div className="loc-footer">
-                    <div className="loc-footer-brand">QUEEN KARIN</div>
-                    <a href="https://throne.qkarin.com" target="_blank" rel="noopener">throne.qkarin.com</a>
+                {/* ════ FOOTER ════ */}
+                <div style={{ marginTop: 80, borderTop: '1px solid rgba(197,160,89,0.06)', paddingTop: 40, textAlign: 'center', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: -1, left: '50%', transform: 'translateX(-50%)', width: 200, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent)' }} />
+                    <div style={{ fontFamily: 'Cormorant Garamond, Georgia, serif', fontSize: '1rem', fontWeight: 600, letterSpacing: 8, color: 'rgba(255,255,255,0.08)', marginBottom: 10 }}>QUEEN KARIN</div>
+                    <a href="https://throne.qkarin.com" target="_blank" rel="noopener" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.06)', textDecoration: 'none', letterSpacing: 3 }}>throne.qkarin.com</a>
                 </div>
 
             </div>
-
-            {/* ── STICKY HEADER ── */}
-            <StickyHeader onCheckout={handleCheckout} price={PRICE} regularPrice={REGULAR_PRICE} />
-
-            {/* ── PAYMENT MODAL ── */}
-            {showPayment && (
-                <PaymentModal
-                    amountEur={PRICE}
-                    label="LOCKTOBER PROGRAM"
-                    cardBody={{ memberId: userEmail || '', amount: PRICE }}
-                    cryptoApiPath="/api/keyholder/passimpay"
-                    cryptoStatusApiPath="/api/keyholder/passimpay-status"
-                    cryptoPayBody={{ tierId: 'loctober' }}
-                    cryptoStatusBody={{ tierId: 'loctober' }}
-                    confirmMessage="PAYMENT CONFIRMED. SEE YOU OCTOBER 1ST."
-                    throneUrl="https://throne.com/queenkarin"
-                    onSuccess={() => { window.location.href = '/profile'; }}
-                    onClose={() => setShowPayment(false)}
-                />
-            )}
-        </>
-    );
-}
-
-/* ── Sticky header that appears on scroll ── */
-function StickyHeader({ onCheckout, price, regularPrice }: { onCheckout: () => void; price: number; regularPrice: number }) {
-    const [show, setShow] = useState(false);
-
-    useEffect(() => {
-        const onScroll = () => setShow(window.scrollY > window.innerHeight * 0.7);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
-
-    return (
-        <div className={`loc-sticky ${show ? 'show' : ''}`}>
-            <div>
-                <span className="loc-sticky-price">&euro;{price}</span>
-                <span className="loc-sticky-old">&euro;{regularPrice}</span>
-            </div>
-            <button className="loc-sticky-btn" onClick={onCheckout}>
-                Lock Up Now
-            </button>
         </div>
-    );
+
+        {/* ── PAYMENT MODAL ── */}
+        {showPayment && (
+            <PaymentModal
+                amountEur={PRICE}
+                label="LOCKTOBER PROGRAM"
+                cardBody={{ memberId: userEmail || '', amount: PRICE }}
+                cryptoApiPath="/api/keyholder/passimpay"
+                cryptoStatusApiPath="/api/keyholder/passimpay-status"
+                cryptoPayBody={{ tierId: 'loctober' }}
+                cryptoStatusBody={{ tierId: 'loctober' }}
+                confirmMessage="PAYMENT CONFIRMED. SEE YOU OCTOBER 1ST."
+                throneUrl="https://throne.com/queenkarin"
+                onSuccess={() => { window.location.href = '/profile'; }}
+                onClose={() => setShowPayment(false)}
+            />
+        )}
+    </>);
 }
