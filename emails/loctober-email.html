@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Queen Karin — LOCKTOBER 2026</title>
+<title>Queen Karin — LOCKTOBER</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -48,7 +48,7 @@
   }
 
   @keyframes countPulse {
-    0%, 100% { opacity: 0.4; }
+    0%, 100% { opacity: 0.35; }
     50% { opacity: 1; }
   }
 
@@ -119,7 +119,6 @@
     background: radial-gradient(ellipse at center, transparent 30%, rgba(5,5,5,0.6) 100%);
   }
 
-  /* Red vignette for locktober mood */
   .hero-gradient::before {
     content: '';
     position: absolute;
@@ -154,7 +153,7 @@
 
   .hero-title {
     font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-    font-size: 54px;
+    font-size: 52px;
     font-weight: 300;
     line-height: 1.05;
     color: #fff;
@@ -176,47 +175,6 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     animation: fadeInUp 1s ease 0.7s both;
-  }
-
-  /* COUNTDOWN ROW */
-  .countdown {
-    display: flex;
-    justify-content: center;
-    gap: 28px;
-    padding: 36px 30px;
-    background: linear-gradient(180deg, rgba(8,4,4,1) 0%, rgba(5,5,5,1) 100%);
-    border-top: 1px solid rgba(139,0,0,0.12);
-    border-bottom: 1px solid rgba(139,0,0,0.12);
-  }
-
-  .cd-block {
-    text-align: center;
-  }
-
-  .cd-num {
-    font-family: 'Cinzel', serif;
-    font-size: 36px;
-    font-weight: 700;
-    color: rgba(180,40,40,0.8);
-    line-height: 1;
-    letter-spacing: -1px;
-    text-shadow: 0 0 30px rgba(139,0,0,0.3);
-  }
-
-  .cd-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 8px;
-    font-weight: 300;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.25);
-    margin-top: 6px;
-  }
-
-  .cd-sep {
-    width: 1px;
-    background: linear-gradient(180deg, transparent, rgba(139,0,0,0.2), transparent);
-    align-self: stretch;
   }
 
   /* URGENCY BAR */
@@ -259,8 +217,8 @@
     padding: 0 4px;
   }
 
-  /* GOLD SEPARATOR */
-  .gold-sep {
+  /* SEPARATOR */
+  .sep {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -268,13 +226,13 @@
     padding: 40px 0 0;
   }
 
-  .gold-sep-line {
+  .sep-line {
     width: 60px;
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(139,0,0,0.3), transparent);
   }
 
-  .gold-sep-diamond {
+  .sep-diamond {
     width: 5px;
     height: 5px;
     background: rgba(139,0,0,0.35);
@@ -327,8 +285,8 @@
     color: rgba(180,40,40,0.65);
   }
 
-  /* CHALLENGE STRIP */
-  .challenge-strip {
+  /* STRIP */
+  .strip {
     margin: 0 30px;
     padding: 28px 34px;
     border-top: 1px solid rgba(139,0,0,0.08);
@@ -336,7 +294,7 @@
     text-align: center;
   }
 
-  .challenge-strip p {
+  .strip p {
     font-family: 'Cormorant Garamond', serif;
     font-size: 17px;
     font-weight: 300;
@@ -346,7 +304,7 @@
     letter-spacing: 0.5px;
   }
 
-  .challenge-strip strong {
+  .strip strong {
     color: rgba(255,255,255,0.65);
     font-weight: 400;
   }
@@ -354,30 +312,29 @@
   /* SPOTS COUNTER */
   .spots {
     text-align: center;
-    padding: 40px 30px 10px;
+    padding: 44px 30px 10px;
   }
 
   .spots-number {
     font-family: 'Cinzel', serif;
-    font-size: 80px;
+    font-size: 100px;
     font-weight: 700;
     line-height: 1;
-    letter-spacing: -3px;
-    background: linear-gradient(180deg, rgba(180,40,40,0.7) 0%, rgba(139,0,0,0.25) 100%);
+    letter-spacing: -4px;
+    background: linear-gradient(180deg, rgba(180,40,40,0.75) 0%, rgba(139,0,0,0.2) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: none;
   }
 
   .spots-label {
     font-family: 'Cinzel', serif;
     font-size: 10px;
     font-weight: 600;
-    letter-spacing: 6px;
+    letter-spacing: 8px;
     text-transform: uppercase;
-    color: rgba(180,40,40,0.5);
-    margin-top: 4px;
+    color: rgba(180,40,40,0.45);
+    margin-top: 2px;
   }
 
   .spots-sub {
@@ -385,14 +342,14 @@
     font-size: 16px;
     font-weight: 300;
     font-style: italic;
-    color: rgba(255,255,255,0.3);
-    margin-top: 16px;
+    color: rgba(255,255,255,0.25);
+    margin-top: 18px;
     line-height: 1.6;
   }
 
   /* FEATURES */
   .features {
-    padding: 40px 44px 10px;
+    padding: 36px 44px 10px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -603,111 +560,6 @@
     animation: countPulse 3s ease infinite;
   }
 
-  /* TIMELINE */
-  .timeline {
-    padding: 10px 44px 30px;
-  }
-
-  .tl-row {
-    display: flex;
-    gap: 18px;
-    padding: 18px 0;
-    border-bottom: 1px solid rgba(139,0,0,0.06);
-  }
-
-  .tl-row:last-child { border-bottom: none; }
-
-  .tl-week {
-    flex-shrink: 0;
-    width: 46px;
-    text-align: center;
-  }
-
-  .tl-week-num {
-    font-family: 'Cinzel', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: rgba(180,40,40,0.55);
-    line-height: 1;
-  }
-
-  .tl-week-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 7px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.2);
-    margin-top: 3px;
-  }
-
-  .tl-content h5 {
-    font-family: 'Cinzel', serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.65);
-    margin-bottom: 4px;
-  }
-
-  .tl-content p {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.35);
-    line-height: 1.6;
-  }
-
-  /* DIVIDER */
-  .divider {
-    padding: 50px 0;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-  }
-
-  .divider-line {
-    width: 80px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.2), transparent);
-  }
-
-  .divider-diamond {
-    width: 4px;
-    height: 4px;
-    background: rgba(139,0,0,0.25);
-    transform: rotate(45deg);
-    flex-shrink: 0;
-  }
-
-  /* BOTTOM QUOTE */
-  .bottom-quote-solo {
-    padding: 0 40px 45px;
-    text-align: center;
-  }
-
-  .bottom-quote-solo p {
-    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-    font-size: 22px;
-    font-weight: 300;
-    font-style: italic;
-    color: rgba(255,255,255,0.35);
-    line-height: 1.75;
-  }
-
-  .bottom-quote-solo .attr {
-    display: block;
-    margin-top: 18px;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px;
-    font-style: normal;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: rgba(139,0,0,0.45);
-  }
-
   /* SECOND CTA */
   .cta2-wrap {
     text-align: center;
@@ -747,7 +599,6 @@
     border-color: rgba(139,0,0,0.45);
     background: rgba(139,0,0,0.04);
     letter-spacing: 7px;
-    box-shadow: 0 0 40px rgba(139,0,0,0.08);
   }
 
   .cta2:hover::after { width: 70%; }
@@ -761,6 +612,56 @@
     font-style: italic;
     color: rgba(255,255,255,0.12);
     letter-spacing: 1px;
+  }
+
+  /* DIVIDER */
+  .divider {
+    padding: 50px 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .divider-line {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139,0,0,0.2), transparent);
+  }
+
+  .divider-diamond {
+    width: 4px;
+    height: 4px;
+    background: rgba(139,0,0,0.25);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+
+  /* BOTTOM QUOTE */
+  .bottom-quote {
+    padding: 0 40px 45px;
+    text-align: center;
+  }
+
+  .bottom-quote p {
+    font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(255,255,255,0.35);
+    line-height: 1.75;
+  }
+
+  .bottom-quote .attr {
+    display: block;
+    margin-top: 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    font-style: normal;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: rgba(139,0,0,0.45);
   }
 
   /* FOOTER */
@@ -804,24 +705,20 @@
   /* MOBILE */
   @media (max-width: 520px) {
     .hero { height: 440px; }
-    .hero-title { font-size: 40px; }
+    .hero-title { font-size: 38px; }
     .hero-content { padding: 0 26px 32px; }
-    .countdown { gap: 16px; padding: 28px 20px; }
-    .cd-num { font-size: 28px; }
     .message { padding: 30px 20px 30px; }
     .message p { font-size: 17px; line-height: 1.8; }
-    .msg-headline { font-size: 24px; letter-spacing: 2px; }
+    .msg-headline { font-size: 22px; letter-spacing: 2px; }
     .msg-subline { font-size: 13px; letter-spacing: 1px; }
-    .challenge-strip { margin: 0 12px; padding: 22px 16px; }
-    .challenge-strip p { font-size: 14px; }
-    .spots-number { font-size: 60px; }
+    .strip { margin: 0 12px; padding: 22px 16px; }
+    .strip p { font-size: 14px; }
+    .spots { padding: 36px 20px 10px; }
+    .spots-number { font-size: 70px; }
     .features { padding: 30px 20px 10px; gap: 16px; }
     .feat-icon { width: 32px; height: 32px; font-size: 14px; }
     .feat-text h4 { font-size: 15px; }
     .feat-text p { font-size: 10px; }
-    .timeline { padding: 10px 20px 30px; }
-    .tl-row { gap: 14px; }
-    .tl-content p { font-size: 13px; }
     .offer { margin: 20px 12px 0; }
     .offer-inner { padding: 32px 18px; }
     .offer-label { font-size: 10px; letter-spacing: 4px; margin-bottom: 22px; }
@@ -834,10 +731,10 @@
     .cta2 { padding: 16px 0; letter-spacing: 3px; font-size: 10px; width: 100%; display: block; text-align: center; }
     .cta2-note { font-size: 12px; padding: 8px 20px 0; }
     .divider { padding: 36px 0; }
-    .bottom-quote-solo { padding: 0 20px 36px; }
-    .bottom-quote-solo p { font-size: 18px; }
-    .bottom-quote-solo .attr { font-size: 8px; letter-spacing: 4px; }
-    .gold-sep { padding: 28px 0 0; }
+    .bottom-quote { padding: 0 20px 36px; }
+    .bottom-quote p { font-size: 18px; }
+    .bottom-quote .attr { font-size: 8px; letter-spacing: 4px; }
+    .sep { padding: 28px 0 0; }
     .footer { padding: 30px 20px; }
     .footer-brand { font-size: 14px; letter-spacing: 6px; }
   }
@@ -851,197 +748,118 @@
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
     <div class="hero-gradient"></div>
     <div class="hero-content">
-      <div class="hero-tag">October 1 &ndash; 31</div>
-      <h1 class="hero-title">Locktober<br><em>is Coming.</em></h1>
-      <p class="hero-sub">31 days. Locked. Under my control.</p>
+      <div class="hero-tag">7 Spots Left</div>
+      <h1 class="hero-title">I'm Taking<br><em>Your October.</em></h1>
+      <p class="hero-sub">31 days locked. Daily video tasks. No way out.</p>
     </div>
   </div>
 
   <!-- TICKER -->
   <div class="urgency-bar">
     <div class="urgency-track">
-      <span class="urgency-item"><span>10</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">october <span>1st</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>release</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>10</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">october <span>1st</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">no <span>release</span></span><span class="urgency-sep">&diams;</span>
+      <span class="urgency-item">only <span>7</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">starts <span>oct 1</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">personally <span>reviewed</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">only <span>7</span> spots</span><span class="urgency-sep">&diams;</span><span class="urgency-item">daily <span>video tasks</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item"><span>31</span> days locked</span><span class="urgency-sep">&diams;</span><span class="urgency-item">starts <span>oct 1</span></span><span class="urgency-sep">&diams;</span><span class="urgency-item">personally <span>reviewed</span></span><span class="urgency-sep">&diams;</span>
     </div>
   </div>
 
-  <!-- COUNTDOWN STATS -->
-  <div class="countdown">
-    <div class="cd-block">
-      <div class="cd-num">31</div>
-      <div class="cd-label">Days</div>
-    </div>
-    <div class="cd-sep"></div>
-    <div class="cd-block">
-      <div class="cd-num">10</div>
-      <div class="cd-label">Spots</div>
-    </div>
-    <div class="cd-sep"></div>
-    <div class="cd-block">
-      <div class="cd-num">0</div>
-      <div class="cd-label">Excuses</div>
-    </div>
+  <!-- SEPARATOR -->
+  <div class="sep">
+    <div class="sep-line"></div>
+    <div class="sep-diamond"></div>
+    <div class="sep-line"></div>
   </div>
 
-  <!-- GOLD SEPARATOR -->
-  <div class="gold-sep">
-    <div class="gold-sep-line"></div>
-    <div class="gold-sep-diamond"></div>
-    <div class="gold-sep-line"></div>
-  </div>
-
-  <!-- MESSAGE -->
+  <!-- MESSAGE 1 -->
   <div class="message">
     <p>
-      <span class="msg-headline">You Know What October Is.</span>
-      <span class="msg-subline">the question is whether you're ready this year.</span>
-      Every October, thousands of men lock up and try to make it through the month.
-      Most of them do it alone. No structure. No accountability.
-      No one watching. They make it a week, maybe two, then quietly
-      <em>unlock and pretend it never happened.</em><br><br>
-      That won't be you. Not this year.<br><br>
-      I'm running <strong>Locktober on my platform.</strong>
-      10 spots. 31 days. Daily video tasks sent directly through the app.
-      Every morning you wake up to new orders.
-      Every day you prove you're still locked.
-      Every task is <strong>reviewed by me personally.</strong><br><br>
-      This is not a timer on your phone. This is not a Reddit thread where
-      you post once and disappear. This is a full month under
-      <strong>real control.</strong>
+      <span class="msg-headline">October Is Mine.</span>
+      <span class="msg-subline">and if you're reading this, it could be yours too.</span>
+      I'm locking <strong>7 men</strong> for the entire month of October.
+      31 days. No breaks. No early release. No negotiating.<br><br>
+      Every single day, you get a <strong>video task</strong> sent directly through my app.
+      I tell you what to film. You film it. You submit it. I review it.
+      If I don't like what I see, I add days.<br><br>
+      This is not some challenge you do alone in your bedroom hoping
+      motivation carries you through. <em>Motivation won't save you.</em>
+      I will. Because I'll be watching. Every. Single. Day.
     </p>
-  </div>
-
-  <!-- CHALLENGE STRIP -->
-  <div class="challenge-strip">
-    <p>
-      Locktober with <strong>no keyholder</strong> is just a man sitting alone in his room hoping willpower works. It never does. <strong>I'm your willpower.</strong>
-    </p>
-  </div>
-
-  <!-- 10 SPOTS -->
-  <div class="spots">
-    <div class="spots-number">10</div>
-    <div class="spots-label">Spots Only</div>
-    <div class="spots-sub">
-      I review every video. Every task. Every submission.<br>
-      I cannot do that for a hundred people. So I won't.
-    </div>
   </div>
 
   <!-- CTA 1 -->
   <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Claim Your Spot</a>
+    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Give Me Your October</a>
   </div>
-  <div class="cta-note">Starts October 1st. When spots fill, they're gone.</div>
+  <div class="cta-note" style="animation: countPulse 3s ease infinite;">7 spots. When they're gone, they're gone.</div>
 
-  <!-- DIVIDER -->
-  <div class="divider">
-    <div class="divider-line"></div>
-    <div class="divider-diamond"></div>
-    <div class="divider-line"></div>
+  <!-- STRIP -->
+  <div class="strip" style="margin-top: 40px;">
+    <p>
+      You've spent every October scrolling past Locktober posts thinking <strong>"maybe next year."</strong> This is next year. And I'm not asking.
+    </p>
   </div>
 
-  <!-- WHAT'S INSIDE -->
-  <div style="text-align: center; padding: 0 40px 10px;">
-    <div style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: rgba(180,40,40,0.5); margin-bottom: 6px;">What You're Getting Into</div>
-    <div style="font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.25); letter-spacing: 1px;">31 days of structured obedience</div>
+  <!-- 7 SPOTS -->
+  <div class="spots">
+    <div class="spots-number">7</div>
+    <div class="spots-label">Spots Remaining</div>
+    <div class="spots-sub">
+      I personally review every video submission.<br>
+      That's why I will never take more than I can handle.
+    </div>
+  </div>
+
+  <!-- SEPARATOR -->
+  <div class="sep" style="padding-bottom: 10px;">
+    <div class="sep-line"></div>
+    <div class="sep-diamond"></div>
+    <div class="sep-line"></div>
+  </div>
+
+  <!-- WHAT YOU GET -->
+  <div style="text-align: center; padding: 30px 40px 0;">
+    <div style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: rgba(180,40,40,0.5);">What 31 Days Looks Like</div>
   </div>
 
   <div class="features">
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>Daily Video Tasks</h4>
-        <p>Not generic instructions. Real tasks assigned through the app. Video proof required.</p>
+        <h4>A New Video Task Every Day</h4>
+        <p>Assigned through the app each morning. You film it. You submit it. I watch it.</p>
       </div>
     </div>
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>Chastity Check-in Every Morning</h4>
-        <p>Photo proof that you're still locked. Every single day. No exceptions.</p>
+        <h4>Chastity Proof Every Morning</h4>
+        <p>You wake up, you prove you're locked. Miss a day and I end your program with a penalty.</p>
       </div>
     </div>
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>Personal Review by Me</h4>
-        <p>I watch every submission. I approve or reject. I add penalty days if you fail.</p>
+        <h4>Reviewed Personally by Me</h4>
+        <p>Not a bot. Not an auto-reply. I see everything you submit and I decide if it's good enough.</p>
       </div>
     </div>
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>Real Keyholder App</h4>
-        <p>Live lock timer. Task dashboard. Progress tracking. Built by me, not a third-party link.</p>
+        <h4>My Keyholder App</h4>
+        <p>Live lock timer. Task dashboard. Streaks. Points. Progress. All inside one platform I built myself.</p>
       </div>
     </div>
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>Escalating Difficulty</h4>
-        <p>Week 1 is manageable. Week 4 will break you. That's the point.</p>
+        <h4>Tasks Get Harder Every Week</h4>
+        <p>Week 1 is warm-up. By week 4 you'll understand why most men don't make it to the end.</p>
       </div>
     </div>
     <div class="feat-row">
       <div class="feat-icon">&#9670;</div>
       <div class="feat-text">
-        <h4>No Early Release</h4>
-        <p>You beg, I deny. You can plead all you want. 31 days means 31 days.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- WEEKLY BREAKDOWN -->
-  <div class="gold-sep" style="padding-bottom: 10px;">
-    <div class="gold-sep-line"></div>
-    <div class="gold-sep-diamond"></div>
-    <div class="gold-sep-line"></div>
-  </div>
-
-  <div style="text-align: center; padding: 30px 40px 0;">
-    <div style="font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600; letter-spacing: 6px; text-transform: uppercase; color: rgba(180,40,40,0.5); margin-bottom: 6px;">The 4 Weeks</div>
-    <div style="font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; font-style: italic; color: rgba(255,255,255,0.25); letter-spacing: 1px;">each one harder than the last</div>
-  </div>
-
-  <div class="timeline">
-    <div class="tl-row">
-      <div class="tl-week">
-        <div class="tl-week-num">1</div>
-        <div class="tl-week-label">Week</div>
-      </div>
-      <div class="tl-content">
-        <h5>Foundation</h5>
-        <p>Kneeling rituals. Morning check-ins. First video submissions. Learning to follow orders without thinking.</p>
-      </div>
-    </div>
-    <div class="tl-row">
-      <div class="tl-week">
-        <div class="tl-week-num">2</div>
-        <div class="tl-week-label">Week</div>
-      </div>
-      <div class="tl-content">
-        <h5>Pressure</h5>
-        <p>Longer tasks. Writing confessions. Endurance challenges. Cold showers. This is where most people quit.</p>
-      </div>
-    </div>
-    <div class="tl-row">
-      <div class="tl-week">
-        <div class="tl-week-num">3</div>
-        <div class="tl-week-label">Week</div>
-      </div>
-      <div class="tl-content">
-        <h5>Obedience</h5>
-        <p>Timed video tasks. Edge control. Devotion letters. Dice rolls and wheel spins that decide your fate.</p>
-      </div>
-    </div>
-    <div class="tl-row">
-      <div class="tl-week">
-        <div class="tl-week-num">4</div>
-        <div class="tl-week-label">Week</div>
-      </div>
-      <div class="tl-content">
-        <h5>The Final Test</h5>
-        <p>Everything escalates. Multiple daily tasks. Penalty stakes. If you've made it this far, you earn the right to call yourself trained.</p>
+        <h4>No Way Out</h4>
+        <p>You can beg. I'll enjoy reading it. But you're not getting released until I say so.</p>
       </div>
     </div>
   </div>
@@ -1054,12 +872,17 @@
     <div class="corner corner-bl"></div>
     <div class="corner corner-br"></div>
     <div class="offer-inner">
-      <div class="offer-label">Listen</div>
+      <div class="offer-label">Hear Me</div>
       <div class="offer-quote">
-        Every year you tell yourself <strong>this is the year you do Locktober for real.</strong><br><br>
-        And every year you unlock after 9 days because
-        nobody was watching. Nobody cared. Nobody even knew.<br><br>
-        I'll know. I'll care. And I <strong>won't let you quit.</strong>
+        Most of you will read this and do nothing.
+        You'll save it. Think about it. Tell yourself
+        you'll <strong>come back later.</strong><br><br>
+        Later there will be no spots left.
+        And you'll spend October the same way
+        you spent every other month. Alone.
+        <strong>Unlocked. Unaccountable. Unchanged.</strong><br><br>
+        Or you take one of these 7 spots right now
+        and let me do what I do best.
       </div>
       <div class="offer-sig">Karin</div>
     </div>
@@ -1067,9 +890,9 @@
 
   <!-- CTA 2 -->
   <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Lock Up for October</a>
+    <a href="https://throne.qkarin.com/keyholder" class="cta" target="_blank">Claim Your Spot</a>
   </div>
-  <div class="cta-note">Only 10 spots. No waitlist.</div>
+  <div class="cta-note">October 1st. 31 days. 7 men. That's it.</div>
 
   <!-- DIVIDER -->
   <div class="divider">
@@ -1079,16 +902,16 @@
   </div>
 
   <!-- BOTTOM QUOTE -->
-  <div class="bottom-quote-solo">
-    <p>October starts in 13 days. You can spend it the same way you spent every other month. Or you can spend it on your knees, locked, proving to yourself that you're capable of something real.</p>
-    <span class="attr">Your key is waiting.</span>
+  <div class="bottom-quote">
+    <p>You don't need another month of pretending you have discipline. You need someone who won't let you pretend anymore. I start October 1st. With or without you.</p>
+    <span class="attr">The key is in your hands. For now.</span>
   </div>
 
   <!-- SECOND CTA -->
   <div class="cta2-wrap">
     <a href="https://throne.qkarin.com/keyholder" class="cta2" target="_blank">Enter the Throne</a>
   </div>
-  <div class="cta2-note">10 spots. 31 days. No way out.</div>
+  <div class="cta2-note">Once spots fill, this page closes.</div>
 
   <!-- FOOTER DIVIDER -->
   <div class="divider" style="padding: 40px 0;">
