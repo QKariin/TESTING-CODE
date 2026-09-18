@@ -49,9 +49,10 @@ export default function LoctoberClient() {
     }, []);
 
     useEffect(() => {
-        const fn = () => setShowSticky(window.scrollY > window.innerHeight * 0.75);
-        window.addEventListener('scroll', fn, { passive: true });
-        return () => window.removeEventListener('scroll', fn);
+        const getScroller = () => document.querySelector('[data-loc-scroll]') as HTMLElement | null;
+        const fn = () => { const s = getScroller(); if (s) setShowSticky(s.scrollTop > window.innerHeight * 0.75); };
+        const t = setTimeout(() => { const s = getScroller(); s?.addEventListener('scroll', fn, { passive: true }); }, 50);
+        return () => { const s = getScroller(); s?.removeEventListener('scroll', fn); clearTimeout(t); };
     }, []);
 
     useEffect(() => {
@@ -92,7 +93,7 @@ export default function LoctoberClient() {
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
         <style>{`
-            html, body { overflow-x:hidden; background:#020202!important; }
+            html, body { background:#020202!important; overflow:hidden!important; height:100%!important; }
             @keyframes locFadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
             @keyframes locFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes locShimmer{0%{background-position:-200% center}100%{background-position:200% center}}
@@ -114,7 +115,6 @@ export default function LoctoberClient() {
             .loc-cta-btn:active{transform:scale(0.98)}
             .loc-need-item{transition:background 0.3s ease}
             .loc-need-item:hover{background:rgba(197,160,89,0.02)}
-            *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
             @media(min-width:769px){
                 .loc-container{max-width:1000px!important;padding-left:60px!important;padding-right:60px!important}
                 .loc-section{margin-left:calc(-50vw + 50%);margin-right:calc(-50vw + 50%);padding-left:calc(50vw - 50% + 60px);padding-right:calc(50vw - 50% + 60px)}
@@ -123,7 +123,7 @@ export default function LoctoberClient() {
             }
         `}</style>
 
-        <div style={{ position: 'relative', zIndex: 1, color: '#fff' }}>
+        <div data-loc-scroll style={{ position: 'fixed', inset: 0, overflowY: 'scroll', overflowX: 'hidden', zIndex: 1, color: '#fff', WebkitOverflowScrolling: 'touch' }}>
         <div className="loc-container" style={{ position: 'relative', maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
             {/* ════ HERO ════ */}
