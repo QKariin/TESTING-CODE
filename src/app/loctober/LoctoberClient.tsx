@@ -126,50 +126,37 @@ export default function LoctoberClient() {
         <div className="loc-container" style={{ position: 'relative', maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
 
             {/* ════ HERO ════ */}
-            <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: '60px 0 40px' }}>
-                {/* Lock icon — compact */}
-                <div style={{ animation: mounted ? 'locFadeIn 1s ease-out both' : 'none', marginBottom: 28 }}>
-                    <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
-                        <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.15)', animation: 'locRing 4s ease-in-out infinite' }} />
-                        <div style={{ width: 80, height: 80, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.25)', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c5a059" strokeWidth="1.2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="#c5a059"/></svg>
-                        </div>
-                    </div>
+            <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: '40px 0' }}>
+
+                {/* ── GROUP 1: Identity ── */}
+                <div style={{ animation: mounted ? 'locFadeIn 0.8s ease-out both' : 'none', marginBottom: 40 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.4)" strokeWidth="1.2" style={{ marginBottom: 16 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill="rgba(197,160,89,0.4)"/></svg>
+                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.8rem,10vw,4.5rem)', color: '#fff', letterSpacing: 6, textTransform: 'uppercase', margin: 0, fontWeight: 700, lineHeight: 1 }}>LOCKTOBER</h1>
+                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(1rem,3vw,1.3rem)', fontStyle: 'italic', color: 'rgba(197,160,89,0.6)', fontWeight: 300, marginTop: 10, letterSpacing: 1 }}>The only Locktober with a real keyholder app.</div>
                 </div>
 
-                <div style={{ animation: mounted ? 'locFadeUp 0.8s ease-out 0.3s both' : 'none' }}>
-                    {/* Title */}
-                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4.2rem)', color: '#fff', letterSpacing: 4, textTransform: 'uppercase', margin: '0 0 6px', fontWeight: 700, lineHeight: 1 }}>LOCKTOBER</h1>
-                    <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: 'clamp(1.1rem,3.5vw,1.5rem)', fontStyle: 'italic', color: '#d4af6a', fontWeight: 300, marginBottom: 24, letterSpacing: 1 }}>The only Locktober with a real keyholder app.</div>
-
-                    {/* Price block */}
-                    <div style={{ marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10 }}>
-                            <span style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(3rem,10vw,4.5rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1, letterSpacing: -2 }}>&euro;{PRICE}</span>
-                            <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1.2rem', fontWeight: 300, color: 'rgba(255,255,255,0.15)', textDecoration: 'line-through', textDecorationColor: 'rgba(197,160,89,0.3)' }}>&euro;{REGULAR}</span>
-                        </div>
-                        <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.55rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.4)', marginTop: 6, textTransform: 'uppercase' }}>31 days &middot; daily tasks &middot; personal review &middot; full app access</div>
+                {/* ── GROUP 2: Price — THE STAR ── */}
+                <div style={{ animation: mounted ? 'locFadeUp 0.8s ease-out 0.3s both' : 'none', marginBottom: 32, padding: '32px 40px', border: '1px solid rgba(197,160,89,0.12)', background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 12 }}>
+                        <span style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(4rem,14vw,6rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1, letterSpacing: -3, animation: 'locGlow 5s ease infinite' }}>&euro;{PRICE}</span>
+                        <span style={{ fontFamily: 'Inter,sans-serif', fontSize: '1.4rem', fontWeight: 300, color: 'rgba(255,255,255,0.12)', textDecoration: 'line-through', textDecorationColor: 'rgba(197,160,89,0.25)' }}>&euro;{REGULAR}</span>
                     </div>
+                    <div style={{ width: 60, height: 1, background: 'rgba(197,160,89,0.15)', margin: '14px auto' }} />
+                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>31 days &middot; daily tasks &middot; personal review &middot; full app</div>
+                </div>
 
-                    {/* Countdown */}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(16px,5vw,32px)', marginBottom: 28 }}>
-                        {[{ v: pad(countdown.d), l: 'Days' }, { v: pad(countdown.h), l: 'Hrs' }, { v: pad(countdown.m), l: 'Min' }, { v: pad(countdown.s), l: 'Sec' }].map((u) => (
-                            <div key={u.l} style={{ textAlign: 'center' }}>
-                                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.6rem,5vw,2.2rem)', fontWeight: 700, color: '#d4af6a', lineHeight: 1 }}>{u.v}</div>
-                                <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.4rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(197,160,89,0.3)', marginTop: 4, textTransform: 'uppercase' }}>{u.l}</div>
-                            </div>
-                        ))}
-                    </div>
-                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 400, letterSpacing: 4, color: 'rgba(197,160,89,0.35)', marginBottom: 24, textTransform: 'uppercase' }}>Price rises to &euro;{REGULAR} when timer hits zero</div>
-
-                    {/* CTA */}
-                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '20px 60px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: 6, textTransform: 'uppercase', boxShadow: '0 4px 30px rgba(197,160,89,0.2)' }}>
+                {/* ── GROUP 3: CTA — immediate action ── */}
+                <div style={{ animation: mounted ? 'locFadeUp 0.8s ease-out 0.5s both' : 'none', marginBottom: 28 }}>
+                    <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 72px', background: 'linear-gradient(135deg,#c5a059 0%,#a8884a 50%,#c5a059 100%)', backgroundSize: '200% auto', color: '#050505', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.7rem', fontWeight: 700, letterSpacing: 7, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.25), 0 0 80px rgba(197,160,89,0.08)' }}>
                         <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                         LOCK UP NOW
                     </button>
+                </div>
 
-                    {/* Spots badge */}
-                    <div style={{ marginTop: 16, display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: '0.45rem', fontWeight: 600, letterSpacing: 5, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059)', backgroundSize: '300% 100%', animation: 'locShimmer 4s ease infinite', padding: '6px 20px', textTransform: 'uppercase' }}>Only 7 Spots Left</div>
+                {/* ── GROUP 4: Urgency bar — spots + countdown in one line ── */}
+                <div style={{ animation: mounted ? 'locFadeIn 1s ease-out 0.8s both' : 'none', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 600, letterSpacing: 4, color: '#050505', background: 'linear-gradient(135deg,#d4af6a,#c5a059)', padding: '5px 16px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>7 Spots Left</div>
+                    <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 400, letterSpacing: 3, color: 'rgba(197,160,89,0.35)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>&euro;{REGULAR} in {countdown.d}d {pad(countdown.h)}h {pad(countdown.m)}m {pad(countdown.s)}s</div>
                 </div>
             </div>
 
