@@ -10,6 +10,7 @@ const TIERS: Record<string, { amountEur: number; days: number }> = {
     weekly:    { amountEur: 55,  days: 7  },
     monthly:   { amountEur: 150, days: 30 },
     quarterly: { amountEur: 300, days: 90 },
+    loctober:  { amountEur: 111, days: 31 },
 };
 
 const CRYPTO_ID_MAP: Record<string, string> = {
