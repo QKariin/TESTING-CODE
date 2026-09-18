@@ -91,7 +91,7 @@ export default function LoctoberClient() {
             </div>
         </div>
 
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
         <style>{`
             html, body { background:#020202!important; overflow:hidden!important; height:100%!important; }
             @keyframes locFadeUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
@@ -138,10 +138,10 @@ export default function LoctoberClient() {
                 {/* ── Title ── */}
                 <div style={{ animation: mounted ? 'locFadeIn 0.8s ease-out both' : 'none', marginBottom: 8 }}>
                     <div style={{ fontFamily: 'Inter,sans-serif', fontSize: '0.45rem', fontWeight: 500, letterSpacing: 6, color: 'rgba(197,160,89,0.35)', textTransform: 'uppercase', marginBottom: 12 }}>QUEEN KARIN PRESENTS</div>
-                    <h1 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4rem)', color: '#fff', letterSpacing: 6, textTransform: 'uppercase', margin: 0, fontWeight: 700, lineHeight: 1 }}>
+                    <h1 style={{ position: 'relative', display: 'inline-block', fontFamily: 'Cinzel,serif', fontSize: 'clamp(2.6rem,9vw,4rem)', color: '#fff', letterSpacing: 6, textTransform: 'uppercase', margin: 0, fontWeight: 700, lineHeight: 1 }}>
                         LOCTOBER
+                        <span style={{ position: 'absolute', right: 'clamp(-24px,-4vw,-40px)', top: 'clamp(-14px,-2vw,-20px)', fontFamily: 'Dancing Script,cursive', fontSize: 'clamp(1.4rem,5vw,2.2rem)', color: '#d4af6a', fontWeight: 400, letterSpacing: 0, textTransform: 'none', transform: 'rotate(-8deg)' }}>fest</span>
                     </h1>
-                    <div style={{ fontFamily: 'Caveat,cursive', fontSize: 'clamp(2rem,7vw,3.2rem)', color: '#d4af6a', fontWeight: 400, marginTop: -4, letterSpacing: 1, lineHeight: 1.1 }}>fest</div>
                 </div>
 
                 {/* ── Differentiator ── */}
