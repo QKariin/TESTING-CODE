@@ -10,7 +10,6 @@
 
   html, body {
     width: 100% !important;
-    min-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #030303;
@@ -24,99 +23,61 @@
     0% { background-position: -200% center; }
     100% { background-position: 200% center; }
   }
-
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.02); }
-  }
-
   @keyframes glow {
-    0%, 100% { box-shadow: 0 0 30px rgba(139,0,0,0.15); }
-    50% { box-shadow: 0 0 50px rgba(139,0,0,0.3); }
+    0%, 100% { box-shadow: 0 0 30px rgba(139,0,0,0.2); }
+    50% { box-shadow: 0 0 60px rgba(139,0,0,0.4); }
   }
-
-  @keyframes priceGlow {
-    0%, 100% { text-shadow: 0 0 20px rgba(139,0,0,0.2); }
-    50% { text-shadow: 0 0 40px rgba(139,0,0,0.5); }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
   }
-
   @keyframes tickerScroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
 
-  .w {
-    width: 100%;
-    max-width: 620px;
-    margin: 0 auto;
-    overflow: hidden;
-    background: #030303;
-  }
+  .w { width: 100%; max-width: 620px; margin: 0 auto; overflow: hidden; background: #030303; }
 
   /* ═══ HERO ═══ */
   .hero {
-    position: relative;
-    width: 100%;
-    height: 600px;
-    overflow: hidden;
+    position: relative; width: 100%; overflow: hidden; background: #030303;
   }
-
   .hero img {
-    width: 100%; height: 100%;
-    object-fit: cover; object-position: center top;
-    display: block;
-    filter: brightness(0.35) saturate(1.4) contrast(1.15);
+    width: 100%; display: block;
+    filter: brightness(0.4) saturate(1.3) contrast(1.1);
   }
-
   .hero-ov {
     position: absolute; inset: 0; z-index: 2;
     background:
-      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.2) 0%, transparent 55%),
-      linear-gradient(180deg, rgba(3,3,3,0.1) 0%, transparent 25%, transparent 35%, rgba(3,3,3,0.6) 58%, rgba(3,3,3,0.95) 80%, #030303 100%);
+      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.25) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(3,3,3,0.1) 0%, transparent 20%, transparent 30%, rgba(3,3,3,0.55) 55%, rgba(3,3,3,0.95) 78%, #030303 100%);
   }
-
   .hero-c {
     position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 0 40px 48px; z-index: 4;
-    text-align: center;
+    padding: 0 36px 44px; z-index: 4; text-align: center;
   }
-
-  .hero-spots {
+  .hero-badge {
     display: inline-block;
-    font-family: 'Cinzel', serif;
-    font-size: 10px; font-weight: 600;
-    letter-spacing: 5px; text-transform: uppercase;
-    color: #fff;
-    background: linear-gradient(135deg, #8b0000 0%, #5a0000 100%);
-    padding: 8px 24px;
-    margin-bottom: 24px;
-    animation: fadeIn 0.8s ease 0.2s both, glow 3s ease infinite;
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+    letter-spacing: 5px; text-transform: uppercase; color: #fff;
+    background: linear-gradient(135deg, #8b0000, #5a0000);
+    padding: 8px 22px; margin-bottom: 20px;
+    animation: fadeIn 0.6s ease 0.2s both, glow 3s ease infinite;
   }
-
   .hero-t {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 56px; font-weight: 300;
-    line-height: 1.0; color: #fff;
-    margin-bottom: 16px;
-    animation: fadeIn 0.8s ease 0.4s both;
+    font-size: 50px; font-weight: 300; line-height: 1.05; color: #fff;
+    margin-bottom: 12px; animation: fadeIn 0.6s ease 0.4s both;
   }
-
-  .hero-t i {
-    font-weight: 300; font-style: italic;
-    color: rgba(180,40,40,0.9);
-  }
-
+  .hero-t i { font-style: italic; color: rgba(180,40,40,0.9); }
   .hero-sub {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px; font-weight: 200;
-    color: rgba(255,255,255,0.35);
+    font-size: 12px; font-weight: 200; color: rgba(255,255,255,0.35);
     letter-spacing: 3px; text-transform: uppercase;
-    animation: fadeIn 0.8s ease 0.6s both;
+    animation: fadeIn 0.6s ease 0.6s both;
   }
 
   /* ═══ TICKER ═══ */
@@ -124,413 +85,265 @@
     background: rgba(139,0,0,0.06);
     border-top: 1px solid rgba(139,0,0,0.12);
     border-bottom: 1px solid rgba(139,0,0,0.12);
-    padding: 13px 0;
-    overflow: hidden; white-space: nowrap;
+    padding: 12px 0; overflow: hidden; white-space: nowrap;
   }
-
   .ticker-t {
-    display: inline-block;
-    animation: tickerScroll 22s linear infinite;
+    display: inline-block; animation: tickerScroll 20s linear infinite;
   }
-
   .ticker-t span {
-    font-family: 'Cinzel', serif;
-    font-size: 10px; font-weight: 400;
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 400;
     letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(255,255,255,0.2);
-    padding: 0 20px;
+    color: rgba(255,255,255,0.2); padding: 0 18px;
   }
+  .ticker-t span b { color: rgba(180,40,40,0.65); font-weight: 600; }
 
-  .ticker-t span b {
-    color: rgba(180,40,40,0.65);
-    font-weight: 600;
-  }
-
-  /* ═══ PRICE HERO ═══ */
-  .price-hero {
+  /* ═══ PRICE BLOCK ═══ */
+  .price-block {
+    margin: 36px 24px 0;
+    background: linear-gradient(165deg, rgba(20,6,6,1) 0%, rgba(8,3,3,1) 100%);
+    border: 1px solid rgba(139,0,0,0.2);
+    padding: 40px 28px 36px;
     text-align: center;
-    padding: 48px 30px 8px;
+    position: relative;
+    animation: glow 5s ease infinite;
   }
+  .price-block .cn { position: absolute; width: 20px; height: 20px; pointer-events: none; }
+  .price-block .cn::before, .price-block .cn::after { content: ''; position: absolute; background: rgba(139,0,0,0.4); }
+  .price-block .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .price-block .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .price-block .cn1 { top: -1px; left: -1px; }
+  .price-block .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .price-block .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .price-block .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
 
-  .price-tag {
+  .pb-weekend {
     display: inline-block;
-    font-family: 'Inter', sans-serif;
-    font-size: 8px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase;
-    color: #030303;
+    font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase; color: #030303;
     background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
-    background-size: 300% 100%;
-    animation: shimmer 4s ease infinite;
-    padding: 6px 18px;
-    margin-bottom: 20px;
+    background-size: 300% 100%; animation: shimmer 4s ease infinite;
+    padding: 5px 16px; margin-bottom: 18px;
   }
-
-  .price-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 16px;
+  .pb-row {
+    display: flex; align-items: baseline; justify-content: center; gap: 14px;
+    margin-bottom: 6px;
   }
-
-  .price-old {
-    font-family: 'Cinzel', serif;
-    font-size: 28px; font-weight: 400;
-    color: rgba(255,255,255,0.15);
-    text-decoration: line-through;
-    text-decoration-color: rgba(180,40,40,0.4);
+  .pb-old {
+    font-family: 'Cinzel', serif; font-size: 26px; font-weight: 400;
+    color: rgba(255,255,255,0.12);
+    text-decoration: line-through; text-decoration-color: rgba(180,40,40,0.5);
   }
-
-  .price-new {
-    font-family: 'Cinzel', serif;
-    font-size: 72px; font-weight: 700;
-    line-height: 1; letter-spacing: -2px;
-    color: rgba(180,40,40,0.85);
-    animation: priceGlow 3s ease infinite;
+  .pb-new {
+    font-family: 'Cinzel', serif; font-size: 68px; font-weight: 700;
+    line-height: 1; letter-spacing: -2px; color: rgba(180,40,40,0.9);
   }
-
-  .price-cur {
-    font-family: 'Inter', sans-serif;
-    font-size: 18px; font-weight: 300;
-    color: rgba(180,40,40,0.4);
-    margin-left: -4px;
-    align-self: flex-start;
-    margin-top: 14px;
+  .pb-cur {
+    font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300;
+    color: rgba(180,40,40,0.45); align-self: flex-start; margin-top: 12px;
   }
-
-  .price-per {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.2);
-    margin-top: 8px;
-    letter-spacing: 1px;
+  .pb-for {
+    font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300;
+    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 14px;
   }
-
-  .price-save {
+  .pb-save {
     display: inline-block;
-    margin-top: 14px;
-    font-family: 'Cinzel', serif;
-    font-size: 9px; font-weight: 600;
+    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
     letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(197,160,89,0.7);
-    border: 1px solid rgba(197,160,89,0.2);
-    padding: 6px 16px;
+    color: rgba(197,160,89,0.8);
+    border: 1px solid rgba(197,160,89,0.25);
+    padding: 7px 18px; margin-bottom: 14px;
   }
-
-  .price-expires {
-    font-family: 'Inter', sans-serif;
-    font-size: 10px; font-weight: 300;
+  .pb-deadline {
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 300;
     letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(180,40,40,0.35);
-    margin-top: 18px;
-    animation: pulse 3s ease infinite;
+    color: rgba(180,40,40,0.4); animation: pulse 3s ease infinite;
   }
 
-  /* ═══ MAIN PITCH ═══ */
-  .pitch {
-    padding: 44px 40px 40px;
-    text-align: center;
+  /* ═══ CTA ═══ */
+  .cta {
+    text-align: center; padding: 28px 24px 0;
   }
-
-  .pitch h2 {
-    font-family: 'Cinzel', serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 6px; text-transform: uppercase;
-    color: rgba(180,40,40,0.7);
-    margin-bottom: 20px;
-  }
-
-  .pitch p {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 21px; font-weight: 300;
-    line-height: 1.85;
-    color: rgba(255,255,255,0.5);
-  }
-
-  .pitch strong { color: rgba(255,255,255,0.9); font-weight: 400; }
-  .pitch em { font-style: italic; color: rgba(180,40,40,0.6); }
-
-  /* ═══ BIG CTA ═══ */
-  .big-cta {
-    text-align: center;
-    padding: 10px 30px 0;
-  }
-
-  .big-cta a {
-    display: block;
-    padding: 24px 0;
+  .cta a {
+    display: block; padding: 22px 0;
     background: linear-gradient(135deg, #8b0000, #5a0000);
-    color: #fff;
-    text-decoration: none;
-    font-family: 'Cinzel', serif;
-    font-size: 13px; font-weight: 600;
-    letter-spacing: 7px; text-transform: uppercase;
+    color: #fff; text-decoration: none;
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 6px; text-transform: uppercase;
     border: 1px solid rgba(139,0,0,0.3);
     transition: all 0.5s ease;
-    position: relative;
-    overflow: hidden;
   }
-
-  .big-cta a:hover {
+  .cta a:hover {
     background: linear-gradient(135deg, #a50000, #7a0000);
-    letter-spacing: 9px;
+    letter-spacing: 8px;
     box-shadow: 0 4px 40px rgba(139,0,0,0.35);
   }
-
-  .big-cta a::after {
-    content: '';
-    position: absolute; bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-    transition: width 0.5s ease;
-  }
-
-  .big-cta a:hover::after { width: 80%; }
-
-  .cta-below {
-    text-align: center;
-    padding: 12px 30px 0;
-    font-size: 9px; font-weight: 300;
-    letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(180,40,40,0.35);
+  .cta-sub {
+    text-align: center; padding: 10px 24px 0;
+    font-size: 9px; font-weight: 300; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(180,40,40,0.3);
     animation: pulse 3s ease infinite;
   }
 
   /* ═══ DIVIDER ═══ */
-  .div {
+  .dv {
     display: flex; align-items: center; justify-content: center; gap: 14px;
-    padding: 44px 0;
+    padding: 40px 0;
   }
-  .div-l { width: 70px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.18), transparent); }
-  .div-d { width: 4px; height: 4px; background: rgba(139,0,0,0.25); transform: rotate(45deg); }
+  .dv-l { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,0,0,0.18), transparent); }
+  .dv-d { width: 4px; height: 4px; background: rgba(139,0,0,0.25); transform: rotate(45deg); }
 
-  /* ═══ WHAT'S INCLUDED ═══ */
-  .inc {
-    padding: 0 34px 10px;
+  /* ═══ TEXT ═══ */
+  .txt {
+    padding: 0 36px;
+    text-align: center;
   }
+  .txt h2 {
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 6px; text-transform: uppercase;
+    color: rgba(180,40,40,0.65); margin-bottom: 18px;
+  }
+  .txt p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px; font-weight: 300; line-height: 1.85;
+    color: rgba(255,255,255,0.5);
+  }
+  .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
+  .txt em { font-style: italic; color: rgba(180,40,40,0.6); }
 
-  .inc-item {
-    display: flex; gap: 16px; align-items: flex-start;
-    padding: 18px 0;
+  /* ═══ VALUE STACK ═══ */
+  .stack {
+    margin: 0 24px;
+    border: 1px solid rgba(139,0,0,0.1);
+    background: rgba(139,0,0,0.02);
+  }
+  .stack-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(139,0,0,0.08);
+    text-align: center;
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+    letter-spacing: 5px; text-transform: uppercase;
+    color: rgba(180,40,40,0.55);
+  }
+  .stack-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px;
     border-bottom: 1px solid rgba(139,0,0,0.05);
   }
-
-  .inc-item:last-child { border-bottom: none; }
-
-  .inc-n {
-    flex-shrink: 0;
-    width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 700;
-    color: rgba(180,40,40,0.5);
-    border: 1px solid rgba(139,0,0,0.15);
+  .stack-row:last-child { border-bottom: none; }
+  .stack-row .s-what {
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 300;
+    color: rgba(255,255,255,0.5); letter-spacing: 0.5px;
   }
-
-  .inc-text h4 {
-    font-family: 'Cinzel', serif;
-    font-size: 11px; font-weight: 600;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 4px;
+  .stack-row .s-val {
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+    color: rgba(255,255,255,0.2); letter-spacing: 1px;
   }
-
-  .inc-text p {
-    font-size: 12px; font-weight: 300;
-    color: rgba(255,255,255,0.25);
-    line-height: 1.5;
-    letter-spacing: 0.3px;
+  .stack-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px;
+    background: rgba(139,0,0,0.04);
+    border-top: 1px solid rgba(139,0,0,0.12);
   }
-
-  /* ═══ SPOTS BOX ═══ */
-  .spots-box {
-    margin: 10px 30px 0;
-    position: relative;
-    background: linear-gradient(165deg, rgba(20,6,6,1) 0%, rgba(8,3,3,1) 100%);
-    border: 1px solid rgba(139,0,0,0.18);
-    text-align: center;
-    padding: 50px 36px;
-    animation: glow 5s ease infinite;
+  .stack-total .s-what {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
   }
-
-  .spots-box .corner {
-    position: absolute; width: 24px; height: 24px; pointer-events: none;
-  }
-  .spots-box .corner::before, .spots-box .corner::after {
-    content: ''; position: absolute; background: rgba(139,0,0,0.35);
-  }
-  .spots-box .corner::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .spots-box .corner::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .spots-box .c-tl { top: -1px; left: -1px; }
-  .spots-box .c-tr { top: -1px; right: -1px; transform: scaleX(-1); }
-  .spots-box .c-bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .spots-box .c-br { bottom: -1px; right: -1px; transform: scale(-1); }
-
-  .spots-pre {
-    font-family: 'Inter', sans-serif;
-    font-size: 9px; font-weight: 300;
-    letter-spacing: 5px; text-transform: uppercase;
+  .stack-total .s-val {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 1px;
     color: rgba(255,255,255,0.2);
-    margin-bottom: 8px;
+    text-decoration: line-through; text-decoration-color: rgba(180,40,40,0.4);
+  }
+  .stack-you-pay {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 20px;
+    background: rgba(139,0,0,0.08);
+    border-top: 1px solid rgba(139,0,0,0.15);
+  }
+  .stack-you-pay .s-what {
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(180,40,40,0.8);
+  }
+  .stack-you-pay .s-val {
+    font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700;
+    color: rgba(180,40,40,0.9); letter-spacing: -1px;
   }
 
-  .spots-num {
-    font-family: 'Cinzel', serif;
-    font-size: 110px; font-weight: 700;
-    line-height: 1; letter-spacing: -5px;
-    background: linear-gradient(180deg, rgba(180,40,40,0.85) 0%, rgba(100,10,10,0.3) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* ═══ SPOTS ═══ */
+  .spots {
+    text-align: center; padding: 36px 30px 0;
   }
-
-  .spots-label {
-    font-family: 'Cinzel', serif;
-    font-size: 12px; font-weight: 600;
-    letter-spacing: 10px; text-transform: uppercase;
-    color: rgba(180,40,40,0.4);
-    margin-top: 4px;
+  .spots-n {
+    font-family: 'Cinzel', serif; font-size: 90px; font-weight: 700;
+    line-height: 1; letter-spacing: -4px;
+    background: linear-gradient(180deg, rgba(180,40,40,0.8) 0%, rgba(100,10,10,0.25) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-
-  .spots-why {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 16px; font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.25);
-    margin-top: 24px;
-    line-height: 1.7;
-    max-width: 380px;
-    margin-left: auto; margin-right: auto;
+  .spots-l {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 8px; text-transform: uppercase;
+    color: rgba(180,40,40,0.35); margin-top: 4px;
+  }
+  .spots-p {
+    font-family: 'Cormorant Garamond', serif; font-size: 15px;
+    font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.2); margin-top: 14px; line-height: 1.7;
   }
 
   /* ═══ QUOTE ═══ */
   .q {
-    padding: 44px 40px;
-    text-align: center;
+    padding: 40px 36px; text-align: center;
   }
-
   .q-mark {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 60px; line-height: 1;
-    color: rgba(139,0,0,0.15);
-    margin-bottom: -10px;
+    font-size: 50px; line-height: 1; color: rgba(139,0,0,0.15);
+    margin-bottom: -8px;
   }
-
   .q-text {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 24px; font-weight: 300; font-style: italic;
-    line-height: 1.75;
-    color: rgba(255,255,255,0.45);
+    font-size: 23px; font-weight: 300; font-style: italic;
+    line-height: 1.75; color: rgba(255,255,255,0.4);
     max-width: 440px; margin: 0 auto;
   }
-
   .q-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
-
   .q-sig {
-    margin-top: 24px;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px; font-weight: 300;
-    letter-spacing: 5px; text-transform: uppercase;
-    color: rgba(139,0,0,0.4);
-  }
-
-  /* ═══ CLOSER ═══ */
-  .closer {
-    padding: 0 40px 44px;
-    text-align: center;
-  }
-
-  .closer p {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 20px; font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.3);
-    line-height: 1.75;
-  }
-
-  .closer .attr {
-    display: block; margin-top: 16px;
-    font-family: 'Inter', sans-serif;
-    font-size: 9px; font-style: normal;
-    letter-spacing: 5px; text-transform: uppercase;
-    color: rgba(139,0,0,0.35);
-  }
-
-  /* ═══ GHOST CTA ═══ */
-  .ghost-cta {
-    text-align: center;
-    padding: 30px 30px 10px;
-  }
-
-  .ghost-cta a {
-    display: inline-block;
-    padding: 18px 56px;
-    background: transparent;
-    color: rgba(180,40,40,0.6);
-    text-decoration: none;
-    font-family: 'Cinzel', serif;
-    font-size: 11px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase;
-    border: 1px solid rgba(139,0,0,0.18);
-    transition: all 0.5s ease;
-  }
-
-  .ghost-cta a:hover {
-    border-color: rgba(139,0,0,0.4);
-    background: rgba(139,0,0,0.04);
-    letter-spacing: 7px;
-  }
-
-  .ghost-note {
-    text-align: center;
-    padding: 10px 30px 0;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 13px; font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.1);
+    margin-top: 20px; font-family: 'Inter', sans-serif;
+    font-size: 9px; font-weight: 300; letter-spacing: 5px;
+    text-transform: uppercase; color: rgba(139,0,0,0.4);
   }
 
   /* ═══ FOOTER ═══ */
   .foot {
     border-top: 1px solid rgba(139,0,0,0.05);
-    padding: 36px 40px;
-    text-align: center;
-    margin-top: 40px;
+    padding: 32px 40px; text-align: center; margin-top: 30px;
   }
-
-  .foot-brand {
+  .foot-b {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 15px; font-weight: 600;
-    letter-spacing: 8px;
-    color: rgba(255,255,255,0.08);
-    margin-bottom: 8px;
+    font-size: 14px; font-weight: 600; letter-spacing: 8px;
+    color: rgba(255,255,255,0.07); margin-bottom: 6px;
   }
-
-  .foot a {
-    font-size: 10px; color: rgba(255,255,255,0.06);
-    text-decoration: none; letter-spacing: 3px;
-  }
+  .foot a { font-size: 10px; color: rgba(255,255,255,0.05); text-decoration: none; letter-spacing: 3px; }
 
   /* ═══ MOBILE ═══ */
   @media (max-width: 520px) {
-    .hero { height: 480px; }
-    .hero-t { font-size: 40px; }
-    .hero-c { padding: 0 24px 36px; }
-    .price-hero { padding: 40px 20px 8px; }
-    .price-new { font-size: 56px; }
-    .price-old { font-size: 22px; }
-    .price-row { gap: 12px; }
-    .pitch { padding: 36px 22px 30px; }
-    .pitch h2 { font-size: 11px; letter-spacing: 4px; }
-    .pitch p { font-size: 18px; }
-    .big-cta { padding: 10px 16px 0; }
-    .big-cta a { font-size: 11px; letter-spacing: 5px; }
-    .inc { padding: 0 18px 10px; }
-    .spots-box { margin: 10px 16px 0; padding: 36px 20px; }
-    .spots-num { font-size: 80px; }
-    .q { padding: 36px 22px; }
-    .q-text { font-size: 20px; }
-    .closer { padding: 0 22px 36px; }
-    .closer p { font-size: 17px; }
-    .ghost-cta a { padding: 16px 0; width: 100%; display: block; letter-spacing: 3px; font-size: 10px; }
-    .div { padding: 34px 0; }
-    .foot { padding: 28px 20px; }
+    .hero-t { font-size: 38px; }
+    .hero-c { padding: 0 22px 32px; }
+    .price-block { margin: 28px 14px 0; padding: 32px 18px 28px; }
+    .pb-new { font-size: 52px; }
+    .pb-old { font-size: 20px; }
+    .cta { padding: 20px 14px 0; }
+    .cta a { font-size: 11px; letter-spacing: 4px; }
+    .txt { padding: 0 20px; }
+    .txt p { font-size: 17px; }
+    .stack { margin: 0 14px; }
+    .stack-row { padding: 12px 16px; }
+    .spots-n { font-size: 70px; }
+    .q { padding: 32px 20px; }
+    .q-text { font-size: 19px; }
+    .dv { padding: 32px 0; }
+    .foot { padding: 24px 20px; }
   }
 </style>
 </head>
@@ -542,200 +355,157 @@
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/friday-hero-2.jpg" alt="">
     <div class="hero-ov"></div>
     <div class="hero-c">
-      <div class="hero-spots">Only 7 Spots</div>
+      <div class="hero-badge">Only 7 Spots</div>
       <h1 class="hero-t">I'm Taking<br><i>Your October.</i></h1>
-      <p class="hero-sub">31 days locked. Daily video tasks. Personally reviewed.</p>
+      <p class="hero-sub">31 days locked. Daily video tasks. No way out.</p>
     </div>
   </div>
 
   <!-- ═══ TICKER ═══ -->
   <div class="ticker">
     <div class="ticker-t">
-      <span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video tasks</b></span><span>no <b>release</b></span><span><b>&euro;111</b> early price</span><span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video tasks</b></span><span>no <b>release</b></span><span><b>&euro;111</b> early price</span>
+      <span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video</b> tasks</span><span><b>&euro;111</b> this weekend</span><span>no <b>release</b></span><span><b>7</b> spots</span><span><b>31</b> days</span><span>daily <b>video</b> tasks</span><span><b>&euro;111</b> this weekend</span><span>no <b>release</b></span>
     </div>
   </div>
 
-  <!-- ═══ PRICE DROP ═══ -->
-  <div class="price-hero">
-    <div class="price-tag">Weekend Early Price</div>
-    <div class="price-row">
-      <span class="price-cur">&euro;</span>
-      <span class="price-new">111</span>
-      <span class="price-old">&euro;199</span>
+  <!-- ═══ PRICE BLOCK ═══ -->
+  <div class="price-block">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="pb-weekend">This Weekend Only</div>
+    <div class="pb-row">
+      <span class="pb-cur">&euro;</span>
+      <span class="pb-new">111</span>
+      <span class="pb-old">&euro;199</span>
     </div>
-    <div class="price-per">for 31 days of real, personal control</div>
-    <div class="price-save">Save &euro;88 This Weekend Only</div>
-    <div class="price-expires">Price goes back to &euro;199 on Monday</div>
+    <div class="pb-for">31 days of personal control. Daily video tasks. Reviewed by me.</div>
+    <div class="pb-save">Save &euro;88</div>
+    <div class="pb-deadline">Goes back to &euro;199 Monday morning</div>
   </div>
 
   <!-- ═══ CTA 1 ═══ -->
-  <div class="big-cta" style="padding-top: 30px;">
+  <div class="cta">
     <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
   </div>
-  <div class="cta-below">3 of 7 spots already claimed</div>
+  <div class="cta-sub">3 of 7 spots already claimed</div>
 
   <!-- ═══ DIVIDER ═══ -->
-  <div class="div">
-    <div class="div-l"></div>
-    <div class="div-d"></div>
-    <div class="div-l"></div>
-  </div>
+  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
 
   <!-- ═══ PITCH ═══ -->
-  <div class="pitch">
-    <h2>Here's the Deal</h2>
+  <div class="txt">
+    <h2>Here's What Happens</h2>
     <p>
-      I'm locking <strong>7 men</strong> for all of October.<br>
-      Every day you get a <strong>video task</strong> through my app.
-      I tell you what to film. You film it. You submit it.
-      <strong>I watch it.</strong><br><br>
-      If I don't like what I see, I add penalty days.
-      If you miss a day, I terminate your program.
-      If you beg for release, <em>I enjoy it and say no.</em><br><br>
-      31 days. Real tasks. Real accountability.
-      One woman actually watching every single thing you do.
+      October 1st, you lock up.<br>
+      Every morning, I send you a <strong>video task</strong> through my app.
+      I tell you what to film. You do it. You submit it. <strong>I watch it personally.</strong><br><br>
+      Miss a task? I add penalty days. Skip a day? <em>I end your program.</em>
+      Beg for release? I read it and laugh.<br><br>
+      This is <strong>31 days of real accountability</strong> with a real woman
+      watching every single thing you do. Not a chatbot. Not a timer on your phone.
+      <strong>Me.</strong>
     </p>
   </div>
 
+  <!-- ═══ DIVIDER ═══ -->
+  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
+
+  <!-- ═══ VALUE STACK ═══ -->
+  <div class="stack">
+    <div class="stack-head">What You're Getting</div>
+    <div class="stack-row">
+      <span class="s-what">31 daily video tasks, personally assigned</span>
+      <span class="s-val">&euro;93</span>
+    </div>
+    <div class="stack-row">
+      <span class="s-what">31 morning chastity check-ins, reviewed by me</span>
+      <span class="s-val">&euro;62</span>
+    </div>
+    <div class="stack-row">
+      <span class="s-what">Full keyholder app access (lock timer, dashboard)</span>
+      <span class="s-val">&euro;49</span>
+    </div>
+    <div class="stack-row">
+      <span class="s-what">Personal task review + penalty system</span>
+      <span class="s-val">&euro;75</span>
+    </div>
+    <div class="stack-row">
+      <span class="s-what">Escalating 4-week program (custom built)</span>
+      <span class="s-val">&euro;60</span>
+    </div>
+    <div class="stack-total">
+      <span class="s-what">Total Value</span>
+      <span class="s-val">&euro;339</span>
+    </div>
+    <div class="stack-you-pay">
+      <span class="s-what">You Pay</span>
+      <span class="s-val">&euro;111</span>
+    </div>
+  </div>
+
   <!-- ═══ CTA 2 ═══ -->
-  <div class="big-cta">
+  <div class="cta" style="padding-top: 24px;">
     <a href="https://throne.qkarin.com/keyholder" target="_blank">Give Me Your October</a>
   </div>
-  <div class="cta-below">&euro;111 this weekend. &euro;199 after Monday.</div>
+  <div class="cta-sub">&euro;111 this weekend. &euro;199 after Monday. No exceptions.</div>
 
   <!-- ═══ DIVIDER ═══ -->
-  <div class="div">
-    <div class="div-l"></div>
-    <div class="div-d"></div>
-    <div class="div-l"></div>
+  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
+
+  <!-- ═══ WHY NOW ═══ -->
+  <div class="txt">
+    <h2>Why This Weekend</h2>
+    <p>
+      <strong>Because Monday it's &euro;199.</strong> That's not a marketing trick.
+      I'm offering the early price to fill spots before October starts.
+      Once I have my 7, this closes.<br><br>
+      3 spots are already taken.
+      That leaves <strong>4 spots at &euro;111.</strong><br><br>
+      When those 4 fill, the next person pays full price.
+      <em>If there's even a spot left.</em>
+    </p>
   </div>
 
-  <!-- ═══ WHAT'S INCLUDED ═══ -->
-  <div style="text-align:center; padding: 0 30px 6px;">
-    <div style="font-family:'Cinzel',serif; font-size:10px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(180,40,40,0.5);">What You Get for &euro;111</div>
-  </div>
-
-  <div class="inc">
-    <div class="inc-item">
-      <div class="inc-n">1</div>
-      <div class="inc-text">
-        <h4>Daily Video Task</h4>
-        <p>A new assignment every morning. Sent through the app. Video proof required.</p>
-      </div>
-    </div>
-    <div class="inc-item">
-      <div class="inc-n">2</div>
-      <div class="inc-text">
-        <h4>Morning Chastity Proof</h4>
-        <p>You wake up. You prove you're locked. Every single day for 31 days.</p>
-      </div>
-    </div>
-    <div class="inc-item">
-      <div class="inc-n">3</div>
-      <div class="inc-text">
-        <h4>Personally Reviewed by Me</h4>
-        <p>I watch everything you submit. Not a bot. Not automated. Me.</p>
-      </div>
-    </div>
-    <div class="inc-item">
-      <div class="inc-n">4</div>
-      <div class="inc-text">
-        <h4>Keyholder App Access</h4>
-        <p>Live lock timer. Task dashboard. Streaks. Points. Built by me.</p>
-      </div>
-    </div>
-    <div class="inc-item">
-      <div class="inc-n">5</div>
-      <div class="inc-text">
-        <h4>Escalating Difficulty</h4>
-        <p>Starts manageable. Ends with you questioning everything. That's the point.</p>
-      </div>
-    </div>
-    <div class="inc-item">
-      <div class="inc-n">6</div>
-      <div class="inc-text">
-        <h4>No Early Release</h4>
-        <p>You can beg. I'll read it with my morning coffee. The answer is no.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ SPOTS BOX ═══ -->
-  <div class="spots-box">
-    <div class="corner c-tl"></div>
-    <div class="corner c-tr"></div>
-    <div class="corner c-bl"></div>
-    <div class="corner c-br"></div>
-    <div class="spots-pre">Only</div>
-    <div class="spots-num">7</div>
-    <div class="spots-label">Spots Total</div>
-    <div class="spots-why">
-      I review every video myself. Every task. Every proof.<br>
-      That takes time. So I keep the number small enough
-      that every single one of you gets my full attention.
-    </div>
+  <!-- ═══ SPOTS ═══ -->
+  <div class="spots">
+    <div class="spots-n">4</div>
+    <div class="spots-l">Spots at &euro;111</div>
+    <div class="spots-p">3 already claimed. Once these fill, early pricing is gone forever.</div>
   </div>
 
   <!-- ═══ CTA 3 ═══ -->
-  <div class="big-cta" style="padding-top: 36px;">
+  <div class="cta" style="padding-top: 28px;">
     <a href="https://throne.qkarin.com/keyholder" target="_blank">Claim Your Spot &mdash; &euro;111</a>
   </div>
-  <div class="cta-below">Weekend price. Gone Monday.</div>
+  <div class="cta-sub">Starts October 1st. Price rises Monday.</div>
 
   <!-- ═══ DIVIDER ═══ -->
-  <div class="div">
-    <div class="div-l"></div>
-    <div class="div-d"></div>
-    <div class="div-l"></div>
-  </div>
+  <div class="dv"><div class="dv-l"></div><div class="dv-d"></div><div class="dv-l"></div></div>
 
   <!-- ═══ QUEEN QUOTE ═══ -->
   <div class="q">
     <div class="q-mark">&ldquo;</div>
     <div class="q-text">
-      Most of you will screenshot this and think about it for three days.
-      By then the spots will be gone and you'll spend October
-      <strong>exactly the way you spent September.</strong><br><br>
-      Scrolling. Unlocked. Alone.<br><br>
-      Or you take a spot right now and let me
-      make this the month you <strong>actually remember.</strong>
+      You'll screenshot this. Think about it. Tell yourself
+      you'll <strong>decide later.</strong><br><br>
+      Later, the spots are gone. The price is higher.
+      And you'll spend October <strong>exactly how you spent September.</strong>
+      Scrolling. Unlocked. Alone. Unchanged.<br><br>
+      Or you take one of these 4 remaining spots right now,
+      for &euro;111, and let me turn October into the month
+      you <strong>actually remember.</strong>
     </div>
     <div class="q-sig">Karin</div>
   </div>
 
-  <!-- ═══ FINAL PRICE REMINDER ═══ -->
-  <div style="text-align:center; padding: 0 30px 10px;">
-    <div style="display:inline-block; border:1px solid rgba(139,0,0,0.12); padding: 20px 36px; background: rgba(139,0,0,0.03);">
-      <div style="font-family:'Inter',sans-serif; font-size:8px; font-weight:300; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.2); margin-bottom:8px;">This weekend</div>
-      <div style="display:flex; align-items:baseline; justify-content:center; gap:10px;">
-        <span style="font-family:'Cinzel',serif; font-size:36px; font-weight:700; color:rgba(180,40,40,0.8);">&euro;111</span>
-        <span style="font-family:'Cinzel',serif; font-size:16px; color:rgba(255,255,255,0.12); text-decoration:line-through;">&euro;199</span>
-      </div>
-      <div style="font-family:'Inter',sans-serif; font-size:8px; font-weight:300; letter-spacing:3px; text-transform:uppercase; color:rgba(180,40,40,0.3); margin-top:8px;">Back to full price Monday</div>
-    </div>
-  </div>
-
-  <!-- ═══ CLOSER ═══ -->
-  <div class="closer" style="padding-top: 36px;">
-    <p>October 1st. 7 men. 31 days under my control. I start with or without you. But the ones who join now will not be the same men on November 1st.</p>
-    <span class="attr">The key is in your hands. For now.</span>
-  </div>
-
   <!-- ═══ FINAL CTA ═══ -->
-  <div class="big-cta">
+  <div class="cta">
     <a href="https://throne.qkarin.com/keyholder" target="_blank">Lock Up for &euro;111</a>
   </div>
-  <div class="cta-below">7 spots. Oct 1st. &euro;111 this weekend only.</div>
-
-  <!-- ═══ GHOST CTA ═══ -->
-  <div class="ghost-cta" style="padding-top: 40px;">
-    <a href="https://throne.qkarin.com" target="_blank">Enter the Throne</a>
-  </div>
-  <div class="ghost-note">throne.qkarin.com</div>
+  <div class="cta-sub">7 spots. 4 left at early price. Oct 1st.</div>
 
   <!-- ═══ FOOTER ═══ -->
   <div class="foot">
-    <div class="foot-brand">QUEEN KARIN</div>
+    <div class="foot-b">QUEEN KARIN</div>
     <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
   </div>
 
