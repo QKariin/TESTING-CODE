@@ -1,0 +1,320 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { defaultDayTasks, generateDefaultProgram } from '@/lib/program-defaults';
+import { findProfile } from '@/lib/lookup';
+
+export const dynamic = 'force-dynamic';
+
+// GET /api/program/program?memberId=xxx  — get a user's 30-day program
+// GET /api/program/program?template=true — get the master template
+// GET /api/program/program?config=true   — get program_config (spin wheel, cards, etc.)
+export async function GET(req: NextRequest) {
+    const memberId = req.nextUrl.searchParams.get('memberId');
+    const isTemplate = req.nextUrl.searchParams.get('template') === 'true';
+    const isConfig = req.nextUrl.searchParams.get('config') === 'true';
+    const listLocked = req.nextUrl.searchParams.get('listLocked') === 'true';
+
+    // ── LIST ALL LOCKED MEMBERS ──
+    if (listLocked) {
+        const { data: sessions } = await supabaseAdmin
+            .from('program_sessions')
+            .select('id, member_id, started_at, lock_days, expires_at, current_streak, total_perfect_days, tier, status, current_day')
+            .in('status', ['active', 'awaiting_video'])
+            .order('started_at', { ascending: false });
+
+        if (!sessions || sessions.length === 0) return NextResponse.json({ locked: [] });
+
+        const today = new Date().toISOString().split('T')[0];
+        const results = [];
+
+        for (const s of sessions) {
+            const daysIn = s.status === 'active' ? (s.current_day ?? Math.floor((Date.now() - new Date(s.started_at).getTime()) / 86400000) + 1) : 0;
+            // Get today's daily record
+            const { data: todayRec } = await supabaseAdmin
+                .from('program_daily')
+                .select('orders, orders_completed, orders_total, perfect')
+                .eq('session_id', s.id)
+                .eq('date', today)
+                .maybeSingle();
+
+            // Get profile name + kinks/limits
+            const prof = await findProfile(s.member_id, 'name, title, avatar_url, profile_picture_url, kinks, limits');
+
+            const orders = todayRec?.orders ? (typeof todayRec.orders === 'string' ? JSON.parse(todayRec.orders) : todayRec.orders) : [];
+            const completed = orders.filter((o: any) => o.done >= o.target).length;
+
+            results.push({
+                memberId: s.member_id,
+                name: prof?.name || prof?.title || s.member_id.split('@')[0],
+                avatar: prof?.profile_picture_url || prof?.avatar_url || null,
+                kinks: prof?.kinks || '',
+                limits: prof?.limits || '',
+                daysIn,
+                lockDays: s.lock_days,
+                status: s.status,
+                streak: s.current_streak || 0,
+                todayTotal: orders.length,
+                todayDone: completed,
+                todayPerfect: todayRec?.perfect || false,
+                tier: s.tier,
+            });
+        }
+
+        return NextResponse.json({ locked: results });
+    }
+
+    // ── GET CONFIG (spin wheel, cards, quiz, etc.) ──
+    if (isConfig) {
+        const { data } = await supabaseAdmin
+            .from('program_config')
+            .select('*')
+            .order('key');
+        return NextResponse.json({ config: data || [] });
+    }
+
+    // ── GET TEMPLATE (master formula) ──
+    if (isTemplate) {
+        const { data } = await supabaseAdmin
+            .from('program_template')
+            .select('*')
+            .order('day_number');
+        return NextResponse.json({ template: data || [] });
+    }
+
+    // ── GET MEMBER PROGRAM ──
+    if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+
+    const email = memberId.toLowerCase();
+    const { data: session } = await supabaseAdmin
+        .from('program_sessions')
+        .select('id')
+        .ilike('member_id', email)
+        .in('status', ['active', 'awaiting_video'])
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (!session) return NextResponse.json({ program: null, message: 'No active session' });
+
+    let { data: prog } = await supabaseAdmin
+        .from('program_member')
+        .select('*')
+        .eq('session_id', session.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    // Auto-create program if none exists for this session
+    if (!prog) {
+        // No program at all — generate fresh from template
+        console.log(`[program program GET] No program for ${email}, generating fresh...`);
+        const freshProgram: Record<string, any[]> = {};
+        const { data: template } = await supabaseAdmin
+            .from('program_template').select('*').order('day_number');
+        if (template && template.length > 0) {
+            for (const row of template) {
+                freshProgram[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+            }
+        } else {
+            Object.assign(freshProgram, generateDefaultProgram());
+        }
+        const { data: newProg } = await supabaseAdmin.from('program_member').insert({
+            session_id: session.id, member_id: email,
+            program: JSON.stringify(freshProgram),
+        }).select('*').single();
+        prog = newProg;
+    }
+
+    // Fetch profile kinks/limits for the member
+    const memberProfile = await findProfile(email, 'kinks, limits');
+
+    return NextResponse.json({ program: prog, profile: { kinks: memberProfile?.kinks || '', limits: memberProfile?.limits || '' } });
+}
+
+// POST /api/program/program
+// Actions: save_template, generate_program, update_day, save_config
+export async function POST(req: NextRequest) {
+    const body = await req.json();
+    const { action } = body;
+
+    // ── SAVE TEMPLATE (the master formula) ──
+    if (action === 'save_template') {
+        const { days } = body; // { "1": [...tasks], "2": [...], ... "30": [...] }
+        if (!days) return NextResponse.json({ error: 'Missing days' }, { status: 400 });
+
+        // Delete old template
+        await supabaseAdmin.from('program_template').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+        // Insert new rows
+        const rows: any[] = [];
+        for (const [dayNum, tasks] of Object.entries(days)) {
+            rows.push({
+                day_number: parseInt(dayNum),
+                tasks: JSON.stringify(tasks),
+            });
+        }
+        const { error } = await supabaseAdmin.from('program_template').insert(rows);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+        // Template saved — member programs are NOT auto-overwritten.
+        // Each member has their own independent copy. Use generate_program per-member to reset.
+        return NextResponse.json({ success: true });
+    }
+
+    // ── GENERATE PROGRAM FOR USER (from template) ──
+    if (action === 'generate_program') {
+        const { memberId } = body;
+        if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
+
+        const email = memberId.toLowerCase();
+        const { data: session } = await supabaseAdmin
+            .from('program_sessions')
+            .select('id')
+            .ilike('member_id', email)
+            .in('status', ['active', 'awaiting_video'])
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!session) return NextResponse.json({ error: 'No active session' }, { status: 400 });
+
+        // Read template
+        const { data: template } = await supabaseAdmin
+            .from('program_template')
+            .select('*')
+            .order('day_number');
+
+        // Build program JSON from template
+        const program: Record<string, any[]> = {};
+        if (template && template.length > 0) {
+            for (const row of template) {
+                const tasks = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+                program[String(row.day_number)] = tasks;
+            }
+        } else {
+            // Fallback: use shared defaults (same as dashboard)
+            const defaults = generateDefaultProgram();
+            Object.assign(program, defaults);
+        }
+
+        // Delete old program and insert fresh copy from template
+        await supabaseAdmin.from('program_member').delete().eq('session_id', session.id);
+        await supabaseAdmin.from('program_member').insert({
+            session_id: session.id,
+            member_id: email,
+            program: JSON.stringify(program),
+        });
+
+        return NextResponse.json({ success: true, program });
+    }
+
+    // ── UPDATE SINGLE DAY FOR USER ──
+    if (action === 'update_day') {
+        const { memberId, dayNumber, tasks } = body;
+        if (!memberId || !dayNumber || !tasks) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+
+        const email = memberId.toLowerCase();
+        const { data: session } = await supabaseAdmin
+            .from('program_sessions')
+            .select('id')
+            .ilike('member_id', email)
+            .in('status', ['active', 'awaiting_video'])
+            .order('started_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!session) return NextResponse.json({ error: 'No active session' }, { status: 400 });
+
+        let { data: prog } = await supabaseAdmin
+            .from('program_member')
+            .select('*')
+            .eq('session_id', session.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        let program: Record<string, any>;
+        if (!prog) {
+            // Auto-create program if it doesn't exist
+            program = generateDefaultProgram();
+            const { data: created } = await supabaseAdmin.from('program_member').insert({
+                session_id: session.id,
+                member_id: email,
+                program: JSON.stringify(program),
+            }).select('id').single();
+            if (!created) return NextResponse.json({ error: 'Failed to create program' }, { status: 500 });
+            prog = { id: created.id, program };
+        } else {
+            program = typeof prog.program === 'string' ? JSON.parse(prog.program) : prog.program;
+        }
+        program[String(dayNumber)] = tasks;
+
+        await supabaseAdmin.from('program_member').update({
+            program: JSON.stringify(program),
+        }).eq('id', prog.id);
+
+        // If editing today's day, also update the live program_daily record
+        try {
+            const { data: fullSession } = await supabaseAdmin
+                .from('program_sessions').select('started_at, current_day').eq('id', session.id).single();
+            if (fullSession?.started_at) {
+                const daysIn = fullSession.current_day ?? Math.floor((Date.now() - new Date(fullSession.started_at).getTime()) / 86400000) + 1;
+                if (daysIn === dayNumber) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const { data: daily } = await supabaseAdmin
+                        .from('program_daily').select('id, orders')
+                        .eq('session_id', session.id).eq('date', today).maybeSingle();
+                    if (daily) {
+                        // Merge new tasks while preserving progress (done counts)
+                        const oldOrders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                        const newOrders = tasks.map((t: any) => {
+                            const existing = oldOrders.find((o: any) => o.type === t.type);
+                            return { type: t.type, target: t.target || 1, done: existing?.done || 0 };
+                        });
+                        const completed = newOrders.filter((o: any) => o.done >= o.target).length;
+                        await supabaseAdmin.from('program_daily').update({
+                            orders: JSON.stringify(newOrders),
+                            orders_total: newOrders.length,
+                            orders_completed: completed,
+                            perfect: completed >= newOrders.length,
+                        }).eq('id', daily.id);
+                    }
+                }
+            }
+        } catch (_) {}
+
+        return NextResponse.json({ success: true });
+    }
+
+    // ── SAVE CONFIG (spin wheel, cards, quiz, etc.) ──
+    if (action === 'save_config') {
+        const { key, value } = body;
+        if (!key || !value) return NextResponse.json({ error: 'Missing key/value' }, { status: 400 });
+
+        // Upsert by key
+        const { data: existing } = await supabaseAdmin
+            .from('program_config')
+            .select('id')
+            .eq('key', key)
+            .maybeSingle();
+
+        if (existing) {
+            await supabaseAdmin.from('program_config').update({
+                value: JSON.stringify(value),
+                updated_at: new Date().toISOString(),
+            }).eq('id', existing.id);
+        } else {
+            await supabaseAdmin.from('program_config').insert({
+                key,
+                value: JSON.stringify(value),
+                updated_at: new Date().toISOString(),
+            });
+        }
+
+        return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+}
+
+// Old defaults removed — now using shared @/lib/program-defaults

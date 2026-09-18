@@ -254,6 +254,17 @@ export function discordVaultLock(name: string, days: number, type: 'instant' | '
     });
 }
 
+export function discordProgramLock(name: string, days: number, type: 'instant' | 'request') {
+    return sendDiscordEmbed({
+        title: type === 'instant' ? '📋 PROGRAM STARTED' : '📋 PROGRAM REQUEST',
+        description: type === 'instant'
+            ? `**${name}** joined the **${days}-day** basic program`
+            : `**${name}** requested a **${days} day** program — awaiting approval`,
+        color: 0x2d5a27,
+        image: { url: cardUrl('program', type === 'instant' ? 'PROGRAM STARTED' : 'PROGRAM REQUEST', `${name} — ${days} day program`, type === 'instant' ? 'Active' : 'Awaiting approval', '📋') },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',

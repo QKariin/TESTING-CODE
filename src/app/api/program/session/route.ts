@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
-import { defaultDayTasks, generateDefaultProgram, kneelTarget } from '@/lib/vault-program-defaults';
+import { defaultDayTasks, generateDefaultProgram, kneelTarget } from '@/lib/program-defaults';
 import { DbService } from '@/lib/supabase-service';
 import { findProfile } from '@/lib/lookup';
 
@@ -36,8 +36,8 @@ function tzYesterday(tz: string): string {
     }
 }
 
-// GET /api/vault/session?memberId=xxx
-// Returns full vault state: active session, today's orders, daily history, adjustments, spins, trials
+// GET /api/program/session?memberId=xxx
+// Returns full program state: active session, today's orders, daily history, adjustments, spins, trials
 export async function GET(req: NextRequest) {
     const caller = await getCaller();
     const host = req.headers.get('host') || '';
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     let tz = req.nextUrl.searchParams.get('tz') || '';
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
-    // Resolve UUID → email if needed (vault_sessions stores email as member_id)
+    // Resolve UUID → email if needed (program_sessions stores email as member_id)
     let email = memberId.toLowerCase();
     let savedTz = '';
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
 
     // 1. Get active session
     const { data: session } = await supabaseAdmin
-        .from('vault_sessions')
+        .from('program_sessions')
         .select('*')
         .eq('member_id', email)
         .eq('status', 'active')
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
     if (!session) {
         // Check if there's a recently released/ended session (for polling detection)
         const { data: releasedSession } = await supabaseAdmin
-            .from('vault_sessions')
+            .from('program_sessions')
             .select('id, status, release_reason')
             .eq('member_id', email)
             .in('status', ['released_early', 'completed', 'denied', 'ended'])
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
 
     // 2. Get all daily records for this session
     const { data: dailyRecords } = await supabaseAdmin
-        .from('vault_daily')
+        .from('program_daily')
         .select('*')
         .eq('session_id', session.id)
         .order('day_number', { ascending: true });
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
     if (!todayRecord && session) {
         const daysIn2 = getSessionDay(session, tz);
         const orders = await _getOrdersForDay(session.id, daysIn2);
-        const { data: inserted, error: insertErr } = await supabaseAdmin.from('vault_daily').insert({
+        const { data: inserted, error: insertErr } = await supabaseAdmin.from('program_daily').insert({
             session_id: session.id,
             member_id: email,
             day_number: daysIn2,
@@ -121,8 +121,8 @@ export async function GET(req: NextRequest) {
             (dailyRecords || []).push(inserted);
         } else if (insertErr) {
             // Duplicate — row exists but wasn't found (race condition), re-fetch
-            console.error('[vault/session] insert daily error:', insertErr.message);
-            const { data: existing } = await supabaseAdmin.from('vault_daily')
+            console.error('[program/session] insert daily error:', insertErr.message);
+            const { data: existing } = await supabaseAdmin.from('program_daily')
                 .select('*').eq('session_id', session.id).eq('date', today).maybeSingle();
             if (existing) todayRecord = existing;
         }
@@ -131,8 +131,8 @@ export async function GET(req: NextRequest) {
     // Sync today's orders with the current program (handles program edits after daily row was created)
     if (todayRecord && session) {
         const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
-        // Use the day_number from the vault_daily record, NOT session.current_day
-        // (current_day advances when chastity check is submitted, but today's orders are still for the original day)
+        // Use the day_number from the program_daily record, NOT session.current_day
+        // (current_day advances when daily check is submitted, but today's orders are still for the original day)
         const syncDayNum = todayRecord.day_number || getSessionDay(session, tz);
         const programOrders = await _getOrdersForDay(session.id, syncDayNum);
 
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
                 return { ...po, done: currentOrders[idx].done, ..._pickSubmission(currentOrders[idx]) };
             });
             const completed = merged.filter((o: any) => o.done >= o.target).length;
-            await supabaseAdmin.from('vault_daily').update({
+            await supabaseAdmin.from('program_daily').update({
                 orders: JSON.stringify(merged),
                 orders_total: merged.length,
                 orders_completed: completed,
@@ -166,28 +166,28 @@ export async function GET(req: NextRequest) {
 
     // 4. Get adjustments log
     const { data: adjustments } = await supabaseAdmin
-        .from('vault_adjustments')
+        .from('program_adjustments')
         .select('*')
         .eq('session_id', session.id)
         .order('created_at', { ascending: true });
 
     // 5. Get spins for this session
     const { data: spins } = await supabaseAdmin
-        .from('vault_spins')
+        .from('program_spins')
         .select('*')
         .eq('session_id', session.id)
         .order('date', { ascending: true });
 
     // 6. Get trials for this session
     const { data: trials } = await supabaseAdmin
-        .from('vault_trials')
+        .from('program_trials')
         .select('*')
         .eq('session_id', session.id)
         .order('date', { ascending: true });
 
     // 7. Get begs
     const { data: begs } = await supabaseAdmin
-        .from('vault_begs')
+        .from('program_begs')
         .select('*')
         .eq('session_id', session.id)
         .order('created_at', { ascending: true });
@@ -201,47 +201,47 @@ export async function GET(req: NextRequest) {
     // 10. Calculate total penalty hours
     const totalPenaltyHours = (adjustments || []).reduce((sum: number, a: any) => sum + a.hours, 0);
 
-    // Calculate chastity check window (6-10 AM in member's local time)
-    let chastityWindow: { open: boolean; before: boolean; localHour: number; localMinute: number } = { open: false, before: false, localHour: 0, localMinute: 0 };
+    // Calculate daily check window (6-10 AM in member's local time)
+    let dailyWindow: { open: boolean; before: boolean; localHour: number; localMinute: number } = { open: false, before: false, localHour: 0, localMinute: 0 };
     try {
         const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
         const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
-        chastityWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
+        dailyWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
-    // Read chastity check from vault_check_log (proper table)
-    const { data: chastityCheck } = await supabaseAdmin.from('vault_check_log')
-        .select('*').eq('session_id', session.id).eq('date', today).eq('type', 'chastity_check').maybeSingle();
+    // Read daily check from program_check_log (proper table)
+    const { data: dailyCheck } = await supabaseAdmin.from('program_check_log')
+        .select('*').eq('session_id', session.id).eq('date', today).eq('type', 'daily_check').maybeSingle();
 
-    // Read ALL chastity check logs for this session (for dashboard history)
-    const { data: allChastityChecks } = await supabaseAdmin.from('vault_check_log')
-        .select('*').eq('session_id', session.id).eq('type', 'chastity_check').order('date', { ascending: true });
+    // Read ALL daily check logs for this session (for dashboard history)
+    const { data: allChastityChecks } = await supabaseAdmin.from('program_check_log')
+        .select('*').eq('session_id', session.id).eq('type', 'daily_check').order('date', { ascending: true });
 
-    // Read today's task submissions from vault_submissions table
+    // Read today's task submissions from program_submissions table
     let todaySubmissions: any[] = [];
     let allSubmissions: any[] = [];
     try {
-        const { data: ts, error: tsErr } = await supabaseAdmin.from('vault_submissions')
+        const { data: ts, error: tsErr } = await supabaseAdmin.from('program_submissions')
             .select('*').eq('session_id', session.id).eq('date', today).order('submitted_at', { ascending: true });
-        if (tsErr) console.error('[vault] submissions read error:', tsErr.message);
+        if (tsErr) console.error('[program] submissions read error:', tsErr.message);
         else todaySubmissions = ts || [];
 
         // Read ALL task submissions for this session (for dashboard history)
-        const { data: as2, error: asErr } = await supabaseAdmin.from('vault_submissions')
+        const { data: as2, error: asErr } = await supabaseAdmin.from('program_submissions')
             .select('*').eq('session_id', session.id).order('submitted_at', { ascending: true });
-        if (asErr) console.error('[vault] all submissions read error:', asErr.message);
+        if (asErr) console.error('[program] all submissions read error:', asErr.message);
         else allSubmissions = as2 || [];
     } catch (e: any) {
-        console.error('[vault] submissions table error:', e?.message);
+        console.error('[program] submissions table error:', e?.message);
     }
 
-    // Read program directly (same source as dashboard's /api/vault/program)
+    // Read program directly (same source as dashboard's /api/program/program)
     let programTasks: any[] | null = null;
     try {
-        // Use vault_daily day_number (stable) not session.current_day (advances on chastity check)
+        // Use program_daily day_number (stable) not session.current_day (advances on daily check)
         const dayNum = todayRecord?.day_number || getSessionDay(session, tz);
         const { data: progRow } = await supabaseAdmin
-            .from('vault_member_program')
+            .from('program_member')
             .select('id, program')
             .eq('session_id', session.id)
             .order('created_at', { ascending: false })
@@ -257,22 +257,22 @@ export async function GET(req: NextRequest) {
         const day1 = prog?.['1'];
         const isStale = !prog || !day1 || day1.length === 0;
         if (isStale) {
-            console.log(`[vault] Program stale or missing for session ${session.id}, regenerating from template...`);
+            console.log(`[program] Program stale or missing for session ${session.id}, regenerating from template...`);
             const freshProgram = await _generateFullProgram();
             // Update DB
             if (progRow?.id) {
-                await supabaseAdmin.from('vault_member_program').update({
+                await supabaseAdmin.from('program_member').update({
                     program: JSON.stringify(freshProgram),
                 }).eq('id', progRow.id);
             } else {
-                await supabaseAdmin.from('vault_member_program').insert({
+                await supabaseAdmin.from('program_member').insert({
                     session_id: session.id,
                     member_id: email,
                     program: JSON.stringify(freshProgram),
                 });
             }
             prog = freshProgram;
-            console.log(`[vault] Regenerated program, day ${dayNum} tasks:`, JSON.stringify(prog[String(dayNum)]?.map((t: any) => t.type)));
+            console.log(`[program] Regenerated program, day ${dayNum} tasks:`, JSON.stringify(prog[String(dayNum)]?.map((t: any) => t.type)));
         }
 
         if (prog) {
@@ -287,9 +287,9 @@ export async function GET(req: NextRequest) {
                 }));
             }
         }
-    } catch (e: any) { console.error('[vault] program read error:', e?.message); }
+    } catch (e: any) { console.error('[program] program read error:', e?.message); }
 
-    // Merge program tasks with vault_daily done counts
+    // Merge program tasks with program_daily done counts
     if (programTasks && todayRecord) {
         const currentOrders: any[] = todayRecord.orders
             ? (typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : todayRecord.orders)
@@ -319,9 +319,9 @@ export async function GET(req: NextRequest) {
         trials: trials || [],
         begs: begs || [],
         totalPenaltyHours,
-        chastityWindow,
-        chastityCheck: chastityCheck || null,
-        chastityLog: allChastityChecks || [],
+        dailyWindow,
+        dailyCheck: dailyCheck || null,
+        dailyLog: allChastityChecks || [],
         submissions: todaySubmissions || [],
         allSubmissions: allSubmissions || [],
         programTasks,
@@ -329,7 +329,7 @@ export async function GET(req: NextRequest) {
     });
 }
 
-// POST /api/vault/session
+// POST /api/program/session
 // Actions: create, adjust, spin, trial, beg, complete_order, claim_reward
 export async function POST(req: NextRequest) {
     const caller = await getCaller();
@@ -345,7 +345,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Missing action or memberId' }, { status: 400 });
     }
 
-    // Resolve UUID → email if needed (vault_sessions stores email as member_id)
+    // Resolve UUID → email if needed (program_sessions stores email as member_id)
     let email = memberId.toLowerCase();
     let tz = body.tz || '';
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(email);
@@ -371,19 +371,19 @@ export async function POST(req: NextRequest) {
 
         // Deactivate any previous active sessions for this member
         const { data: oldSessions } = await supabaseAdmin
-            .from('vault_sessions')
+            .from('program_sessions')
             .select('id')
             .eq('member_id', email)
             .in('status', ['active', 'awaiting_video']);
         if (oldSessions && oldSessions.length > 0) {
             const oldIds = oldSessions.map((s: any) => s.id);
             await supabaseAdmin
-                .from('vault_sessions')
+                .from('program_sessions')
                 .update({ status: 'ended' })
                 .in('id', oldIds);
             // Delete old programs — fresh template copy every time
             await supabaseAdmin
-                .from('vault_member_program')
+                .from('program_member')
                 .delete()
                 .in('session_id', oldIds);
         }
@@ -391,7 +391,7 @@ export async function POST(req: NextRequest) {
         const expiresAt = new Date(Date.now() + lockDays * 86400000).toISOString();
 
         const { data: session, error } = await supabaseAdmin
-            .from('vault_sessions')
+            .from('program_sessions')
             .insert({
                 member_id: email,
                 tier,
@@ -405,13 +405,13 @@ export async function POST(req: NextRequest) {
 
         // ALWAYS copy the LATEST master template — fresh program every join
         const program = await _generateFullProgram();
-        console.log(`[vault] Generated program for ${email}, day 1 tasks:`, JSON.stringify(program['1']));
-        const { error: progErr } = await supabaseAdmin.from('vault_member_program').insert({
+        console.log(`[program] Generated program for ${email}, day 1 tasks:`, JSON.stringify(program['1']));
+        const { error: progErr } = await supabaseAdmin.from('program_member').insert({
             session_id: session.id,
             member_id: email,
             program: JSON.stringify(program),
         });
-        if (progErr) console.error('[vault] Failed to insert program:', progErr.message);
+        if (progErr) console.error('[program] Failed to insert program:', progErr.message);
 
         // Create day 1 orders from the generated program (include label + config)
         const day1Tasks = program['1'] || [];
@@ -421,7 +421,7 @@ export async function POST(req: NextRequest) {
             if (t.config) order.config = t.config;
             return order;
         });
-        await supabaseAdmin.from('vault_daily').insert({
+        await supabaseAdmin.from('program_daily').insert({
             session_id: session.id,
             member_id: email,
             day_number: 1,
@@ -431,7 +431,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Log initial adjustment
-        await supabaseAdmin.from('vault_adjustments').insert({
+        await supabaseAdmin.from('program_adjustments').insert({
             session_id: session.id,
             member_id: email,
             hours: lockDays * 24,
@@ -441,9 +441,84 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, session });
     }
 
+    // ── AUTO ENROLL — self-service, creates + activates a 30-day program ──
+    if (action === 'auto_enroll') {
+        const lockDays = 30;
+
+        // Already have an active/pending session? Just return it
+        const { data: existing } = await supabaseAdmin
+            .from('program_sessions')
+            .select('id, status')
+            .eq('member_id', email)
+            .in('status', ['active', 'pending', 'scheduled', 'awaiting_video'])
+            .maybeSingle();
+        if (existing) {
+            return NextResponse.json({ success: true, alreadyActive: true, sessionId: existing.id, status: existing.status });
+        }
+
+        // End any old completed/ended sessions' program_member (fresh start)
+        const { data: oldSessions } = await supabaseAdmin
+            .from('program_sessions').select('id').eq('member_id', email).in('status', ['ended', 'completed', 'released_early']);
+        if (oldSessions && oldSessions.length > 0) {
+            await supabaseAdmin.from('program_member').delete().in('session_id', oldSessions.map((s: any) => s.id));
+        }
+
+        const expiresAt = new Date(Date.now() + lockDays * 86400000).toISOString();
+        const { data: newSession, error: sessErr } = await supabaseAdmin
+            .from('program_sessions')
+            .insert({
+                member_id: email,
+                tier: 'auto-30d',
+                lock_days: lockDays,
+                status: 'active',
+                started_at: new Date().toISOString(),
+                expires_at: expiresAt,
+            })
+            .select()
+            .single();
+
+        if (sessErr) return NextResponse.json({ error: sessErr.message }, { status: 500 });
+
+        // Generate program from template
+        const program = await _generateFullProgram();
+        await supabaseAdmin.from('program_member').insert({
+            session_id: newSession.id,
+            member_id: email,
+            program: JSON.stringify(program),
+        });
+
+        // Create day 1 orders
+        const day1Tasks = program['1'] || [];
+        const orders = day1Tasks.map((t: any) => {
+            const order: any = { type: t.type, target: t.target || 1, done: 0 };
+            if (t.label) order.label = t.label;
+            if (t.config) order.config = t.config;
+            return order;
+        });
+        await supabaseAdmin.from('program_daily').insert({
+            session_id: newSession.id,
+            member_id: email,
+            day_number: 1,
+            date: tzToday(tz),
+            orders: JSON.stringify(orders),
+            orders_total: orders.length,
+        });
+
+        // Set profile overlay marker
+        const prof = await findProfile(email, 'ID, parameters');
+        if (prof) {
+            const params = prof.parameters || {};
+            params.active_overlay = 'program';
+            params.program_request = { sessionId: newSession.id, status: 'active' };
+            await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
+        }
+
+        return NextResponse.json({ success: true, sessionId: newSession.id });
+    }
+
     // ── GET ACTIVE SESSION (helper) ──
     const { data: session } = await supabaseAdmin
-        .from('vault_sessions')
+        .from('program_sessions')
         .select('*')
         .eq('member_id', email)
         .in('status', ['active', 'awaiting_video'])
@@ -461,7 +536,7 @@ export async function POST(req: NextRequest) {
         if (!hours || !reason) return NextResponse.json({ error: 'Missing hours or reason' }, { status: 400 });
 
         // Insert adjustment record
-        const { error: adjErr } = await supabaseAdmin.from('vault_adjustments').insert({
+        const { error: adjErr } = await supabaseAdmin.from('program_adjustments').insert({
             session_id: session.id,
             member_id: email,
             hours,
@@ -473,7 +548,7 @@ export async function POST(req: NextRequest) {
         const newPenalty = (session.penalty_hours || 0) + hours;
         const newExpires = new Date(new Date(session.expires_at).getTime() + hours * 3600000).toISOString();
 
-        await supabaseAdmin.from('vault_sessions').update({
+        await supabaseAdmin.from('program_sessions').update({
             penalty_hours: newPenalty,
             expires_at: newExpires,
         }).eq('id', session.id);
@@ -486,7 +561,7 @@ export async function POST(req: NextRequest) {
         const { resultText, resultType } = body;
         const today = tzToday(tz);
 
-        const { error } = await supabaseAdmin.from('vault_spins').insert({
+        const { error } = await supabaseAdmin.from('program_spins').insert({
             session_id: session.id,
             member_id: email,
             date: today,
@@ -511,7 +586,7 @@ export async function POST(req: NextRequest) {
         const today = tzToday(tz);
         const daysIn = getSessionDay(session, tz);
 
-        const { error } = await supabaseAdmin.from('vault_trials').insert({
+        const { error } = await supabaseAdmin.from('program_trials').insert({
             session_id: session.id,
             member_id: email,
             day_number: daysIn,
@@ -538,7 +613,7 @@ export async function POST(req: NextRequest) {
         const { message } = body;
         if (!message) return NextResponse.json({ error: 'Missing message' }, { status: 400 });
 
-        const { error } = await supabaseAdmin.from('vault_begs').insert({
+        const { error } = await supabaseAdmin.from('program_begs').insert({
             session_id: session.id,
             member_id: email,
             message,
@@ -554,19 +629,19 @@ export async function POST(req: NextRequest) {
         const today = tzToday(tz);
 
         // Chastity check: enforce 6-10 AM window, save photo, DON'T mark as done — needs Queen's approval
-        if (orderType === 'chastity_check' && photoUrl) {
+        if (orderType === 'daily_check' && photoUrl) {
             const tz = body.tz || 'UTC';
             const localHour = parseInt(
                 new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()),
                 10
             );
 
-            // Check existing submission in vault_check_log (proper table, not JSON)
-            const { data: existing } = await supabaseAdmin.from('vault_check_log')
-                .select('id, status').eq('session_id', session.id).eq('date', today).eq('type', 'chastity_check').maybeSingle();
+            // Check existing submission in program_check_log (proper table, not JSON)
+            const { data: existing } = await supabaseAdmin.from('program_check_log')
+                .select('id, status').eq('session_id', session.id).eq('date', today).eq('type', 'daily_check').maybeSingle();
 
             if (existing && (existing.status === 'pending' || existing.status === 'approved')) {
-                return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: existing.status }, { status: 400 });
+                return NextResponse.json({ error: 'Chastity check already submitted today', dailyStatus: existing.status }, { status: 400 });
             }
             // Enforce 6-10 AM window — allow resubmit anytime if Queen rejected
             const isRejectedRetry = existing?.status === 'rejected';
@@ -574,10 +649,10 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
             }
 
-            // Write to vault_check_log (proper table — same pattern as user_routines)
+            // Write to program_check_log (proper table — same pattern as user_routines)
             if (existing) {
                 // Re-submit after rejection
-                await supabaseAdmin.from('vault_check_log').update({
+                await supabaseAdmin.from('program_check_log').update({
                     proof_url: photoUrl,
                     status: 'pending',
                     submitted_at: new Date().toISOString(),
@@ -585,22 +660,22 @@ export async function POST(req: NextRequest) {
                     queen_comment: null,
                 }).eq('id', existing.id);
             } else {
-                await supabaseAdmin.from('vault_check_log').insert({
+                await supabaseAdmin.from('program_check_log').insert({
                     session_id: session.id,
                     member_id: email,
                     date: today,
-                    type: 'chastity_check',
+                    type: 'daily_check',
                     proof_url: photoUrl,
                     status: 'pending',
                     submitted_at: new Date().toISOString(),
                 });
-                // Advance day counter on each new chastity check submission
-                await supabaseAdmin.from('vault_sessions').update({
+                // Advance day counter on each new daily check submission
+                await supabaseAdmin.from('program_sessions').update({
                     current_day: (session.current_day ?? 1) + 1,
                 }).eq('id', session.id);
             }
 
-            // No need to touch vault_daily orders — chastity status lives in vault_check_log
+            // No need to touch program_daily orders — daily status lives in program_check_log
 
             // Push notification to Queen
             try {
@@ -617,15 +692,15 @@ export async function POST(req: NextRequest) {
                             target_channel: 'push',
                             include_aliases: { external_id: ['ceo@qkarin.com'] },
                             headings: { en: 'Chastity Check Submitted' },
-                            subtitle: { en: 'Vault' },
-                            contents: { en: `${name} submitted their daily chastity check photo` },
+                            subtitle: { en: 'Program' },
+                            contents: { en: `${name} submitted their daily daily check photo` },
                             url: 'https://throne.qkarin.com/dashboard',
                         }),
                     }).catch(() => {});
                 }
             } catch (_) {}
 
-            return NextResponse.json({ success: true, chastityStatus: 'pending' });
+            return NextResponse.json({ success: true, dailyStatus: 'pending' });
         }
 
         await _updateOrderDone(session.id, today, orderType, amount);
@@ -637,15 +712,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── APPROVE CHASTITY CHECK ──
-    if (action === 'approve_chastity') {
+    if (action === 'approve_daily') {
         const { date: targetDate, comment } = body;
         const date = targetDate || tzToday(tz);
 
-        await supabaseAdmin.from('vault_check_log').update({
+        await supabaseAdmin.from('program_check_log').update({
             status: 'approved',
             reviewed_at: new Date().toISOString(),
             queen_comment: comment || null,
-        }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
+        }).eq('session_id', session.id).eq('date', date).eq('type', 'daily_check');
 
         await _syncChastityOrder(session.id, date, 'approved');
 
@@ -659,7 +734,7 @@ export async function POST(req: NextRequest) {
                 if (lastApproved !== date) {
                     const newStreak = (lastApproved === yesterdayDate) ? (ur.current_streak || 0) + 1 : 1;
                     const newBest = Math.max(newStreak, ur.best_streak || 0);
-                    const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'VAULT_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
+                    const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'PROGRAM_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
                     await supabaseAdmin.from('user_routines').update({
                         history: [...(ur.history || []), entry],
                         current_streak: newStreak,
@@ -678,7 +753,7 @@ export async function POST(req: NextRequest) {
                 }
             } else {
                 // No user_routines row yet — create one
-                const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'VAULT_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
+                const entry = { id: Date.now().toString(), date, submitted_at: new Date().toISOString(), status: 'approve', proof_url: 'PROGRAM_CHASTITY', proof_type: 'image', thumbnail_url: null, points_awarded: 0 };
                 await supabaseAdmin.from('user_routines').insert({
                     member_id: email, routine_name: 'Daily Routine',
                     history: [entry], current_streak: 1, best_streak: 1, last_approved_date: date,
@@ -692,34 +767,34 @@ export async function POST(req: NextRequest) {
                     await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
                 }
             }
-        } catch (e: any) { console.error('[vault] chastity consistency update error:', e?.message); }
+        } catch (e: any) { console.error('[program] daily consistency update error:', e?.message); }
 
         // Sync to profile score (leaderboard)
         try { await DbService.awardPoints(email, 25); } catch (_) {}
 
-        // Broadcast to member so their vault page updates instantly
-        _notifyMember(email, 'chastity_reviewed', { status: 'approved', date });
+        // Broadcast to member so their program page updates instantly
+        _notifyMember(email, 'daily_reviewed', { status: 'approved', date });
         // Push notification
-        _pushToMember(email, 'Chastity Approved', 'Your chastity check has been approved by Queen.');
+        _pushToMember(email, 'Chastity Approved', 'Your daily check has been approved by Queen.');
 
         return NextResponse.json({ success: true, approved: true });
     }
 
     // ── REJECT CHASTITY CHECK ──
-    if (action === 'reject_chastity') {
+    if (action === 'reject_daily') {
         const { date: targetDate, reason } = body;
         const date = targetDate || tzToday(tz);
 
-        await supabaseAdmin.from('vault_check_log').update({
+        await supabaseAdmin.from('program_check_log').update({
             status: 'rejected',
             reviewed_at: new Date().toISOString(),
             queen_comment: reason || null,
-        }).eq('session_id', session.id).eq('date', date).eq('type', 'chastity_check');
+        }).eq('session_id', session.id).eq('date', date).eq('type', 'daily_check');
 
         await _syncChastityOrder(session.id, date, 'rejected');
 
-        _notifyMember(email, 'chastity_reviewed', { status: 'rejected', date });
-        _pushToMember(email, 'Chastity Rejected', reason || 'Your chastity check was rejected. Resubmit.');
+        _notifyMember(email, 'daily_reviewed', { status: 'rejected', date });
+        _pushToMember(email, 'Chastity Rejected', reason || 'Your daily check was rejected. Resubmit.');
 
         return NextResponse.json({ success: true, rejected: true });
     }
@@ -729,17 +804,17 @@ export async function POST(req: NextRequest) {
         const { orderType, text, photoUrl, videoUrl } = body;
         const today = tzToday(tz);
 
-        console.log('[vault] submit_task:', { email, orderType, sessionId: session.id, today });
+        console.log('[program] submit_task:', { email, orderType, sessionId: session.id, today });
 
-        const { data: daily, error: dailyErr } = await supabaseAdmin.from('vault_daily')
+        const { data: daily, error: dailyErr } = await supabaseAdmin.from('program_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
-        if (dailyErr) console.error('[vault] submit_task daily lookup error:', dailyErr.message);
+        if (dailyErr) console.error('[program] submit_task daily lookup error:', dailyErr.message);
         if (!daily) {
-            console.error('[vault] submit_task: no vault_daily for session', session.id, 'date', today);
-            // Still try to insert into vault_submissions even without vault_daily
+            console.error('[program] submit_task: no program_daily for session', session.id, 'date', today);
+            // Still try to insert into program_submissions even without program_daily
             try {
-                await supabaseAdmin.from('vault_submissions').insert({
+                await supabaseAdmin.from('program_submissions').insert({
                     session_id: session.id, member_id: email, date: today,
                     order_idx: 0, order_type: orderType || 'unknown', label: orderType || null,
                     text: text || null, photo_url: photoUrl || null, video_url: videoUrl || null,
@@ -750,27 +825,27 @@ export async function POST(req: NextRequest) {
         }
 
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
-        console.log('[vault] submit_task orders count:', orders.length, 'looking for type:', orderType);
+        console.log('[program] submit_task orders count:', orders.length, 'looking for type:', orderType);
         const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target && o.submitted !== 'pending');
 
-        // Mark the order as submitted in vault_daily orders JSON (reliable fallback)
+        // Mark the order as submitted in program_daily orders JSON (reliable fallback)
         if (idx >= 0 && idx < orders.length) {
             orders[idx].submitted = 'pending';
             orders[idx].submitted_at = new Date().toISOString();
             if (text) orders[idx].submitted_text = text;
             if (photoUrl) orders[idx].submitted_photo = photoUrl;
             if (videoUrl) orders[idx].submitted_video = videoUrl;
-            const { error: updErr } = await supabaseAdmin.from('vault_daily').update({
+            const { error: updErr } = await supabaseAdmin.from('program_daily').update({
                 orders: JSON.stringify(orders),
             }).eq('id', daily.id);
-            console.log('[vault] submit_task vault_daily updated:', idx, updErr ? 'ERROR: ' + updErr.message : 'OK');
+            console.log('[program] submit_task program_daily updated:', idx, updErr ? 'ERROR: ' + updErr.message : 'OK');
         } else {
-            console.log('[vault] submit_task: no matching order found for type', orderType, 'idx:', idx);
+            console.log('[program] submit_task: no matching order found for type', orderType, 'idx:', idx);
         }
 
-        // Also insert into vault_submissions table if it exists
+        // Also insert into program_submissions table if it exists
         try {
-            const { error: subErr } = await supabaseAdmin.from('vault_submissions').insert({
+            const { error: subErr } = await supabaseAdmin.from('program_submissions').insert({
                 session_id: session.id,
                 member_id: email,
                 date: today,
@@ -782,9 +857,9 @@ export async function POST(req: NextRequest) {
                 video_url: videoUrl || null,
                 status: 'pending',
             });
-            if (subErr) console.error('[vault] submit_task vault_submissions insert error:', subErr.message);
+            if (subErr) console.error('[program] submit_task program_submissions insert error:', subErr.message);
         } catch (e: any) {
-            console.error('[vault] vault_submissions table missing:', e?.message);
+            console.error('[program] program_submissions table missing:', e?.message);
         }
 
         return NextResponse.json({ success: true, status: 'pending' });
@@ -813,8 +888,8 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // Auto-approve in vault_daily orders
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        // Auto-approve in program_daily orders
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
@@ -825,13 +900,13 @@ export async function POST(req: NextRequest) {
                 orders[idx].submitted = 'approved';
                 orders[idx].done = (orders[idx].done || 0) + 1;
                 orders[idx].submitted_text = `Quiz: ${correct}/${total} correct`;
-                await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+                await supabaseAdmin.from('program_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
             }
         }
 
         // Insert auto-approved submission record
         try {
-            await supabaseAdmin.from('vault_submissions').insert({
+            await supabaseAdmin.from('program_submissions').insert({
                 session_id: session.id,
                 member_id: email,
                 date: today,
@@ -847,12 +922,12 @@ export async function POST(req: NextRequest) {
         if (dayChange !== 0) {
             const newExpires = new Date(new Date(session.expires_at).getTime() + dayChange * 86400000).toISOString();
             const newLockDays = Math.max(1, (session.lock_days || 0) + dayChange);
-            await supabaseAdmin.from('vault_sessions').update({
+            await supabaseAdmin.from('program_sessions').update({
                 expires_at: newExpires,
                 lock_days: newLockDays,
             }).eq('id', session.id);
             if (dayChange > 0) await _extendProgram(email, session.id, newLockDays);
-            console.log(`[vault] quiz_grade: ${correct}/${total} → dayChange=${dayChange}, newLockDays=${newLockDays}`);
+            console.log(`[program] quiz_grade: ${correct}/${total} → dayChange=${dayChange}, newLockDays=${newLockDays}`);
         }
 
         return NextResponse.json({ success: true, dayChange, correct, total });
@@ -873,7 +948,7 @@ export async function POST(req: NextRequest) {
                 ? currentWallet + coinDelta
                 : Math.max(0, currentWallet - coinDelta);
             if (prof) await supabaseAdmin.from('profiles').update({ wallet: newWallet }).eq('ID', prof.ID);
-            console.log(`[vault] apply_followup: ${followUpType} ${coinDelta} → wallet ${currentWallet} → ${newWallet}`);
+            console.log(`[program] apply_followup: ${followUpType} ${coinDelta} → wallet ${currentWallet} → ${newWallet}`);
         }
 
         // Apply skip pass
@@ -882,7 +957,7 @@ export async function POST(req: NextRequest) {
             const prof = await findProfile(email, 'ID, skippass');
             const currentSkip = prof?.skippass ?? 0;
             if (prof) await supabaseAdmin.from('profiles').update({ skippass: currentSkip + skipDelta }).eq('ID', prof.ID);
-            console.log(`[vault] apply_followup: add_skippass ${skipDelta} → skippass ${currentSkip} → ${currentSkip + skipDelta}`);
+            console.log(`[program] apply_followup: add_skippass ${skipDelta} → skippass ${currentSkip} → ${currentSkip + skipDelta}`);
         }
 
         // Apply day change
@@ -891,16 +966,16 @@ export async function POST(req: NextRequest) {
             const newExpires = new Date(new Date(session.expires_at).getTime() + dayDelta * 86400000).toISOString();
             const currentDay = session.current_day || 1;
             const newLockDays = Math.max(currentDay, (session.lock_days || 0) + dayDelta);
-            await supabaseAdmin.from('vault_sessions').update({
+            await supabaseAdmin.from('program_sessions').update({
                 expires_at: newExpires,
                 lock_days: newLockDays,
             }).eq('id', session.id);
             if (dayDelta > 0) await _extendProgram(email, session.id, newLockDays);
-            console.log(`[vault] apply_followup: ${followUpType} ${delta} → lock_days ${session.lock_days} → ${newLockDays}`);
+            console.log(`[program] apply_followup: ${followUpType} ${delta} → lock_days ${session.lock_days} → ${newLockDays}`);
         }
 
-        // Mark order as auto-completed in vault_daily
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        // Mark order as auto-completed in program_daily
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
@@ -911,13 +986,13 @@ export async function POST(req: NextRequest) {
                 orders[idx].submitted = 'approved';
                 orders[idx].done = (orders[idx].done || 0) + 1;
                 orders[idx].submitted_text = `Auto: ${followUpType}${amount ? ` ×${amount}` : ''}`;
-                await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+                await supabaseAdmin.from('program_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
             }
         }
 
         // Log auto-approved submission
         try {
-            await supabaseAdmin.from('vault_submissions').insert({
+            await supabaseAdmin.from('program_submissions').insert({
                 session_id: session.id,
                 member_id: email,
                 date: today,
@@ -938,7 +1013,7 @@ export async function POST(req: NextRequest) {
         if (!orderType || gambleResult === undefined) return NextResponse.json({ error: 'Missing orderType or gambleResult' }, { status: 400 });
 
         const today = tzToday(tz);
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', today)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
@@ -948,7 +1023,7 @@ export async function POST(req: NextRequest) {
         const idx = orders.findIndex((o: any) => o.type === orderType && o.done < o.target);
         if (idx >= 0) {
             orders[idx].gambleResult = gambleResult;
-            await supabaseAdmin.from('vault_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
+            await supabaseAdmin.from('program_daily').update({ orders: JSON.stringify(orders) }).eq('id', daily.id);
         }
         return NextResponse.json({ success: true });
     }
@@ -958,19 +1033,19 @@ export async function POST(req: NextRequest) {
         const { date: targetDate, submissionId, comment } = body;
         const date = targetDate || tzToday(tz);
 
-        // Update the submission row in vault_submissions
-        await supabaseAdmin.from('vault_submissions').update({
+        // Update the submission row in program_submissions
+        await supabaseAdmin.from('program_submissions').update({
             status: 'approved',
             reviewed_at: new Date().toISOString(),
             queen_comment: comment || null,
         }).eq('id', submissionId);
 
         // Get the submission to find order_idx + info for chat card
-        const { data: sub } = await supabaseAdmin.from('vault_submissions')
+        const { data: sub } = await supabaseAdmin.from('program_submissions')
             .select('order_idx, order_type, label, photo_url').eq('id', submissionId).single();
 
-        // Update order done count in vault_daily
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        // Update order done count in program_daily
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders, orders_completed, orders_total, perfect').eq('session_id', session.id).eq('date', date).maybeSingle();
         if (daily) {
             const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
@@ -983,7 +1058,7 @@ export async function POST(req: NextRequest) {
             const completed = orders.filter((o: any) => o.done >= o.target).length;
             const perfect = completed >= orders.length;
 
-            await supabaseAdmin.from('vault_daily').update({
+            await supabaseAdmin.from('program_daily').update({
                 orders: JSON.stringify(orders),
                 orders_completed: completed,
                 perfect,
@@ -991,11 +1066,11 @@ export async function POST(req: NextRequest) {
 
             // Only increment streak when day FIRST becomes perfect
             if (perfect && !daily.perfect) {
-                const { data: sess } = await supabaseAdmin.from('vault_sessions')
+                const { data: sess } = await supabaseAdmin.from('program_sessions')
                     .select('current_streak, best_streak, total_perfect_days').eq('id', session.id).single();
                 if (sess) {
                     const ns = (sess.current_streak || 0) + 1;
-                    await supabaseAdmin.from('vault_sessions').update({
+                    await supabaseAdmin.from('program_sessions').update({
                         current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
                         total_perfect_days: (sess.total_perfect_days || 0) + 1,
                     }).eq('id', session.id);
@@ -1012,7 +1087,7 @@ export async function POST(req: NextRequest) {
             await DbService.sendMessage(email, `TASK_REVIEW_CARD::${JSON.stringify(cardData)}`, 'system');
         } catch (_) {}
 
-        // Broadcast to member so their vault page updates instantly
+        // Broadcast to member so their program page updates instantly
         _notifyMember(email, 'task_reviewed', { status: 'approved', submissionId });
         _pushToMember(email, 'Task Approved', comment ? `Approved: ${comment}` : 'Your task submission has been approved by Queen.');
 
@@ -1025,18 +1100,18 @@ export async function POST(req: NextRequest) {
         const date = targetDate || tzToday(tz);
 
         // Update the submission row
-        await supabaseAdmin.from('vault_submissions').update({
+        await supabaseAdmin.from('program_submissions').update({
             status: 'rejected',
             reviewed_at: new Date().toISOString(),
             queen_comment: comment || null,
         }).eq('id', submissionId);
 
         // Get the submission to find order_idx + info for chat card
-        const { data: sub } = await supabaseAdmin.from('vault_submissions')
+        const { data: sub } = await supabaseAdmin.from('program_submissions')
             .select('order_idx, order_type, label, photo_url').eq('id', submissionId).single();
 
         // Reset order done count
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders').eq('session_id', session.id).eq('date', date).maybeSingle();
         if (daily) {
             const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
@@ -1044,7 +1119,7 @@ export async function POST(req: NextRequest) {
             if (oIdx != null && orders[oIdx]) {
                 orders[oIdx].done = 0;
             }
-            await supabaseAdmin.from('vault_daily').update({
+            await supabaseAdmin.from('program_daily').update({
                 orders: JSON.stringify(orders),
             }).eq('id', daily.id);
         }
@@ -1068,7 +1143,7 @@ export async function POST(req: NextRequest) {
 
         // Check today is perfect
         const { data: todayRecord } = await supabaseAdmin
-            .from('vault_daily')
+            .from('program_daily')
             .select('*')
             .eq('session_id', session.id)
             .eq('date', today)
@@ -1082,7 +1157,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Already claimed today' }, { status: 409 });
         }
 
-        await supabaseAdmin.from('vault_daily').update({ reward_claimed: true }).eq('id', todayRecord.id);
+        await supabaseAdmin.from('program_daily').update({ reward_claimed: true }).eq('id', todayRecord.id);
 
         const rewardUntil = Date.now() + 60 * 60 * 1000;
         return NextResponse.json({ success: true, rewardUntil });
@@ -1091,7 +1166,7 @@ export async function POST(req: NextRequest) {
     // ── SET CHAT OPEN (keyholder grant — simple boolean, no timers) ──
     if (action === 'set_chat_open') {
         const { open } = body;
-        await supabaseAdmin.from('vault_sessions').update({ chat_open: !!open }).eq('id', session.id);
+        await supabaseAdmin.from('program_sessions').update({ chat_open: !!open }).eq('id', session.id);
         await _notifyMember(email, open ? 'chat_granted' : 'chat_closed', {});
         return NextResponse.json({ success: true });
     }
@@ -1112,7 +1187,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Record submission as skipped
-        await supabaseAdmin.from('vault_submissions').insert({
+        await supabaseAdmin.from('program_submissions').insert({
             session_id: session.id,
             member_id: email,
             order_type: orderType || 'unknown',
@@ -1128,7 +1203,7 @@ export async function POST(req: NextRequest) {
         const { amount } = body;
         if (!amount) return NextResponse.json({ error: 'Missing amount' }, { status: 400 });
 
-        const { error } = await supabaseAdmin.from('vault_tributes').insert({
+        const { error } = await supabaseAdmin.from('program_tributes').insert({
             session_id: session.id,
             member_id: email,
             amount,
@@ -1147,47 +1222,47 @@ export async function POST(req: NextRequest) {
         const daysIn = getSessionDay(session, tz);
 
         const { data: existing } = await supabaseAdmin
-            .from('vault_daily')
+            .from('program_daily')
             .select('*')
             .eq('session_id', session.id)
             .eq('date', today)
             .maybeSingle();
 
         if (!existing) {
-            // Check if yesterday's chastity check was submitted
-            // Skip day 1-2 (video submission day) — chastity check starts from day 3
+            // Check if yesterday's daily check was submitted
+            // Skip day 1-2 (video submission day) — daily check starts from day 3
             if (daysIn > 2) {
                 const yesterday = tzYesterday(tz);
 
-                // Check vault_check_log first (proper table)
-                let chastitySubmitted = false;
+                // Check program_check_log first (proper table)
+                let dailySubmitted = false;
                 try {
-                    const { data: yCheck } = await supabaseAdmin.from('vault_check_log')
-                        .select('status').eq('session_id', session.id).eq('date', yesterday).eq('type', 'chastity_check').maybeSingle();
-                    if (yCheck) chastitySubmitted = true;
+                    const { data: yCheck } = await supabaseAdmin.from('program_check_log')
+                        .select('status').eq('session_id', session.id).eq('date', yesterday).eq('type', 'daily_check').maybeSingle();
+                    if (yCheck) dailySubmitted = true;
                 } catch {}
 
-                // Fallback: check orders JSON done count (for when vault_check_log doesn't exist yet)
-                if (!chastitySubmitted) {
-                    const { data: yDaily } = await supabaseAdmin.from('vault_daily')
+                // Fallback: check orders JSON done count (for when program_check_log doesn't exist yet)
+                if (!dailySubmitted) {
+                    const { data: yDaily } = await supabaseAdmin.from('program_daily')
                         .select('orders').eq('session_id', session.id).eq('day_number', daysIn - 1).maybeSingle();
                     const yOrders: any[] = yDaily ? (typeof yDaily.orders === 'string' ? JSON.parse(yDaily.orders) : (yDaily.orders || [])) : [];
-                    const cc = yOrders.find((o: any) => o.type === 'chastity_check');
-                    if (cc && cc.done >= cc.target) chastitySubmitted = true;
+                    const cc = yOrders.find((o: any) => o.type === 'daily_check');
+                    if (cc && cc.done >= cc.target) dailySubmitted = true;
 
-                    // Only terminate if yesterday HAD a chastity order AND it wasn't done
-                    if (cc && !chastitySubmitted) {
-                        await supabaseAdmin.from('vault_sessions').update({
+                    // Only terminate if yesterday HAD a daily order AND it wasn't done
+                    if (cc && !dailySubmitted) {
+                        await supabaseAdmin.from('program_sessions').update({
                             status: 'completed',
                             release_reason: 'Chastity check not submitted. Program terminated.',
                         }).eq('id', session.id);
-                        return NextResponse.json({ success: false, ended: true, reason: 'chastity_failed' });
+                        return NextResponse.json({ success: false, ended: true, reason: 'daily_failed' });
                     }
                 }
             }
 
             const orders = await _getOrdersForDay(session.id, daysIn);
-            const { error: ensureInsertErr } = await supabaseAdmin.from('vault_daily').insert({
+            const { error: ensureInsertErr } = await supabaseAdmin.from('program_daily').insert({
                 session_id: session.id,
                 member_id: email,
                 day_number: daysIn,
@@ -1197,23 +1272,23 @@ export async function POST(req: NextRequest) {
             });
             if (ensureInsertErr) {
                 // Duplicate — row was created by a concurrent request, ignore
-                console.log('[vault/session] ensure_today insert race (ok):', ensureInsertErr.message);
+                console.log('[program/session] ensure_today insert race (ok):', ensureInsertErr.message);
             }
         } else if (existing.perfect) {
             // Record shows perfect — verify it has real activity (submissions, spins, trials, or done orders)
             const { data: todaySubs } = await supabaseAdmin
-                .from('vault_submissions').select('id').eq('session_id', session.id).eq('date', today).limit(1).maybeSingle();
+                .from('program_submissions').select('id').eq('session_id', session.id).eq('date', today).limit(1).maybeSingle();
             const { data: todaySpin } = await supabaseAdmin
-                .from('vault_spins').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
+                .from('program_spins').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
             const { data: todayTrial } = await supabaseAdmin
-                .from('vault_trials').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
+                .from('program_trials').select('id').eq('session_id', session.id).eq('date', today).maybeSingle();
             // Also check if any orders have real done counts (kneel syncs from tasks table, not submissions)
             const existingOrders: any[] = typeof existing.orders === 'string' ? JSON.parse(existing.orders) : (existing.orders || []);
             const hasRealDone = existingOrders.some((o: any) => (o.done || 0) > 0);
             if (!todaySubs && !todaySpin && !todayTrial && !hasRealDone) {
                 // No real activity at all — reset pre-seeded record
                 const orders = await _getOrdersForDay(session.id, daysIn);
-                await supabaseAdmin.from('vault_daily').update({
+                await supabaseAdmin.from('program_daily').update({
                     orders: JSON.stringify(orders),
                     orders_total: orders.length,
                     orders_completed: 0,
@@ -1226,14 +1301,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true });
     }
 
-    // ── ADD LOCK DAYS — keyholder extends the chastity lock from dashboard ──
+    // ── ADD LOCK DAYS — keyholder extends the daily lock from dashboard ──
     if (action === 'add_lock_days') {
         const { days } = body;
         if (!days || isNaN(Number(days))) return NextResponse.json({ error: 'Missing days' }, { status: 400 });
         const d = Number(days);
         const newLockDays = (session.lock_days || 0) + d;
         const newExpires = new Date(new Date(session.expires_at).getTime() + d * 86400000).toISOString();
-        await supabaseAdmin.from('vault_sessions').update({
+        await supabaseAdmin.from('program_sessions').update({
             lock_days: newLockDays,
             expires_at: newExpires,
         }).eq('id', session.id);
@@ -1242,7 +1317,7 @@ export async function POST(req: NextRequest) {
         // Send card to member's chat
         const cardData = { days: d, newTotal: newLockDays, newExpires };
         try { await DbService.sendMessage(email, `LOCK_EXTENDED_CARD::${JSON.stringify(cardData)}`, 'system'); } catch (_) {}
-        console.log(`[vault] add_lock_days: +${d} days → lockDays=${newLockDays}`);
+        console.log(`[program] add_lock_days: +${d} days → lockDays=${newLockDays}`);
         return NextResponse.json({ success: true, lockDays: newLockDays, expiresAt: newExpires });
     }
 
@@ -1260,7 +1335,7 @@ export async function POST(req: NextRequest) {
 async function _extendProgram(memberId: string, sessionId: string, newLockDays: number) {
     try {
         const { data: prog } = await supabaseAdmin
-            .from('vault_member_program').select('id, program')
+            .from('program_member').select('id, program')
             .eq('session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle();
         if (!prog) return;
         const program = typeof prog.program === 'string' ? JSON.parse(prog.program) : (prog.program || {});
@@ -1272,42 +1347,42 @@ async function _extendProgram(memberId: string, sessionId: string, newLockDays: 
             }
         }
         if (added > 0) {
-            await supabaseAdmin.from('vault_member_program').update({ program: JSON.stringify(program) }).eq('id', prog.id);
-            console.log(`[vault] _extendProgram: added ${added} days → total ${newLockDays} for ${memberId}`);
+            await supabaseAdmin.from('program_member').update({ program: JSON.stringify(program) }).eq('id', prog.id);
+            console.log(`[program] _extendProgram: added ${added} days → total ${newLockDays} for ${memberId}`);
         }
-    } catch (e: any) { console.error('[vault] _extendProgram error:', e?.message); }
+    } catch (e: any) { console.error('[program] _extendProgram error:', e?.message); }
 }
 
 // Read orders from member's custom program; auto-generate program if missing
 async function _getOrdersForDay(sessionId: string, dayNumber: number) {
     try {
         let { data: prog, error: progErr } = await supabaseAdmin
-            .from('vault_member_program')
+            .from('program_member')
             .select('program')
             .eq('session_id', sessionId)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-        if (progErr) console.error('[vault] _getOrdersForDay query error:', progErr.message);
+        if (progErr) console.error('[program] _getOrdersForDay query error:', progErr.message);
 
         // Auto-generate program for sessions that don't have one yet
         if (!prog) {
-            console.log(`[vault] No program for session ${sessionId}, auto-generating...`);
+            console.log(`[program] No program for session ${sessionId}, auto-generating...`);
             const { data: sess } = await supabaseAdmin
-                .from('vault_sessions')
+                .from('program_sessions')
                 .select('member_id')
                 .eq('id', sessionId)
                 .single();
             if (sess) {
                 const program = await _generateFullProgram();
-                const { error: insertErr } = await supabaseAdmin.from('vault_member_program').insert({
+                const { error: insertErr } = await supabaseAdmin.from('program_member').insert({
                     session_id: sessionId,
                     member_id: sess.member_id,
                     program: JSON.stringify(program),
                 });
-                if (insertErr) console.error('[vault] Failed to insert auto-generated program:', insertErr.message);
-                else console.log(`[vault] Auto-generated program for session ${sessionId}`);
+                if (insertErr) console.error('[program] Failed to insert auto-generated program:', insertErr.message);
+                else console.log(`[program] Auto-generated program for session ${sessionId}`);
                 prog = { program: JSON.stringify(program) };
             }
         }
@@ -1322,29 +1397,29 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
                     if (t.config) order.config = t.config;
                     return order;
                 });
-                // Safety net: ensure kneel + chastity_check exist on EVERY day
+                // Safety net: ensure kneel + daily_check exist on EVERY day
                 if (!orders.some((o: any) => o.type === 'kneel')) {
                     const kt = kneelTarget(dayNumber);
                     orders.unshift({ type: 'kneel', target: kt, done: 0, label: `Kneel ${kt} times` });
                 }
-                if (!orders.some((o: any) => o.type === 'chastity_check')) {
+                if (!orders.some((o: any) => o.type === 'daily_check')) {
                     const idx = orders.findIndex((o: any) => o.type === 'kneel');
-                    orders.splice(idx + 1, 0, { type: 'chastity_check', target: 1, done: 0, label: 'Chastity check-in' });
+                    orders.splice(idx + 1, 0, { type: 'daily_check', target: 1, done: 0, label: 'Chastity check-in' });
                 }
                 return orders;
             }
             // Day missing from stored program — generate, save back, and return
-            console.warn(`[vault] Program found but day ${dayNumber} has no tasks, backfilling...`);
+            console.warn(`[program] Program found but day ${dayNumber} has no tasks, backfilling...`);
             const newTasks = defaultDayTasks(dayNumber);
             program[String(dayNumber)] = newTasks;
             try {
                 const { data: progRow } = await supabaseAdmin
-                    .from('vault_member_program').select('id')
+                    .from('program_member').select('id')
                     .eq('session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle();
                 if (progRow) {
-                    await supabaseAdmin.from('vault_member_program')
+                    await supabaseAdmin.from('program_member')
                         .update({ program: JSON.stringify(program) }).eq('id', progRow.id);
-                    console.log(`[vault] Backfilled day ${dayNumber} into stored program`);
+                    console.log(`[program] Backfilled day ${dayNumber} into stored program`);
                 }
             } catch (_) {}
             return newTasks.map((t: any) => {
@@ -1355,7 +1430,7 @@ async function _getOrdersForDay(sessionId: string, dayNumber: number) {
             });
         }
     } catch (err: any) {
-        console.error('[vault] _getOrdersForDay error:', err?.message || err);
+        console.error('[program] _getOrdersForDay error:', err?.message || err);
     }
     // Final fallback
     return _generateDailyOrders(dayNumber);
@@ -1385,24 +1460,24 @@ function _generateDailyOrders(dayNumber: number) {
 // Generate a full 30-day program from template or defaults
 async function _generateFullProgram(): Promise<Record<string, any[]>> {
     const program: Record<string, any[]> = {};
-    // ALWAYS read LATEST from vault_program_template
+    // ALWAYS read LATEST from program_template
     try {
         const { data: template, error: tplErr } = await supabaseAdmin
-            .from('vault_program_template')
+            .from('program_template')
             .select('*')
             .order('day_number');
-        if (tplErr) console.error('[vault] Template read error:', tplErr.message);
+        if (tplErr) console.error('[program] Template read error:', tplErr.message);
         if (template && template.length > 0) {
-            console.log(`[vault] Found ${template.length} template rows, copying to member program`);
+            console.log(`[program] Found ${template.length} template rows, copying to member program`);
             for (const row of template) {
                 const tasks = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
                 program[String(row.day_number)] = tasks;
             }
             return program;
         }
-        console.log('[vault] No template found, using hardcoded defaults');
+        console.log('[program] No template found, using hardcoded defaults');
     } catch (e: any) {
-        console.error('[vault] _generateFullProgram error:', e?.message);
+        console.error('[program] _generateFullProgram error:', e?.message);
     }
     // Fallback: use shared defaults (same as dashboard)
     return generateDefaultProgram();
@@ -1410,7 +1485,7 @@ async function _generateFullProgram(): Promise<Record<string, any[]>> {
 
 async function _updateOrderDone(sessionId: string, date: string, orderType: string, amount?: number) {
     const { data: daily } = await supabaseAdmin
-        .from('vault_daily')
+        .from('program_daily')
         .select('*')
         .eq('session_id', sessionId)
         .eq('date', date)
@@ -1438,7 +1513,7 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
     const completed = orders.filter((o: any) => o.done >= o.target).length;
     const perfect = completed >= orders.length;
 
-    await supabaseAdmin.from('vault_daily').update({
+    await supabaseAdmin.from('program_daily').update({
         orders: JSON.stringify(orders),
         orders_completed: completed,
         perfect,
@@ -1447,7 +1522,7 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
     // Update session streak only if day JUST became perfect (wasn't perfect before)
     if (perfect && !daily.perfect) {
         const { data: session } = await supabaseAdmin
-            .from('vault_sessions')
+            .from('program_sessions')
             .select('current_streak, best_streak, total_perfect_days, member_id')
             .eq('id', sessionId)
             .single();
@@ -1455,7 +1530,7 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
         if (session) {
             const newStreak = (session.current_streak || 0) + 1;
             const bestStreak = Math.max(session.best_streak || 0, newStreak);
-            await supabaseAdmin.from('vault_sessions').update({
+            await supabaseAdmin.from('program_sessions').update({
                 current_streak: newStreak,
                 best_streak: bestStreak,
                 total_perfect_days: (session.total_perfect_days || 0) + 1,
@@ -1469,16 +1544,16 @@ async function _updateOrderDone(sessionId: string, date: string, orderType: stri
     }
 }
 
-// Sync vault_daily order status when chastity check is approved/rejected via vault_check_log
+// Sync program_daily order status when daily check is approved/rejected via program_check_log
 async function _syncChastityOrder(sessionId: string, date: string, status: 'approved' | 'rejected') {
     try {
-        const { data: daily } = await supabaseAdmin.from('vault_daily')
+        const { data: daily } = await supabaseAdmin.from('program_daily')
             .select('id, orders, orders_completed, orders_total').eq('session_id', sessionId).eq('date', date).maybeSingle();
         if (!daily) return;
 
         const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
         for (const o of orders) {
-            if (o.type === 'chastity_check') {
+            if (o.type === 'daily_check') {
                 o.done = status === 'approved' ? o.target : 0;
                 break;
             }
@@ -1486,7 +1561,7 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
         const completed = orders.filter((o: any) => o.done >= o.target).length;
         const perfect = completed >= orders.length;
 
-        await supabaseAdmin.from('vault_daily').update({
+        await supabaseAdmin.from('program_daily').update({
             orders: JSON.stringify(orders),
             orders_completed: completed,
             perfect,
@@ -1494,11 +1569,11 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
 
         // Update streak if perfect
         if (perfect) {
-            const { data: sess } = await supabaseAdmin.from('vault_sessions')
+            const { data: sess } = await supabaseAdmin.from('program_sessions')
                 .select('current_streak, best_streak, total_perfect_days').eq('id', sessionId).single();
             if (sess) {
                 const ns = (sess.current_streak || 0) + 1;
-                await supabaseAdmin.from('vault_sessions').update({
+                await supabaseAdmin.from('program_sessions').update({
                     current_streak: ns, best_streak: Math.max(sess.best_streak || 0, ns),
                     total_perfect_days: (sess.total_perfect_days || 0) + 1,
                 }).eq('id', sessionId);
@@ -1507,12 +1582,12 @@ async function _syncChastityOrder(sessionId: string, date: string, status: 'appr
     } catch (_) {}
 }
 
-// Broadcast realtime event to member's vault page so it refreshes instantly
+// Broadcast realtime event to member's program page so it refreshes instantly
 async function _notifyMember(memberEmail: string, event: string, payload: any) {
     try {
         const prof = await findProfile(memberEmail, 'ID');
         if (!prof) return;
-        const ch = supabaseAdmin.channel(`vault-notify-${prof.ID}`);
+        const ch = supabaseAdmin.channel(`program-notify-${prof.ID}`);
         await ch.subscribe();
         await ch.send({ type: 'broadcast', event, payload });
         setTimeout(() => supabaseAdmin.removeChannel(ch), 1500);
@@ -1533,9 +1608,9 @@ function _pushToMember(memberEmail: string, title: string, message: string) {
                 target_channel: 'push',
                 include_aliases: { external_id: [memberEmail.toLowerCase()] },
                 headings: { en: title },
-                subtitle: { en: 'Vault' },
+                subtitle: { en: 'Program' },
                 contents: { en: message },
-                url: 'https://throne.qkarin.com/vault',
+                url: 'https://throne.qkarin.com/program',
             }),
         }).catch(() => {});
     } catch (_) {}

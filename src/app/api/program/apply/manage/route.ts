@@ -1,0 +1,272 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
+import { DbService } from '@/lib/supabase-service';
+import { generateDefaultProgram } from '@/lib/program-defaults';
+import { findProfile } from '@/lib/lookup';
+
+export const dynamic = 'force-dynamic';
+
+// POST /api/program/apply/manage
+// Admin actions: accept, deny, schedule
+export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) {
+        return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
+
+    try {
+        const { action, sessionId, scheduledStart, reason } = await req.json();
+        if (!sessionId) return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
+
+        const { data: session } = await supabaseAdmin
+            .from('program_sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .maybeSingle();
+
+        if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+
+        const memberId = session.member_id;
+
+        // ── ACCEPT (send to video proof screen, same as self-lock) ──
+        if (action === 'accept') {
+            // Set to awaiting_video — lock only activates after video proof is submitted
+            await supabaseAdmin.from('program_sessions').update({
+                status: 'awaiting_video',
+            }).eq('id', sessionId);
+
+            // ALWAYS generate FRESH program from latest template — delete any old one first
+            try {
+                await supabaseAdmin
+                    .from('program_member')
+                    .delete()
+                    .eq('session_id', sessionId);
+                const program = await _generateProgram();
+                console.log(`[program manage] Generated fresh program from template for ${memberId}, day 1:`, JSON.stringify(program['1']));
+                await supabaseAdmin.from('program_member').insert({
+                    session_id: sessionId,
+                    member_id: memberId,
+                    program: JSON.stringify(program),
+                });
+            } catch (e: any) {
+                console.error('[program manage] Program generation failed:', e?.message);
+            }
+
+            // Update profile — set program_request to awaiting_video (no active_overlay yet)
+            const profile = await findProfile(memberId, 'ID, parameters');
+
+            if (profile) {
+                const params = profile.parameters || {};
+                params.program_request = { ...params.program_request, status: 'awaiting_video', sessionId, lockDays: session.lock_days };
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            }
+
+            // Notify user
+            try {
+                await DbService.sendMessage(memberId,
+                    `LOCK APPROVED — ${session.lock_days} days. Submit your video proof to begin.`,
+                    'system');
+                await _pushToUser(memberId, 'Lock approved. Submit your video proof now.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'awaiting_video' });
+        }
+
+        // ── SCHEDULE ──
+        if (action === 'schedule') {
+            if (!scheduledStart) return NextResponse.json({ error: 'Missing scheduledStart' }, { status: 400 });
+
+            await supabaseAdmin.from('program_sessions').update({
+                status: 'scheduled',
+                scheduled_start: scheduledStart,
+            }).eq('id', sessionId);
+
+            // Update profile
+            const profile = await findProfile(memberId, 'ID, parameters');
+
+            if (profile) {
+                const params = profile.parameters || {};
+                params.program_request = { ...params.program_request, status: 'scheduled', scheduledStart };
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            }
+
+            const startDate = new Date(scheduledStart);
+            const timeStr = startDate.toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+
+            try {
+                await DbService.sendMessage(memberId,
+                    `LOCK SCHEDULED — ${session.lock_days} days starting ${timeStr}. Prepare yourself.`,
+                    'system');
+                await _pushToUser(memberId, `Lock approved. Begins ${timeStr}. Prepare yourself.`);
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'scheduled', scheduledStart });
+        }
+
+        // ── DENY ──
+        if (action === 'deny') {
+            await supabaseAdmin.from('program_sessions').update({ status: 'denied' }).eq('id', sessionId);
+
+            // Refund coins if paid with coins
+            if (session.coins_paid > 0) {
+                const profile = await findProfile(memberId, 'ID, wallet, parameters');
+
+                if (profile) {
+                    const newWallet = Number(profile.wallet || 0) + session.coins_paid;
+                    const params = profile.parameters || {};
+                    delete params.program_request;
+                    await supabaseAdmin.from('profiles').update({ wallet: newWallet, parameters: params }).eq('ID', profile.ID);
+                }
+            }
+
+            try {
+                await DbService.sendMessage(memberId,
+                    `LOCK REQUEST DENIED. ${session.coins_paid > 0 ? session.coins_paid.toLocaleString() + ' coins refunded.' : ''} Not today.`,
+                    'system');
+                await _pushToUser(memberId, 'Your lock request was denied.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'denied' });
+        }
+
+        // ── RELEASE (immediate early release) ──
+        if (action === 'release') {
+            // Critical: update status first — must succeed
+            const { error: releaseErr } = await supabaseAdmin.from('program_sessions').update({
+                status: 'released_early',
+                released_at: new Date().toISOString(),
+            }).eq('id', sessionId);
+
+            if (releaseErr) {
+                console.error('[PROGRAM MANAGE] Release status update failed:', releaseErr);
+                return NextResponse.json({ error: 'Failed to release: ' + releaseErr.message }, { status: 500 });
+            }
+
+            // Optional: store reason (column may not exist yet)
+            if (reason) {
+                try {
+                    await supabaseAdmin.from('program_sessions').update({ release_reason: reason }).eq('id', sessionId);
+                } catch (_) {}
+            }
+
+            // Clear program_request from profile
+            const profile = await findProfile(memberId, 'ID, parameters');
+
+            if (profile) {
+                const params = profile.parameters || {};
+                delete params.program_request;
+                delete params.active_overlay;
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+            }
+
+            try {
+                const reasonMsg = reason ? `\n\n"${reason}"` : '';
+                await DbService.sendMessage(memberId,
+                    `LOCK RELEASED EARLY by Queen Karin. ${session.lock_days} day sentence ended.${reasonMsg}`,
+                    'system');
+                await _pushToUser(memberId, 'Your lock has been released by the Queen.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'released_early' });
+        }
+
+        // ── APPROVE PROOF (mark video as reviewed + count as daily check) ──
+        if (action === 'approve-proof') {
+            const now = new Date().toISOString();
+            const { error: reviewErr } = await supabaseAdmin.from('program_sessions').update({
+                video_reviewed: true,
+                video_reviewed_at: now,
+            }).eq('id', sessionId);
+
+            if (reviewErr) console.error('[PROGRAM MANAGE] Approve proof failed:', reviewErr);
+
+            // If no daily check exists for the video submission day, create + approve it
+            try {
+                const videoDate = session.video_submitted_at
+                    ? new Date(session.video_submitted_at).toISOString().split('T')[0]
+                    : (session.started_at ? new Date(session.started_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+
+                const { data: existing } = await supabaseAdmin.from('program_check_log')
+                    .select('id').eq('session_id', sessionId).eq('date', videoDate).eq('type', 'daily_check').maybeSingle();
+
+                if (existing) {
+                    // Already exists (pending) — approve it
+                    await supabaseAdmin.from('program_check_log').update({
+                        status: 'approved', reviewed_at: now, queen_comment: 'Approved via video proof review',
+                    }).eq('id', existing.id);
+                } else {
+                    // Doesn't exist — create and auto-approve
+                    await supabaseAdmin.from('program_check_log').insert({
+                        session_id: sessionId, member_id: memberId, date: videoDate,
+                        type: 'daily_check', proof_url: session.video_proof_url || '',
+                        status: 'approved', submitted_at: session.video_submitted_at || now, reviewed_at: now,
+                        queen_comment: 'Approved via video proof review',
+                    });
+                }
+
+                // Sync the daily order in program_daily so it counts as done
+                const { data: daily } = await supabaseAdmin.from('program_daily')
+                    .select('id, orders, orders_completed, orders_total').eq('session_id', sessionId).eq('date', videoDate).maybeSingle();
+                if (daily) {
+                    const orders: any[] = typeof daily.orders === 'string' ? JSON.parse(daily.orders) : (daily.orders || []);
+                    for (const o of orders) {
+                        if (o.type === 'daily_check') { o.done = o.target; break; }
+                    }
+                    const completed = orders.filter((o: any) => o.done >= o.target).length;
+                    await supabaseAdmin.from('program_daily').update({
+                        orders: JSON.stringify(orders), orders_completed: completed, perfect: completed >= orders.length,
+                    }).eq('id', daily.id);
+                }
+            } catch (e: any) {
+                console.error('[PROGRAM MANAGE] Chastity check sync on proof approve failed:', e?.message);
+            }
+
+            try {
+                await DbService.sendMessage(memberId,
+                    `VIDEO PROOF REVIEWED & APPROVED by Queen Karin. Your lock is confirmed.`,
+                    'system');
+                await _pushToUser(memberId, 'Queen has reviewed your proof. Lock confirmed.');
+            } catch (_) {}
+
+            return NextResponse.json({ success: true, status: 'proof_approved' });
+        }
+
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    } catch (err: any) {
+        console.error('[PROGRAM MANAGE] Error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+}
+
+async function _generateProgram(): Promise<Record<string, any[]>> {
+    const program: Record<string, any[]> = {};
+    try {
+        const { data: template, error: tplErr } = await supabaseAdmin
+            .from('program_template').select('*').order('day_number');
+        if (tplErr) console.error('[program manage] Template read error:', tplErr.message);
+        if (template && template.length > 0) {
+            for (const row of template) {
+                program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+            }
+            return program;
+        }
+    } catch (e: any) {
+        console.error('[program manage] Template read failed:', e?.message);
+    }
+    // Fallback: use shared defaults (same as dashboard)
+    return generateDefaultProgram();
+}
+
+async function _pushToUser(memberId: string, message: string) {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://throne.qkarin.com';
+    await fetch(`${baseUrl}/api/push`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            externalId: memberId,
+            title: '🔏 BasicProgram',
+            message,
+        }),
+    });
+}
