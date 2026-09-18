@@ -118,7 +118,6 @@ export default function LoctoberClient() {
             @media(min-width:769px){
                 .loc-container{max-width:1000px!important;padding-left:60px!important;padding-right:60px!important}
                 .loc-section{margin-left:calc(-50vw + 50%);margin-right:calc(-50vw + 50%);padding-left:calc(50vw - 50% + 60px);padding-right:calc(50vw - 50% + 60px)}
-                .loc-compare-grid{grid-template-columns:1fr 1fr!important}
                 .loc-week-grid{grid-template-columns:1fr 1fr!important}
             }
         `}</style>
@@ -252,26 +251,6 @@ export default function LoctoberClient() {
                     <div style={{ position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%', background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)', animation: 'locCtaShine 3s ease-in-out infinite', pointerEvents: 'none' }} />
                     Claim Your Spot &euro;{PRICE}
                 </button>
-            </div>
-
-            <div className="loc-divider"><span>THE DIFFERENCE</span></div>
-
-            {/* ════ BEFORE vs AFTER ════ */}
-            <div className="loc-section" style={{ paddingTop: 40, paddingBottom: 60 }}>
-                <div className="loc-compare-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
-                    <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 4 }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 4, marginBottom: 20 }}>WITHOUT A KEYHOLDER</div>
-                        {['You unlock after 2 hours', 'No one knows. No one cares.', 'You tell yourself "next time"', 'October passes. Nothing changes.', 'Another year of empty promises'].map((line, i) => (
-                            <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>{line}</div>
-                        ))}
-                    </div>
-                    <div style={{ padding: 'clamp(20px,3vw,32px)', background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 4 }}>
-                        <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', letterSpacing: 4, marginBottom: 20 }}>UNDER QUEEN KARIN'S LOCKTOBER</div>
-                        {['31 days. No exceptions. No breaks.', 'Daily video tasks reviewed by me.', 'Miss a task? Penalty days added.', 'Real accountability. Real consequences.', 'You become who you claimed to be.'].map((line, i) => (
-                            <div key={i} style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(197,160,89,0.55)', lineHeight: 1.6, padding: '6px 0', borderBottom: i < 4 ? '1px solid rgba(197,160,89,0.06)' : 'none' }}>{line}</div>
-                        ))}
-                    </div>
-                </div>
             </div>
 
             <div className="loc-divider"><span>THE 4 WEEKS</span></div>
