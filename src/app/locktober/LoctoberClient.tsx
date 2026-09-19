@@ -73,7 +73,7 @@ export default function LoctoberClient() {
     return (<>
         {/* ── FIXED BG ── */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: -50, background: "url('https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-hero.jpg') center 15%/cover no-repeat", filter: 'brightness(0.18) saturate(1.1)', opacity: 0.55 }} />
+            <div style={{ position: 'absolute', inset: -50, background: "url('https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-bg.png') center top/cover no-repeat", filter: 'brightness(0.18) saturate(1.1)', opacity: 0.55 }} />
         </div>
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: -50, background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 65%)' }} />
