@@ -646,6 +646,13 @@ export default function PaymentModal({
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.8)" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9h4.5a1.5 1.5 0 010 3H9m1.5 0H15a1.5 1.5 0 010 3H9"/></svg>
                         CRYPTO
                     </button>
+                    {/* CARD (YouPay) */}
+                    <a href={youpayUrl || "https://youpay.me/qkarin"} target="_blank" rel="noopener noreferrer"
+                        onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'youpay', tier_id: label }) }); } catch {} }}
+                        style={{ width: '100%', padding: '16px 20px', background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 10, color: 'rgba(139,92,246,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/><path d="M2 10h20" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/></svg>
+                        CARD
+                    </a>
                     {/* Patreon */}
                     <a href={patreonUrl || "https://www.patreon.com/QKArin/membership"} target="_blank" rel="noopener noreferrer"
                         style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,66,77,0.06)', border: '1px solid rgba(255,66,77,0.25)', borderRadius: 10, color: 'rgba(255,66,77,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
@@ -666,14 +673,6 @@ export default function PaymentModal({
                             style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 19h20v2H2v-2zm2-3l2-8 4 4 2-6 2 6 4-4 2 8H4z" fill="rgba(255,255,255,0.35)"/></svg>
                             THRONE
-                        </a>
-                    )}
-                    {youpayUrl && (
-                        <a href={youpayUrl} target="_blank" rel="noopener noreferrer"
-                            onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'youpay', tier_id: label }) }); } catch {} }}
-                            style={{ width: '100%', padding: '16px 20px', background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 10, color: 'rgba(139,92,246,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/><path d="M2 10h20" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/></svg>
-                            CARD (YOUPAY)
                         </a>
                     )}
                     {paypalMeUrl && (
