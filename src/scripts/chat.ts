@@ -488,9 +488,15 @@ export async function renderChat(messages: any[]) {
                     srcUrl = getOptimizedUrl(rawUrl, 600);
                 }
 
-                const isVideo = mediaType(srcUrl) === "video" || srcUrl.includes(".mp4");
+                const mType = mediaType(srcUrl);
+                const isVideo = mType === "video" || srcUrl.includes(".mp4");
+                const isImage = mType === "image";
+                const isActualMedia = isVideo || isImage || !!m.mediaUrl;
 
-                if (isVideo) {
+                if (!isActualMedia) {
+                    // Plain link — render as clickable + preview card
+                    contentHtml = `<div class="msg ${msgClass}"><a href="${rawUrl}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;">${rawUrl}</a><div class="lp-card" data-lp="${encodeURIComponent(rawUrl)}" style="margin-top:8px;border:1px solid rgba(197,160,89,0.1);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:260px;min-height:10px;"></div></div>`;
+                } else if (isVideo) {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; background:black;"><video src="${srcUrl}" onloadeddata="window.forceBottom()" controls playsinline preload="none" style="max-width:100%; border-radius:inherit;" onerror="this.closest('.msg').innerHTML='<div style=\\'padding:10px;font-family:Orbitron;font-size:0.5rem;color:rgba(255,100,100,0.7);\\'>VIDEO UNAVAILABLE</div>'"></video></div>`;
                 } else {
                     contentHtml = `<div class="msg ${msgClass}" style="padding:0; overflow:hidden; width:240px; max-width:70vw; border-radius:12px;">
