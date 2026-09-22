@@ -118,11 +118,8 @@ export default function LoctoberClient() {
         </div>
 
         {/* ── STICKY TOP HEADER ── */}
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(4,4,6,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(197,160,89,0.15)', transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease', transform: showSticky ? 'translateY(0)' : 'translateY(-100%)', opacity: showSticky ? 1 : 0, pointerEvents: showSticky ? 'auto' : 'none' }}>
-            <div style={{ textAlign: 'center', width: '100%' }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2vw,0.65rem)', fontWeight: 400, letterSpacing: 4, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>LOCKTOBER 2026 &middot; QUEEN KARIN &middot; 5 SPOTS LEFT</div>
-                <button onClick={handleCheckout} style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2vw,0.7rem)', fontWeight: 700, color: '#000', letterSpacing: 4, background: 'linear-gradient(135deg,#d4af6a,#b8860b)', border: 'none', padding: '10px 32px', cursor: 'pointer', animation: 'casinoPulse 2s ease infinite' }}>CLAIM MY SPOT &euro;{PRICE}</button>
-            </div>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999, padding: '14px 20px', background: 'rgba(4,4,6,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(197,160,89,0.1)', textAlign: 'center', transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease', transform: showSticky ? 'translateY(0)' : 'translateY(-100%)', opacity: showSticky ? 1 : 0, pointerEvents: showSticky ? 'auto' : 'none' }}>
+            <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.5rem,2vw,0.6rem)', fontWeight: 400, letterSpacing: 5, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' }}>Locktober &middot; Queen Karin</div>
         </div>
 
         {/* ── FIXED BOTTOM URGENCY BAR — always visible ── */}
@@ -323,7 +320,7 @@ export default function LoctoberClient() {
             </div>
 
             {/* ════ FAQ ════ */}
-            <div className="loc-anim" style={{ paddingTop: 80, paddingBottom: 20 }}>
+            <div style={{ paddingTop: 80, paddingBottom: 20 }}>
                 <div style={{ textAlign: 'center', marginBottom: 48 }}>
                     <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', fontWeight: 600, letterSpacing: 6, color: 'rgba(197,160,89,0.5)', textTransform: 'uppercase', marginBottom: 12 }}>Questions</div>
                     <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.3rem,4vw,1.8rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.85)' }}>You Want Answers.</h2>
