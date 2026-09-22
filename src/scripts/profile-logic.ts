@@ -3936,6 +3936,7 @@ export async function loadChatHistory(memberId: string) {
                 _scrollChatDelayed();
             }
             _attachImgScrollHandlers();
+            _loadProfileLinkPreviews();
 
             // Check unlock status for any paid media messages (await to ensure DOM updates)
             await _checkPaidMediaUnlocks(messages);
@@ -4651,30 +4652,10 @@ function renderChatMessage(msg: any, prevTs?: number): string {
         // Linkify URLs in plain text messages
         const _firstUrl = content.match(/(https?:\/\/[^\s<>"']+)/)?.[1] || null;
         content = content.replace(/(https?:\/\/[^\s<>"']+)/g, (url: string) =>
-            `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;text-decoration:underline;">${url}</a>`
+            `<a onclick="event.preventDefault();window._openLinkOverlay('${url.replace(/'/g, '%27')}')" href="${url}" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;text-decoration:underline;cursor:pointer;">${url}</a>`
         );
         if (_firstUrl) {
-            const _lpId = 'lp_' + Math.random().toString(36).slice(2, 8);
-            content += `<div id="${_lpId}" data-lp="${encodeURIComponent(_firstUrl)}" style="margin-top:8px;border:1px solid rgba(197,160,89,0.15);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:260px;"></div>`;
-            setTimeout(() => {
-                const el = document.getElementById(_lpId);
-                if (!el) return;
-                fetch(`/api/link-preview?url=${encodeURIComponent(_firstUrl)}`)
-                    .then(r => r.json())
-                    .then((d: any) => {
-                        if (!d.title && !d.image) { if (el) el.style.display = 'none'; return; }
-                        el.style.cursor = 'pointer';
-                        el.onclick = () => window.open(_firstUrl, '_blank', 'noopener');
-                        el.innerHTML = `
-                            ${d.image ? `<img src="${d.image}" style="width:100%;height:100px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
-                            <div style="padding:7px 10px 9px;">
-                                ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${d.title.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
-                                ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.35);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px;">${d.description.replace(/</g,'&lt;').slice(0,100)}</div>` : ''}
-                                <div style="font-family:'Orbitron',sans-serif;font-size:0.28rem;color:rgba(197,160,89,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${new URL(_firstUrl).hostname.toUpperCase()}</div>
-                            </div>`;
-                    })
-                    .catch(() => { if (el) el.style.display = 'none'; });
-            }, 100);
+            content += `<div class="chat-lp-card" data-lp="${encodeURIComponent(_firstUrl)}" onclick="window._openLinkOverlay('${_firstUrl.replace(/'/g, '%27')}')" style="margin-top:8px;border:1px solid rgba(197,160,89,0.15);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:260px;cursor:pointer;min-height:10px;"></div>`;
         }
     }
 
@@ -4744,6 +4725,7 @@ function appendChatCard(msg: any) {
             el.scrollTop = el.scrollHeight;
         }
     });
+    _loadProfileLinkPreviews();
 }
 
 let _sendingChat = false;
@@ -10874,10 +10856,84 @@ async function _checkPaidMediaUnlocks(messages: any[]) {
     }
 }
 
+// ─── LINK PREVIEW LOADER ──────────────────────────────────────────────────────
+
+export function _loadProfileLinkPreviews() {
+    document.querySelectorAll<HTMLElement>('.chat-lp-card[data-lp]').forEach(async (el) => {
+        const url = decodeURIComponent(el.getAttribute('data-lp') || '');
+        el.removeAttribute('data-lp');
+        try {
+            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+            const d = await r.json();
+            if (!d.title && !d.image) { el.style.display = 'none'; return; }
+            el.innerHTML = `
+                ${d.image ? `<img src="${d.image}" style="width:100%;height:90px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                <div style="padding:7px 10px 9px;">
+                    ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${d.title.replace(/</g,'&lt;')}</div>` : ''}
+                    ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.35);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px;">${d.description.replace(/</g,'&lt;').slice(0,120)}</div>` : ''}
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.28rem;color:rgba(197,160,89,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${new URL(url).hostname.toUpperCase()}</div>
+                </div>`;
+        } catch { el.style.display = 'none'; }
+    });
+}
+
+// ─── LINK OVERLAY (tap link → bottom sheet → open in browser) ─────────────────
+
+function _openLinkOverlay(url: string) {
+    const existing = document.getElementById('_linkOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = '_linkOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end;';
+
+    const sheet = document.createElement('div');
+    sheet.style.cssText = 'background:#0d0d0d;border-top:1px solid rgba(197,160,89,0.2);border-radius:18px 18px 0 0;padding:0 0 env(safe-area-inset-bottom,16px);max-height:70vh;overflow:auto;animation:slideUp 0.25s ease;';
+
+    let hostname = url;
+    try { hostname = new URL(url).hostname; } catch {}
+
+    sheet.innerHTML = `
+        <style>@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">
+            <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.5);letter-spacing:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:75%;">${hostname.toUpperCase()}</div>
+            <div onclick="document.getElementById('_linkOverlay')?.remove()" style="color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;padding:4px 0 4px 12px;line-height:1;">✕</div>
+        </div>
+        <div id="_lpSheetPreview" style="margin:0 16px;border:1px solid rgba(197,160,89,0.1);border-radius:10px;overflow:hidden;background:rgba(0,0,0,0.4);min-height:8px;"></div>
+        <div style="padding:16px 16px 8px;word-break:break-all;">
+            <div style="font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.25);line-height:1.4;">${url.replace(/</g,'&lt;')}</div>
+        </div>
+        <div style="padding:0 16px 20px;">
+            <button onclick="window.open('${url.replace(/'/g, '%27')}','_blank','noopener');document.getElementById('_linkOverlay')?.remove();" style="width:100%;padding:16px;background:linear-gradient(135deg,#d4af6a,#b8860b);border:none;border-radius:10px;font-family:'Cinzel',serif;font-size:0.65rem;font-weight:700;color:#000;letter-spacing:3px;cursor:pointer;">OPEN IN BROWSER</button>
+        </div>`;
+
+    overlay.appendChild(sheet);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+
+    // Load preview into sheet
+    const previewEl = document.getElementById('_lpSheetPreview');
+    if (previewEl) {
+        fetch(`/api/link-preview?url=${encodeURIComponent(url)}`)
+            .then(r => r.json())
+            .then((d: any) => {
+                if (!previewEl || (!d.title && !d.image)) { if (previewEl) previewEl.style.display = 'none'; return; }
+                previewEl.innerHTML = `
+                    ${d.image ? `<img src="${d.image}" style="width:100%;height:140px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                    <div style="padding:10px 14px 12px;">
+                        ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:rgba(255,255,255,0.85);font-weight:600;line-height:1.3;margin-bottom:4px;">${d.title.replace(/</g,'&lt;')}</div>` : ''}
+                        ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.35);line-height:1.4;">${d.description.replace(/</g,'&lt;').slice(0,180)}</div>` : ''}
+                    </div>`;
+            })
+            .catch(() => { if (previewEl) previewEl.style.display = 'none'; });
+    }
+}
+
 // Expose to window for onclick handlers
 if (typeof window !== 'undefined') {
     (window as any)._unlockPaidMedia = _unlockPaidMedia;
     (window as any)._openPaidMediaModal = _openPaidMediaModal;
+    (window as any)._openLinkOverlay = _openLinkOverlay;
 }
 
 // ─── QUEEN'S GALLERY ─────────────────────────────────────────────────────────
