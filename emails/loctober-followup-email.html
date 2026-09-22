@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queen Karin — LOCKTOBER</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Subject: You saw the email. You did nothing.
+  Preheader: 5 spots left. Price goes up Monday. This is the last time I ask.
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #050505;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.03; }
+    50% { opacity: 0.07; }
+  }
+  @keyframes borderGlow {
+    0%, 100% { border-color: rgba(197,160,89,0.1); }
+    50% { border-color: rgba(197,160,89,0.3); }
+  }
+  @keyframes redGlow {
+    0%, 100% { border-color: rgba(139,0,0,0.2); }
+    50% { border-color: rgba(180,0,0,0.5); }
+  }
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .wrap {
+    width: 100%; max-width: 620px; margin: 0 auto;
+    overflow: hidden; background: #050505; position: relative;
+  }
+  .wrap::after {
+    content: '';
+    position: absolute; top: 300px; left: 50%;
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    transform: translateX(-50%); pointer-events: none;
+    animation: breathe 6s ease infinite;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; width: 100%; overflow: hidden; background: #050505;
+  }
+  .hero img {
+    width: 100%; display: block;
+    filter: brightness(0.35) saturate(1.2) contrast(1.1);
+  }
+  .hero-ov {
+    position: absolute; inset: 0; z-index: 2;
+    background:
+      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.12) 0%, transparent 55%),
+      linear-gradient(180deg, rgba(5,5,5,0.15) 0%, transparent 20%, transparent 35%, rgba(5,5,5,0.55) 58%, rgba(5,5,5,0.95) 80%, #050505 100%);
+  }
+  .hero-c {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 44px 44px; z-index: 4; text-align: center;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase; color: #fff;
+    background: linear-gradient(135deg, #8b0000, #a00000, #8b0000);
+    background-size: 300% 100%;
+    animation: fadeInUp 1s ease 0.3s both;
+    padding: 7px 20px; margin-bottom: 22px;
+  }
+  .hero-t {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 50px; font-weight: 300; line-height: 1.05; color: #fff;
+    margin-bottom: 14px; animation: fadeInUp 1s ease 0.5s both;
+  }
+  .hero-t em { font-style: italic; color: #d4af6a; font-weight: 300; }
+  .hero-sub {
+    font-size: 13px; font-weight: 200; color: rgba(255,255,255,0.4);
+    letter-spacing: 2px; text-transform: uppercase;
+    animation: fadeInUp 1s ease 0.7s both;
+  }
+
+  /* ── TICKER ── */
+  .ticker {
+    background: linear-gradient(180deg, rgba(12,4,4,1) 0%, rgba(8,3,3,1) 100%);
+    border-top: 1px solid rgba(139,0,0,0.3);
+    border-bottom: 1px solid rgba(139,0,0,0.3);
+    padding: 14px 0; overflow: hidden; white-space: nowrap;
+  }
+  .ticker-t {
+    display: inline-block; animation: tickerScroll 25s linear infinite;
+  }
+  .ticker-t span {
+    display: inline-block;
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(255,255,255,0.35); padding: 0 14px;
+  }
+  .ticker-t span b { color: #d4af6a; font-weight: 600; }
+  .ticker-sep {
+    display: inline-block; color: rgba(139,0,0,0.4);
+    font-size: 6px; vertical-align: middle; padding: 0 4px;
+  }
+
+  /* ── SEPARATOR ── */
+  .sep {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    padding: 40px 0;
+  }
+  .sep-l { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent); }
+  .sep-d { width: 4px; height: 4px; background: rgba(197,160,89,0.2); transform: rotate(45deg); flex-shrink: 0; }
+
+  /* ── TEXT SECTIONS ── */
+  .txt {
+    padding: 0 44px; text-align: center;
+  }
+  .txt-head {
+    display: block;
+    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 600;
+    letter-spacing: 3px; color: #d4af6a; margin-bottom: 6px;
+  }
+  .txt-subhead {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.35); letter-spacing: 2px; margin-bottom: 24px;
+  }
+  .txt p {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 20px; font-weight: 300; line-height: 1.9;
+    color: rgba(255,255,255,0.55); text-align: center;
+  }
+  .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
+  .txt em { font-style: italic; color: rgba(232,201,122,0.7); }
+
+  /* ── CALLOUT BOX ── */
+  .callout {
+    margin: 0 30px;
+    background: linear-gradient(165deg, rgba(25,8,8,1) 0%, rgba(18,5,5,1) 50%, rgba(22,8,4,1) 100%);
+    border: 1px solid rgba(139,0,0,0.3);
+    animation: redGlow 5s ease infinite;
+    overflow: hidden; position: relative;
+  }
+  .callout .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+  .callout .cn::before, .callout .cn::after { content: ''; position: absolute; background: rgba(139,0,0,0.4); }
+  .callout .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .callout .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .callout .cn1 { top: -1px; left: -1px; }
+  .callout .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .callout .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .callout .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
+  .callout-inner {
+    padding: 40px 36px; text-align: center; position: relative; z-index: 1;
+  }
+  .callout-inner::before {
+    content: '';
+    position: absolute; top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px; height: 250px;
+    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .callout-label {
+    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+    letter-spacing: 6px; text-transform: uppercase;
+    color: rgba(220,60,60,0.7); margin-bottom: 20px; position: relative;
+  }
+  .callout-text {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 22px; font-weight: 300; font-style: italic;
+    line-height: 1.8; color: rgba(255,255,255,0.45);
+    max-width: 440px; margin: 0 auto; position: relative;
+  }
+  .callout-text strong { color: rgba(255,255,255,0.9); font-weight: 400; }
+
+  /* ── PRICE BLOCK ── */
+  .price-card {
+    margin: 0 30px;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden;
+    animation: borderGlow 5s ease infinite;
+  }
+  .price-card .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+  .price-card .cn::before, .price-card .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
+  .price-card .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .price-card .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .price-card .cn1 { top: -1px; left: -1px; }
+  .price-card .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .price-card .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .price-card .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
+  .price-inner {
+    padding: 48px 36px 40px; text-align: center; position: relative; z-index: 1;
+  }
+  .price-inner::before {
+    content: '';
+    position: absolute; top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; height: 200px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.05) 0%, transparent 70%);
+    pointer-events: none; animation: breathe 5s ease infinite;
+  }
+  .price-tag {
+    display: inline-block;
+    font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 500;
+    letter-spacing: 5px; text-transform: uppercase; color: #050505;
+    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
+    background-size: 300% 100%; animation: shimmer 4s ease infinite;
+    padding: 5px 16px; margin-bottom: 22px;
+  }
+  .price-row {
+    display: flex; align-items: baseline; justify-content: center; gap: 14px;
+    margin-bottom: 8px;
+  }
+  .price-cur {
+    font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300;
+    color: rgba(197,160,89,0.5); align-self: flex-start; margin-top: 12px;
+  }
+  .price-num {
+    font-family: 'Cinzel', serif; font-size: 72px; font-weight: 700;
+    line-height: 1; letter-spacing: -2px; color: #d4af6a;
+  }
+  .price-old {
+    font-family: 'Cinzel', serif; font-size: 26px; font-weight: 400;
+    color: rgba(255,255,255,0.12);
+    text-decoration: line-through; text-decoration-color: rgba(197,160,89,0.35);
+  }
+  .price-for {
+    font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300;
+    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 16px;
+  }
+  .price-save {
+    display: inline-block;
+    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(197,160,89,0.8);
+    border: 1px solid rgba(197,160,89,0.2);
+    padding: 7px 18px; margin-bottom: 14px;
+  }
+  .price-note {
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 300;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(197,160,89,0.35); animation: pulse 3s ease infinite;
+  }
+
+  /* ── CTA ── */
+  .cta-wrap { text-align: center; padding: 30px 30px 0; }
+  .cta-btn {
+    display: block; padding: 22px 0; text-decoration: none;
+    background: linear-gradient(135deg, #c5a059, #a8884a);
+    color: #050505;
+    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 6px; text-transform: uppercase;
+    border: 1px solid rgba(197,160,89,0.3);
+    transition: all 0.5s ease;
+  }
+  .cta-btn:hover {
+    background: linear-gradient(135deg, #d4af6a, #c5a059);
+    letter-spacing: 8px;
+    box-shadow: 0 4px 40px rgba(197,160,89,0.2);
+  }
+  .cta-sub {
+    text-align: center; padding: 12px 30px 0;
+    font-size: 10px; font-weight: 300; letter-spacing: 3px;
+    text-transform: uppercase; color: rgba(197,160,89,0.3);
+  }
+
+  /* ── SPOTS ── */
+  .spots { text-align: center; padding: 36px 30px 0; }
+  .spots-n {
+    font-family: 'Cinzel', serif; font-size: 100px; font-weight: 700;
+    line-height: 1; letter-spacing: -4px;
+    background: linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.12) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .spots-l {
+    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 8px; text-transform: uppercase;
+    color: rgba(197,160,89,0.4); margin-top: 4px;
+  }
+  .spots-p {
+    font-family: 'Cormorant Garamond', serif; font-size: 15px;
+    font-weight: 300; font-style: italic;
+    color: rgba(255,255,255,0.2); margin-top: 14px; line-height: 1.7;
+  }
+
+  /* ── QUOTE BOX ── */
+  .quote-box {
+    margin: 0 30px;
+    position: relative;
+    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
+    border: 1px solid rgba(197,160,89,0.12);
+    overflow: hidden; animation: borderGlow 5s ease infinite;
+  }
+  .quote-box .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
+  .quote-box .cn::before, .quote-box .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
+  .quote-box .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
+  .quote-box .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
+  .quote-box .cn1 { top: -1px; left: -1px; }
+  .quote-box .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
+  .quote-box .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
+  .quote-box .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
+  .quote-inner {
+    padding: 48px 36px; text-align: center; position: relative; z-index: 1;
+  }
+  .quote-inner::before {
+    content: '';
+    position: absolute; top: 45%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px; height: 250px;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    pointer-events: none; animation: breathe 5s ease infinite;
+  }
+  .quote-label {
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
+    letter-spacing: 8px; text-transform: uppercase;
+    color: #d4af6a; margin-bottom: 28px; position: relative;
+  }
+  .quote-text {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 23px; font-weight: 300; font-style: italic;
+    line-height: 1.75; color: rgba(255,255,255,0.4);
+    max-width: 440px; margin: 0 auto; position: relative;
+  }
+  .quote-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
+  .quote-sig {
+    margin-top: 24px; font-family: 'Inter', sans-serif;
+    font-size: 9px; font-weight: 300; letter-spacing: 5px;
+    text-transform: uppercase; color: rgba(197,160,89,0.4);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid rgba(197,160,89,0.06);
+    padding: 40px 40px; text-align: center; position: relative;
+  }
+  .footer::before {
+    content: '';
+    position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
+  }
+  .footer-b {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 16px; font-weight: 600; letter-spacing: 8px;
+    color: rgba(255,255,255,0.12); margin-bottom: 10px;
+  }
+  .footer a {
+    font-size: 10px; color: rgba(255,255,255,0.1); text-decoration: none;
+    letter-spacing: 3px; transition: color 0.4s ease;
+  }
+  .footer a:hover { color: #c5a059; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 520px) {
+    .hero-t { font-size: 38px; }
+    .hero-c { padding: 0 22px 32px; }
+    .txt { padding: 0 20px; }
+    .txt p { font-size: 17px; line-height: 1.8; }
+    .txt-head { font-size: 22px; letter-spacing: 2px; }
+    .callout { margin: 0 14px; }
+    .callout-inner { padding: 28px 20px; }
+    .callout-text { font-size: 18px; }
+    .price-card { margin: 0 14px; }
+    .price-inner { padding: 36px 20px 32px; }
+    .price-num { font-size: 56px; }
+    .price-old { font-size: 20px; }
+    .cta-wrap { padding: 24px 14px 0; }
+    .cta-btn { font-size: 11px; letter-spacing: 4px; }
+    .spots-n { font-size: 76px; }
+    .quote-box { margin: 0 14px; }
+    .quote-inner { padding: 32px 20px; }
+    .quote-text { font-size: 19px; }
+    .sep { padding: 32px 0; }
+    .footer { padding: 30px 20px; }
+  }
+</style>
+</head>
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-bg.png" alt="">
+    <div class="hero-ov"></div>
+    <div class="hero-c">
+      <div class="hero-tag">5 Spots Left</div>
+      <h1 class="hero-t">You Saw It.<br><em>You Did Nothing.</em></h1>
+      <p class="hero-sub">This is the last time I send this.</p>
+    </div>
+  </div>
+
+  <!-- ── TICKER ── -->
+  <div class="ticker">
+    <div class="ticker-t">
+      <span><b>5</b> spots left</span><span class="ticker-sep">&diams;</span><span>price rises <b>Monday</b></span><span class="ticker-sep">&diams;</span><span>2 already <b>taken</b> since yesterday</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots left</span><span class="ticker-sep">&diams;</span><span>price rises <b>Monday</b></span><span class="ticker-sep">&diams;</span><span>2 already <b>taken</b> since yesterday</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── CALLOUT ── -->
+  <div class="callout">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="callout-inner">
+      <div class="callout-label">I know you opened it.</div>
+      <div class="callout-text">
+        You got the first email. You read it.
+        You thought about it. You told yourself
+        <strong>you would come back to it later.</strong><br><br>
+        You did not come back to it.<br><br>
+        Two spots are already gone.
+        <strong>Five remain.</strong>
+        Monday morning the price goes back to &euro;199
+        and I stop thinking about you entirely.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── BODY COPY ── -->
+  <div class="txt">
+    <span class="txt-head">One more time.</span>
+    <span class="txt-subhead">because you clearly need it spelled out.</span>
+    <p>
+      October 1st, your cage locks.<br>
+      I hold the key inside a <strong>real keyholder app</strong> I built myself.<br><br>
+      Every morning, a new task appears in your dashboard.
+      You film it. You submit it. I watch it personally and decide
+      whether you deserve to continue.<br><br>
+      Miss a task, I add days. Submit something lazy, rejected.
+      Skip entirely, I decide if you are even worth keeping.<br><br>
+      <strong>31 days. No breaks. No early release. No mercy.</strong><br><br>
+      This is not a fantasy. This is the program.
+      The only question is whether you are going to keep
+      <em>pretending</em> you will do it next year.
+    </p>
+  </div>
+
+  <!-- ── CTA 1 ── -->
+  <div class="cta-wrap">
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Take the Spot</a>
+  </div>
+  <div class="cta-sub">5 spots. &euro;111 until Monday. Then it is gone.</div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── PRICE ── -->
+  <div class="price-card">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="price-inner">
+      <div class="price-tag">Last Chance Price</div>
+      <div class="price-row">
+        <span class="price-cur">&euro;</span>
+        <span class="price-num">111</span>
+        <span class="price-old">&euro;199</span>
+      </div>
+      <div class="price-for">31 days of real control. Daily tasks. Personal review. Full app access.</div>
+      <div class="price-save">Save &euro;88</div>
+      <div class="price-note">Monday morning this becomes &euro;199. No exceptions.</div>
+    </div>
+  </div>
+
+  <!-- ── CTA 2 ── -->
+  <div class="cta-wrap">
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Claim Your Spot Now</a>
+  </div>
+  <div class="cta-sub">&euro;111 this weekend only. &euro;199 after Monday.</div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── SPOTS ── -->
+  <div class="spots">
+    <div class="spots-n">5</div>
+    <div class="spots-l">Spots Remaining</div>
+    <div class="spots-p">Two went since yesterday. I am not holding yours.<br>When they are gone, they are gone.</div>
+  </div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── QUEEN QUOTE ── -->
+  <div class="quote-box">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="quote-inner">
+      <div class="quote-label">Last thing.</div>
+      <div class="quote-text">
+        I do not chase. I do not beg. I do not send
+        a third email.<br><br>
+        If you are still reading this and you have not
+        bought your spot, you already know what
+        is going to happen. Monday comes.
+        The price goes up. The spots fill.
+        And you spend October exactly the way
+        you spent every other October.<br><br>
+        <strong>Or you stop hesitating and you buy the spot right now.</strong><br><br>
+        It is a simple choice.
+        You have made it complicated enough already.
+      </div>
+      <div class="quote-sig">Karin</div>
+    </div>
+  </div>
+
+  <!-- ── FINAL CTA ── -->
+  <div class="cta-wrap" style="padding-top: 40px;">
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Give Me Your October</a>
+  </div>
+  <div class="cta-sub">5 spots. &euro;111 until Monday. Starts Oct 1st.</div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep" style="padding: 40px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer-b">QUEEN KARIN</div>
+    <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+  </div>
+
+</div>
+</body>
+</html>
