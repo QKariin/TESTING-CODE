@@ -664,7 +664,11 @@ function _appendMessage(msg: any) {
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     const el = document.createElement('div');
     el.innerHTML = _buildBubble(msg, myName, myEmail);
-    feed.appendChild(el.firstElementChild!);
+    const child = el.firstElementChild as HTMLElement | null;
+    if (child) {
+        feed.appendChild(child);
+        _loadLinkPreviews(child);
+    }
     if (wasNear) feed.scrollTop = feed.scrollHeight;
 }
 
@@ -686,6 +690,7 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
     }
     const wasNear = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
     feed.innerHTML = messages.map(m => _buildBubble(m, myName, myEmail)).join('');
+    _loadLinkPreviews(feed);
     if (scrollBottom || wasNear) {
         // Double-RAF + timeout to ensure scroll after full paint and image loads
         requestAnimationFrame(() => {
@@ -695,6 +700,48 @@ function _renderMessages(messages: any[], scrollBottom: boolean) {
         setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 300);
     }
 }
+
+// ─── LINK UTILITIES ──────────────────────────────────────────────────────────
+
+const _URL_RE = /(https?:\/\/[^\s<>"']+)/g;
+
+function _linkify(text: string): string {
+    return text.replace(_URL_RE, (url) =>
+        `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;">${url}</a>`
+    );
+}
+
+function _extractFirstUrl(text: string): string | null {
+    const m = text.match(_URL_RE);
+    return m ? m[0] : null;
+}
+
+function _linkPreviewHtml(url: string): string {
+    return `<div class="lp-card" data-lp="${encodeURIComponent(url)}" style="margin-top:8px;border:1px solid rgba(197,160,89,0.1);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:280px;min-height:10px;"></div>`;
+}
+
+async function _loadLinkPreviews(root: HTMLElement) {
+    root.querySelectorAll<HTMLElement>('.lp-card[data-lp]').forEach(async (el) => {
+        const url = decodeURIComponent(el.getAttribute('data-lp') || '');
+        el.removeAttribute('data-lp');
+        try {
+            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+            const d = await r.json();
+            if (!d.title && !d.image) { el.style.display = 'none'; return; }
+            el.style.cursor = 'pointer';
+            el.onclick = () => window.open(url, '_blank', 'noopener');
+            el.innerHTML = `
+                ${d.image ? `<img src="${d.image}" style="width:100%;height:110px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                <div style="padding:8px 12px 10px;">
+                    ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;color:rgba(255,255,255,0.85);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${d.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
+                    ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.35);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px;">${d.description.replace(/</g, '&lt;').slice(0, 120)}</div>` : ''}
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.28rem;color:rgba(197,160,89,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${new URL(url).hostname.toUpperCase()}</div>
+                </div>`;
+        } catch { el.style.display = 'none'; }
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1166,10 +1213,11 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             </div>`;
         }
         // Text bubble with gold frame
+        const _qFirstUrl = _qTextContent ? _extractFirstUrl(_qTextContent) : null;
         return `<div class="gl-msg-row" style="margin-bottom:8px;">
             <div style="padding:9px 13px 11px;background:linear-gradient(135deg,rgba(197,160,89,0.14),rgba(100,75,15,0.08));border:1.5px solid rgba(197,160,89,0.75);border-radius:10px;box-shadow:0 0 14px rgba(197,160,89,0.1);">
                 ${_qHeader}
-                ${quoteHtml}${_qTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${_qTextContent}</div>` : ''}
+                ${quoteHtml}${_qTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:rgba(255,255,255,0.7);line-height:1.5;">${_linkify(_qTextContent)}</div>${_qFirstUrl ? _linkPreviewHtml(_qFirstUrl) : ''}` : ''}
                 ${mediaHtml}
             </div>
         </div>`;
@@ -1215,10 +1263,11 @@ function _buildBubble(msg: any, myName: string, myEmail: string = ''): string {
             ${mediaHtml}
         </div>`;
     }
+    const _uFirstUrl = _uTextContent ? _extractFirstUrl(_uTextContent) : null;
     return `<div class="gl-msg-row" style="margin-bottom:8px;">
         <div style="padding:9px 13px 11px;background:rgba(255,255,255,0.02);border:1px solid rgba(180,180,200,0.18);border-radius:10px;">
             ${_uHeader}
-            ${quoteHtml}${_uTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${_uTextContent}</div>` : ''}
+            ${quoteHtml}${_uTextContent ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;color:rgba(255,255,255,0.7);line-height:1.45;">${_linkify(_uTextContent)}</div>${_uFirstUrl ? _linkPreviewHtml(_uFirstUrl) : ''}` : ''}
             ${mediaHtml}
         </div>
     </div>`;

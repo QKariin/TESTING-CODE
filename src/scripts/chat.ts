@@ -128,6 +128,14 @@ export async function renderChat(messages: any[]) {
         const isQueen = !isGuardian && (m.metadata?.isQueen || (!isMe && senderLower !== 'system'));
 
         txt = txt.replace(/\n/g, "<br>");
+        // Linkify URLs
+        txt = txt.replace(/(https?:\/\/[^\s<>"']+)/g, (url) =>
+            `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;">${url}</a>`
+        );
+        const _firstUrl = originalMsg.match(/(https?:\/\/[^\s<>"']+)/)?.[1] || null;
+        const _previewHtml = (_firstUrl && !originalMsg.startsWith('http'))
+            ? `<div class="lp-card" data-lp="${encodeURIComponent(_firstUrl)}" style="margin-top:8px;border:1px solid rgba(197,160,89,0.1);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:260px;min-height:10px;"></div>`
+            : '';
         const timeStr = new Date(m.created_at || m._createdDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const msgClass = isMe ? 'm-slave' : isGuardian ? 'm-guardian' : 'm-queen';
 
@@ -145,7 +153,7 @@ export async function renderChat(messages: any[]) {
         const SVG_REPLY = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>`;
         const replyBtn = msgId ? `<button class="chat-reply-btn" onclick="event.stopPropagation();window.setProfileChatReply('${msgId}','${senderNameSafe}','${contentSafe}')" title="Reply">${SVG_REPLY}</button>` : '';
 
-        let contentHtml = `<div class="msg ${msgClass}">${quoteHtml}${txt}</div>`;
+        let contentHtml = `<div class="msg ${msgClass}">${quoteHtml}${txt}${_previewHtml}</div>`;
 
         // --- WISHLIST CARD (type-based) ---
         if (m.type === 'wishlist') {
@@ -534,7 +542,31 @@ export async function renderChat(messages: any[]) {
         if (mobChat) mobChat.innerHTML = messagesHtml;
     }
 
+    // Load link previews for any URLs in messages
+    _loadChatLinkPreviews();
+
     if (wasInitialLoad || isAtBottom) forceBottom();
+}
+
+function _loadChatLinkPreviews() {
+    document.querySelectorAll<HTMLElement>('.lp-card[data-lp]').forEach(async (el) => {
+        const url = decodeURIComponent(el.getAttribute('data-lp') || '');
+        el.removeAttribute('data-lp');
+        try {
+            const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+            const d = await r.json();
+            if (!d.title && !d.image) { el.style.display = 'none'; return; }
+            el.style.cursor = 'pointer';
+            el.onclick = () => window.open(url, '_blank', 'noopener');
+            el.innerHTML = `
+                ${d.image ? `<img src="${d.image}" style="width:100%;height:100px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                <div style="padding:7px 10px 9px;">
+                    ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${d.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : ''}
+                    ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:3px;">${d.description.replace(/</g, '&lt;').slice(0, 100)}</div>` : ''}
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.28rem;color:rgba(197,160,89,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${new URL(url).hostname.toUpperCase()}</div>
+                </div>`;
+        } catch { el.style.display = 'none'; }
+    });
 }
 
 export function forceBottom() {
