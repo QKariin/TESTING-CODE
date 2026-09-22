@@ -8,14 +8,14 @@ const PRICE = 111;
 const REGULAR = 199;
 
 const TICKER = [
-    { name: 'slave_r***', loc: 'Finland',     ago: '2 min ago' },
-    { name: 'sub_k***',   loc: 'Germany',     ago: '6 min ago' },
-    { name: 'cage_b***',  loc: 'UK',          ago: '14 min ago' },
-    { name: 'locked_***', loc: 'Netherlands', ago: '23 min ago' },
-    { name: 'pet_m***',   loc: 'Sweden',      ago: '31 min ago' },
-    { name: 'slave_t***', loc: 'USA',         ago: '47 min ago' },
-    { name: 'sub_j***',   loc: 'Australia',   ago: '1 hr ago' },
-    { name: 'obey_***',   loc: 'Canada',      ago: '1 hr ago' },
+    'slave_r*** is viewing this page',
+    'sub_k*** is checking the price right now',
+    'cage_b*** is reading the program details',
+    'locked_*** is on the checkout page',
+    'pet_m*** is looking at the spots left',
+    'slave_t*** just opened this page',
+    'sub_j*** is considering locking up',
+    'obey_*** is reading the Queen\'s message',
 ];
 
 export default function LoctoberClient() {
@@ -99,13 +99,21 @@ export default function LoctoberClient() {
             <div style={{ position: 'absolute', inset: -50, backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '128px 128px' }} />
         </div>
 
-        {/* ── STICKY HEADER ── */}
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(4,4,6,0.7)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(197,160,89,0.1)', transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease', transform: showSticky ? 'translateY(0)' : 'translateY(-100%)', opacity: showSticky ? 1 : 0, pointerEvents: showSticky ? 'auto' : 'none' }}>
+        {/* ── STICKY TOP HEADER ── */}
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(4,4,6,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(197,160,89,0.15)', transition: 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease', transform: showSticky ? 'translateY(0)' : 'translateY(-100%)', opacity: showSticky ? 1 : 0, pointerEvents: showSticky ? 'auto' : 'none' }}>
             <div style={{ textAlign: 'center', width: '100%' }}>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.45rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase', marginBottom: 2 }}>LOCKTOBER 2026</div>
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.9rem,4vw,1.3rem)', fontWeight: 400, letterSpacing: 6, color: 'rgba(255,255,255,0.7)', marginBottom: 6 }}>QUEEN KARIN</div>
-                <button onClick={handleCheckout} style={{ fontFamily: 'Cinzel,serif', fontSize: '0.5rem', fontWeight: 700, color: '#000', letterSpacing: 4, background: 'linear-gradient(135deg,#d4af6a,#a07830)', border: 'none', padding: '8px 26px', cursor: 'pointer', borderRadius: 2 }}>CLAIM MY SPOT &mdash; &euro;{PRICE}</button>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2vw,0.65rem)', fontWeight: 400, letterSpacing: 4, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>LOCKTOBER 2026 &middot; QUEEN KARIN &middot; 5 SPOTS LEFT</div>
+                <button onClick={handleCheckout} style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2vw,0.7rem)', fontWeight: 700, color: '#000', letterSpacing: 4, background: 'linear-gradient(135deg,#d4af6a,#b8860b)', border: 'none', padding: '10px 32px', cursor: 'pointer', animation: 'casinoPulse 2s ease infinite' }}>CLAIM MY SPOT &euro;{PRICE}</button>
             </div>
+        </div>
+
+        {/* ── FIXED BOTTOM URGENCY BAR — always visible ── */}
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 99998, padding: '12px 16px 20px', background: 'rgba(8,0,0,0.97)', borderTop: '1px solid rgba(139,0,0,0.8)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, animation: 'bottomBarPulse 3s ease infinite' }}>
+            <div>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2vw,0.7rem)', fontWeight: 700, color: '#fff', letterSpacing: 2 }}>LAST 5 SPOTS</div>
+                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', letterSpacing: 1 }}>Price rises Monday</div>
+            </div>
+            <button onClick={handleCheckout} style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.6rem,2vw,0.75rem)', fontWeight: 700, color: '#000', letterSpacing: 3, background: 'linear-gradient(135deg,#d4af6a,#b8860b)', border: 'none', padding: '14px 28px', cursor: 'pointer', whiteSpace: 'nowrap', animation: 'casinoPulse 2s ease infinite', flexShrink: 0 }}>BUY NOW &euro;{PRICE}</button>
         </div>
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@200;300;400;500&family=Rajdhani:wght@300;400;500;600;700&display=swap" />
@@ -120,18 +128,18 @@ export default function LoctoberClient() {
             @keyframes locRing{0%{transform:scale(0.95);opacity:0.3}50%{transform:scale(1.06);opacity:0.7}100%{transform:scale(0.95);opacity:0.3}}
             @keyframes locBorder{0%,100%{border-color:rgba(197,160,89,0.08);box-shadow:0 0 30px rgba(197,160,89,0.03)}50%{border-color:rgba(197,160,89,0.25);box-shadow:0 0 50px rgba(197,160,89,0.08)}}
             @keyframes locCtaShine{0%{left:-100%}50%,100%{left:100%}}
-            @keyframes locGlowPulse{0%,100%{box-shadow:0 0 20px rgba(197,160,89,0.05)}50%{box-shadow:0 0 40px rgba(197,160,89,0.15)}}
+            @keyframes casinoPulse{0%,100%{box-shadow:0 0 25px rgba(197,160,89,0.5),0 0 50px rgba(197,160,89,0.25)}50%{box-shadow:0 0 40px rgba(197,160,89,0.8),0 0 80px rgba(197,160,89,0.4),0 0 120px rgba(197,160,89,0.15)}}
             @keyframes tickerSlide{0%{opacity:0;transform:translateY(8px)}15%,85%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
-            @keyframes urgentFlash{0%,100%{background:rgba(139,0,0,0.95)}50%{background:rgba(160,0,0,1)}}
+            @keyframes bottomBarPulse{0%,100%{background:rgba(100,0,0,0.98)}50%{background:rgba(139,0,0,1)}}
             .loc-divider{width:100%;display:flex;align-items:center;gap:20px;padding:100px 0}
             .loc-divider::before,.loc-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.2),rgba(197,160,89,0.05))}
             .loc-divider::after{background:linear-gradient(90deg,rgba(197,160,89,0.05),rgba(197,160,89,0.2),transparent)}
             .loc-divider span{font-family:Cinzel,serif;font-size:0.6rem;color:rgba(197,160,89,0.4);letter-spacing:6px;white-space:nowrap}
             .loc-section{position:relative;margin-left:calc(-1*clamp(20px,5vw,40px));margin-right:calc(-1*clamp(20px,5vw,40px));padding-left:clamp(20px,5vw,40px);padding-right:clamp(20px,5vw,40px);border-top:1px solid rgba(197,160,89,0.04);border-bottom:1px solid rgba(197,160,89,0.04);background:rgba(0,0,0,0.5)}
             .loc-section-alt{background:rgba(0,0,0,0.85);border-top:1px solid rgba(197,160,89,0.08);border-bottom:1px solid rgba(197,160,89,0.08)}
-            .loc-cta-btn{position:relative;overflow:hidden;transition:all 0.25s ease}
-            .loc-cta-btn:hover{filter:brightness(1.15);transform:translateY(-1px);box-shadow:0 8px 32px rgba(197,160,89,0.35)!important}
-            .loc-cta-btn:active{transform:scale(0.97)}
+            .loc-cta-btn{position:relative;overflow:hidden;transition:all 0.2s ease;display:inline-block;width:auto}
+            .loc-cta-btn:hover{filter:brightness(1.2);transform:translateY(-2px)}
+            .loc-cta-btn:active{transform:scale(0.96)}
             .loc-need-item{transition:background 0.3s ease}
             .loc-need-item:hover{background:rgba(197,160,89,0.02)}
             @media(min-width:769px){
@@ -143,15 +151,6 @@ export default function LoctoberClient() {
 
         <div data-loc-scroll style={{ position: 'fixed', inset: 0, overflowY: 'scroll', overflowX: 'hidden', zIndex: 1, color: '#fff', WebkitOverflowScrolling: 'touch' }}>
         <div className="loc-container" style={{ position: 'relative', maxWidth: 700, margin: '0 auto', padding: '0 clamp(20px,5vw,32px) 80px' }}>
-
-            {/* ════ URGENT BANNER ════ */}
-            <div style={{ margin: '0 calc(-1*clamp(20px,5vw,32px))', background: 'rgba(139,0,0,0.95)', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, animation: mounted ? 'locFadeIn 0.3s ease both' : 'none' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'locPulse 1s ease infinite', flexShrink: 0 }} />
-                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.55rem,2.5vw,0.75rem)', fontWeight: 700, color: '#fff', letterSpacing: 3, textTransform: 'uppercase', textAlign: 'center' }}>
-                    Registration closes Monday &mdash; only 5 spots remaining
-                </div>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', animation: 'locPulse 1s ease infinite', flexShrink: 0 }} />
-            </div>
 
             {/* ════ HERO ════ */}
             <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', position: 'relative', padding: '40px 0' }}>
@@ -202,7 +201,7 @@ export default function LoctoberClient() {
                 {/* ── SOLID CTA ── */}
                 <div style={{ animation: mounted ? 'locFadeUp 0.7s ease-out 0.7s both' : 'none', marginBottom: 16 }}>
                     <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 60px', background: 'linear-gradient(135deg,#d4af6a,#a07830)', color: '#000', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.65rem,2.5vw,0.85rem)', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.4)' }}>
-                        CLAIM MY SPOT &mdash; &euro;{PRICE}
+                        CLAIM MY SPOT &euro;{PRICE}
                     </button>
                 </div>
 
@@ -210,12 +209,8 @@ export default function LoctoberClient() {
                 {mounted && (
                     <div style={{ animation: 'locFadeIn 0.5s ease-out 1s both', height: 28, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                         <div key={tickerIdx} style={{ display: 'flex', alignItems: 'center', gap: 8, animation: 'tickerSlide 4s ease forwards' }}>
-                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', flexShrink: 0, boxShadow: '0 0 8px rgba(74,222,128,0.8)' }} />
-                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>
-                                <strong style={{ color: 'rgba(255,255,255,0.7)' }}>{TICKER[tickerIdx].name}</strong>
-                                {' '}from {TICKER[tickerIdx].loc} just secured their spot
-                                <span style={{ color: 'rgba(255,255,255,0.25)', marginLeft: 6 }}>{TICKER[tickerIdx].ago}</span>
-                            </span>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', flexShrink: 0, boxShadow: '0 0 8px rgba(74,222,128,0.8)', animation: 'locPulse 1s ease infinite' }} />
+                            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>{TICKER[tickerIdx]}</span>
                         </div>
                     </div>
                 )}
@@ -235,7 +230,7 @@ export default function LoctoberClient() {
                     <video src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/tribute-intro.mov#t=0.1" controls playsInline preload="metadata" style={{ width: '100%', display: 'block' }} />
                 </div>
                 <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '20px 60px', background: 'linear-gradient(135deg,#d4af6a,#a07830)', color: '#000', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: '0.62rem', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 32px rgba(197,160,89,0.35)' }}>
-                    CLAIM MY SPOT &mdash; &euro;{PRICE}
+                    CLAIM MY SPOT &euro;{PRICE}
                 </button>
                 <div style={{ marginTop: 16 }}>
                     <a href="/keyholder" style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 2, textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 1 }}>New to keyholding? Learn more &rarr;</a>
@@ -314,7 +309,7 @@ export default function LoctoberClient() {
                 <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.4rem,4vw,2rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.8)', marginBottom: 10 }}>Buy now. Lock October 1st.</h2>
                 <div style={{ fontFamily: 'Cormorant Garamond,serif', fontSize: '1.1rem', fontStyle: 'italic', fontWeight: 300, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>Your spot is reserved today. Your cage locks October 1st.</div>
                 <button className="loc-cta-btn" onClick={handleCheckout} style={{ padding: '22px 72px', background: 'linear-gradient(135deg,#d4af6a,#a07830)', color: '#000', border: 'none', cursor: 'pointer', fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.65rem,2.5vw,0.85rem)', fontWeight: 700, letterSpacing: 5, textTransform: 'uppercase', boxShadow: '0 4px 40px rgba(197,160,89,0.4)' }}>
-                    CLAIM MY SPOT &mdash; &euro;{PRICE}
+                    CLAIM MY SPOT &euro;{PRICE}
                 </button>
                 <div style={{ marginTop: 14, fontFamily: 'Inter,sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.25)', letterSpacing: 3, animation: 'locPulse 3s ease infinite' }}>5 spots left. &euro;{PRICE} until Monday.</div>
             </div>

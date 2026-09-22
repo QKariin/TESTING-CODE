@@ -491,7 +491,7 @@ export async function renderChat(messages: any[]) {
                 const mType = mediaType(srcUrl);
                 const isVideo = mType === "video" || srcUrl.includes(".mp4");
                 const isImage = mType === "image";
-                const isActualMedia = isVideo || isImage || !!m.mediaUrl;
+                const isActualMedia = isVideo || isImage;
 
                 if (!isActualMedia) {
                     // Plain link — render as clickable + preview card
