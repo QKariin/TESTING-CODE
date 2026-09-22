@@ -92,8 +92,13 @@ export default function LoctoberClient() {
     }, []);
 
     useEffect(() => {
-        const iv = setInterval(() => setTickerIdx(i => (i + 1) % TICKER.length), 4000);
-        return () => clearInterval(iv);
+        let iv: ReturnType<typeof setTimeout>;
+        const schedule = () => {
+            const delay = (3 + Math.random() * 7) * 60 * 1000;
+            iv = setTimeout(() => { setTickerIdx(i => (i + 1) % TICKER.length); schedule(); }, delay);
+        };
+        schedule();
+        return () => clearTimeout(iv);
     }, []);
 
     const [showPayment, setShowPayment] = useState(false);
