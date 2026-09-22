@@ -4647,6 +4647,35 @@ function renderChatMessage(msg: any, prevTs?: number): string {
     } else if (msg.type === 'video') {
         const vidUrl = content.includes('supabase.co/storage') ? `/api/media?url=${encodeURIComponent(content)}` : content;
         content = `<video src="${vidUrl}" class="chat-img-attachment" controls playsinline preload="none" style="max-width:100%;border-radius:8px;"></video>`;
+    } else {
+        // Linkify URLs in plain text messages
+        const _firstUrl = content.match(/(https?:\/\/[^\s<>"']+)/)?.[1] || null;
+        content = content.replace(/(https?:\/\/[^\s<>"']+)/g, (url: string) =>
+            `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;text-decoration:underline;">${url}</a>`
+        );
+        if (_firstUrl) {
+            const _lpId = 'lp_' + Math.random().toString(36).slice(2, 8);
+            content += `<div id="${_lpId}" data-lp="${encodeURIComponent(_firstUrl)}" style="margin-top:8px;border:1px solid rgba(197,160,89,0.15);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.5);max-width:260px;"></div>`;
+            setTimeout(() => {
+                const el = document.getElementById(_lpId);
+                if (!el) return;
+                fetch(`/api/link-preview?url=${encodeURIComponent(_firstUrl)}`)
+                    .then(r => r.json())
+                    .then((d: any) => {
+                        if (!d.title && !d.image) { if (el) el.style.display = 'none'; return; }
+                        el.style.cursor = 'pointer';
+                        el.onclick = () => window.open(_firstUrl, '_blank', 'noopener');
+                        el.innerHTML = `
+                            ${d.image ? `<img src="${d.image}" style="width:100%;height:100px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : ''}
+                            <div style="padding:7px 10px 9px;">
+                                ${d.title ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.85);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px;">${d.title.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+                                ${d.description ? `<div style="font-family:'Rajdhani',sans-serif;font-size:0.72rem;color:rgba(255,255,255,0.35);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:3px;">${d.description.replace(/</g,'&lt;').slice(0,100)}</div>` : ''}
+                                <div style="font-family:'Orbitron',sans-serif;font-size:0.28rem;color:rgba(197,160,89,0.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${new URL(_firstUrl).hostname.toUpperCase()}</div>
+                            </div>`;
+                    })
+                    .catch(() => { if (el) el.style.display = 'none'; });
+            }, 100);
+        }
     }
 
     // AI ASSISTANT message — purple bubble, no avatar image
