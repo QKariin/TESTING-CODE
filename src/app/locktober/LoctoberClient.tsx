@@ -18,6 +18,23 @@ const TICKER = [
     'obey_*** is reading the Queen\'s message',
 ];
 
+function FaqItem({ q, a }: { q: string; a: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div onClick={() => setOpen(o => !o)} style={{ borderBottom: '1px solid rgba(197,160,89,0.08)', cursor: 'pointer', padding: '0 4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '22px 0' }}>
+                <div style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(0.65rem,2.5vw,0.8rem)', fontWeight: 500, letterSpacing: 1, color: open ? '#d4af6a' : 'rgba(255,255,255,0.75)', lineHeight: 1.5, transition: 'color 0.3s ease' }}>{q}</div>
+                <div style={{ flexShrink: 0, width: 22, height: 22, border: '1px solid rgba(197,160,89,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'transform 0.3s ease', transform: open ? 'rotate(45deg)' : 'none' }}>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><line x1="5" y1="0" x2="5" y2="10" stroke="#c5a059" strokeWidth="1.5"/><line x1="0" y1="5" x2="10" y2="5" stroke="#c5a059" strokeWidth="1.5"/></svg>
+                </div>
+            </div>
+            {open && (
+                <div style={{ fontFamily: 'Cormorant Garamond,Georgia,serif', fontSize: 'clamp(0.95rem,2.5vw,1.1rem)', fontWeight: 300, lineHeight: 1.85, color: 'rgba(255,255,255,0.5)', paddingBottom: 24, paddingRight: 38 }}>{a}</div>
+            )}
+        </div>
+    );
+}
+
 export default function LoctoberClient() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -303,6 +320,50 @@ export default function LoctoberClient() {
                     </div>
                     <div style={{ marginTop: 28, fontFamily: 'Inter,sans-serif', fontSize: '0.5rem', fontWeight: 300, letterSpacing: 5, color: 'rgba(197,160,89,0.4)', textTransform: 'uppercase' }}>Karin</div>
                 </div>
+            </div>
+
+            {/* ════ FAQ ════ */}
+            <div className="loc-anim" style={{ paddingTop: 80, paddingBottom: 20 }}>
+                <div style={{ textAlign: 'center', marginBottom: 48 }}>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.55rem', fontWeight: 600, letterSpacing: 6, color: 'rgba(197,160,89,0.5)', textTransform: 'uppercase', marginBottom: 12 }}>Questions</div>
+                    <h2 style={{ fontFamily: 'Cinzel,serif', fontSize: 'clamp(1.3rem,4vw,1.8rem)', fontWeight: 600, letterSpacing: 3, color: 'rgba(255,255,255,0.85)' }}>You Want Answers.</h2>
+                </div>
+                {[
+                    {
+                        q: "I've thought about doing Locktober for years. Why is this year different?",
+                        a: "Because last year you did nothing. The year before, nothing. Every October you told yourself next time and next time never came. You know what changed? Nothing. On your own, nothing ever changes. You need a real keyholder, a real app, real daily tasks, and a real woman who notices when you slip. That is what this is. You have wasted enough Octobers. This one does not have to be another one."
+                    },
+                    {
+                        q: "What makes this worth €111 when I could just lock myself?",
+                        a: "Go ahead. Lock yourself right now. See how long it lasts. You already know the answer. The moment it gets uncomfortable, the moment life gets inconvenient, the moment you feel like just this once — you unlock. Every single time. €111 is not the price of a cage. It is the price of someone who does not let you quit. Someone who is watching, reviewing, and adding days when you try to negotiate. You have had free willpower your whole life. Look how that turned out."
+                    },
+                    {
+                        q: "Is there real human interaction or will I be talking to a bot?",
+                        a: "I watch every video. I read every message. I decide every approval, every rejection, every penalty. When you submit your task at 7am on a Tuesday in the third week of October and your hands are shaking and you are not sure you can keep going — I am the one who sees it. Not an algorithm. Me. That is what you are paying for. That is what you cannot get anywhere else."
+                    },
+                    {
+                        q: "What happens if I fail halfway through the month?",
+                        a: "You will not fail. You will want to. There will be a moment, probably around day nine, where every part of you wants out. That is exactly when having a real keyholder matters. I do not let you quit because it got hard. I do not accept excuses. I add days. I push back. The men who have done this with me did not succeed because they were strong. They succeeded because I did not give them the option to be weak."
+                    },
+                    {
+                        q: "Do I need to already own a chastity device?",
+                        a: "Yes. And if you do not have one, buy it today. Not after you finish reading this. Today. You have been thinking about this long enough. A device costs less than a dinner out. You have already spent more money on things that meant far less. Order it, lock October 1st in your calendar, and stop giving yourself reasons to wait."
+                    },
+                    {
+                        q: "Will anyone find out I did this?",
+                        a: "Nobody will know unless you tell them. Your account is private. Your submissions stay inside the app. I do not share, post, or discuss participants. Ever. The only people who know what you did in October are you and me. And by the end of it, you will not want to keep quiet about it anyway."
+                    },
+                    {
+                        q: "What happens the moment I pay?",
+                        a: "You get access to the app immediately. You see the dashboard, the task system, exactly what is coming. October 1st your cage locks and the first task is already waiting. No confusion. No delay. No wondering if this is real. It is real. You will feel it from the first minute."
+                    },
+                    {
+                        q: "Why only 5 spots — is this just a sales trick?",
+                        a: "Two are already gone. If this were a trick I would sell a hundred spots and let an algorithm run it. I do not. I review every submission personally, every single day, for 31 days. That takes real time and real attention. I cap it because I refuse to let the quality drop. Five means five. When they are gone I close enrollment and I do not reopen it. You have been on this page long enough to know you want a spot. Stop talking yourself out of it."
+                    },
+                ].map((item, i) => (
+                    <FaqItem key={i} q={item.q} a={item.a} />
+                ))}
             </div>
 
             {/* ════ FINAL CTA ════ */}
