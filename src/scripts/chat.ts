@@ -129,7 +129,7 @@ export async function renderChat(messages: any[]) {
 
         txt = txt.replace(/\n/g, "<br>");
         // Linkify URLs
-        txt = txt.replace(/(https?:\/\/[^\s<>"']+)/g, (url) =>
+        txt = txt.replace(/(https?:\/\/[^\s<>"']+)/g, (url: string) =>
             `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#c5a059;text-underline-offset:3px;word-break:break-all;">${url}</a>`
         );
         const _firstUrl = originalMsg.match(/(https?:\/\/[^\s<>"']+)/)?.[1] || null;
