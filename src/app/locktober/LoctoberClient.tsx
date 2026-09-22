@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import PaymentModal from '@/components/PaymentModal';
 
 const PRICE = 111;
 const REGULAR = 199;
@@ -20,7 +19,6 @@ const TICKER = [
 
 export default function LoctoberClient() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [showPayment, setShowPayment] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [showSticky, setShowSticky] = useState(false);
     const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -41,7 +39,6 @@ export default function LoctoberClient() {
     useEffect(() => {
         if (userEmail && typeof window !== 'undefined') {
             const p = new URLSearchParams(window.location.search);
-            if (p.get('pay') === '1') { window.history.replaceState({}, '', '/locktober'); setShowPayment(true); }
         }
     }, [userEmail]);
 
@@ -81,8 +78,7 @@ export default function LoctoberClient() {
     }, []);
 
     const handleCheckout = () => {
-        if (!userEmail) { window.location.href = `https://throne.qkarin.com/login?redirect=${encodeURIComponent('/locktober?pay=1')}`; return; }
-        setShowPayment(true);
+        window.open('https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c', '_blank', 'noopener');
     };
 
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -330,21 +326,5 @@ export default function LoctoberClient() {
         </div>
         </div>
 
-        {showPayment && (
-            <PaymentModal
-                amountEur={PRICE}
-                label="LOCKTOBER PROGRAM"
-                cardBody={{ memberId: userEmail || '', amount: PRICE }}
-                cryptoApiPath="/api/keyholder/passimpay"
-                cryptoStatusApiPath="/api/keyholder/passimpay-status"
-                cryptoPayBody={{ tierId: 'loctober' }}
-                cryptoStatusBody={{ tierId: 'loctober' }}
-                confirmMessage="PAYMENT CONFIRMED. SEE YOU OCTOBER 1ST."
-                throneUrl="https://throne.com/queenkarin/item/52b32815-98d6-47da-97ed-85ac83d16e58"
-                patreonUrl="https://www.patreon.com/QKarin/posts/locktoberfest-169936709?source=storefront"
-                onSuccess={() => { window.location.href = '/profile'; }}
-                onClose={() => setShowPayment(false)}
-            />
-        )}
     </>);
 }
