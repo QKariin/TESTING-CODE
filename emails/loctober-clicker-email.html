@@ -6,8 +6,8 @@
 <title>Queen Karin — LOCKTOBER</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
-  Subject: i saw you click.
-  Preheader: You went all the way there. And then you just... left. Interesting choice.
+  Subject: the link. here it is.
+  Preheader: The real one. Where you actually join. October 1st. €111 this weekend.
 -->
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -25,7 +25,6 @@
 
   .wrap { width:100%; max-width:620px; margin:0 auto; background:#050505; overflow:hidden; }
 
-  /* HERO */
   .hero { position:relative; width:100%; overflow:hidden; }
   .hero img { width:100%; display:block; filter:brightness(0.25) saturate(1.1) contrast(1.1); }
   .hero-ov {
@@ -33,47 +32,27 @@
     background:linear-gradient(180deg, rgba(5,5,5,0.05) 0%, transparent 30%, transparent 40%, rgba(5,5,5,0.65) 65%, rgba(5,5,5,0.98) 84%, #050505 100%);
   }
   .hero-c { position:absolute; bottom:0; left:0; right:0; padding:0 44px 52px; z-index:4; text-align:center; }
-  .hero-eyebrow {
-    font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px;
-    text-transform:uppercase; color:rgba(197,160,89,0.5); margin-bottom:20px;
-    animation:fadeInUp 0.8s ease 0.2s both;
-  }
-  .hero-t {
-    font-family:'Cormorant Garamond',Georgia,serif; font-size:58px; font-weight:300;
-    line-height:1.05; color:#fff; margin-bottom:18px; animation:fadeInUp 0.8s ease 0.35s both;
-  }
+  .hero-eyebrow { font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.5); margin-bottom:20px; animation:fadeInUp 0.8s ease 0.2s both; }
+  .hero-t { font-family:'Cormorant Garamond',Georgia,serif; font-size:58px; font-weight:300; line-height:1.05; color:#fff; margin-bottom:18px; animation:fadeInUp 0.8s ease 0.35s both; }
   .hero-t em { font-style:italic; color:#d4af6a; }
-  .hero-sub {
-    font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300; font-style:italic;
-    color:rgba(255,255,255,0.3); animation:fadeInUp 0.8s ease 0.5s both;
-  }
+  .hero-sub { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.3); animation:fadeInUp 0.8s ease 0.5s both; }
 
-  /* TICKER */
-  .ticker {
-    background:#050505; border-top:1px solid rgba(197,160,89,0.1); border-bottom:1px solid rgba(197,160,89,0.1);
-    padding:13px 0; overflow:hidden; white-space:nowrap;
-  }
+  .ticker { background:#050505; border-top:1px solid rgba(197,160,89,0.1); border-bottom:1px solid rgba(197,160,89,0.1); padding:13px 0; overflow:hidden; white-space:nowrap; }
   .ticker-t { display:inline-block; animation:tickerScroll 30s linear infinite; }
   .ticker-t span { display:inline-block; font-family:'Cinzel',serif; font-size:10px; font-weight:400; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.22); padding:0 16px; }
   .ticker-t span b { color:#c5a059; font-weight:600; }
   .ticker-sep { display:inline-block; color:rgba(197,160,89,0.18); font-size:5px; vertical-align:middle; padding:0 4px; }
 
-  /* SEP */
   .sep { display:flex; align-items:center; justify-content:center; gap:14px; padding:48px 0; }
   .sep-l { width:80px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.18),transparent); }
   .sep-d { width:4px; height:4px; background:rgba(197,160,89,0.18); transform:rotate(45deg); flex-shrink:0; }
 
-  /* COPY */
   .copy { padding:0 52px; text-align:center; }
-  .copy p {
-    font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300;
-    line-height:1.95; color:rgba(255,255,255,0.48);
-  }
+  .copy p { font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300; line-height:1.95; color:rgba(255,255,255,0.48); }
   .copy p + p { margin-top:32px; }
   .copy strong { color:rgba(255,255,255,0.92); font-weight:400; }
   .copy em { font-style:italic; color:rgba(212,175,106,0.8); }
 
-  /* CALLOUT */
   .callout {
     margin:0 30px; position:relative;
     background:linear-gradient(165deg,rgba(14,13,8,1) 0%,rgba(9,8,5,1) 100%);
@@ -86,19 +65,11 @@
   .callout .cn1{top:-1px;left:-1px} .callout .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
   .callout .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .callout .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
   .callout-inner { padding:44px 40px; text-align:center; position:relative; z-index:1; }
-  .callout-inner::before {
-    content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:340px; height:240px; background:radial-gradient(ellipse,rgba(197,160,89,0.04) 0%,transparent 70%);
-    pointer-events:none; animation:breathe 6s ease infinite;
-  }
+  .callout-inner::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:340px; height:240px; background:radial-gradient(ellipse,rgba(197,160,89,0.04) 0%,transparent 70%); pointer-events:none; animation:breathe 6s ease infinite; }
   .callout-label { font-family:'Cinzel',serif; font-size:9px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.45); margin-bottom:22px; position:relative; }
-  .callout-text {
-    font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300; font-style:italic;
-    line-height:1.85; color:rgba(255,255,255,0.42); max-width:420px; margin:0 auto; position:relative;
-  }
+  .callout-text { font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300; font-style:italic; line-height:1.85; color:rgba(255,255,255,0.42); max-width:420px; margin:0 auto; position:relative; }
   .callout-text strong { color:rgba(255,255,255,0.9); font-weight:400; font-style:normal; }
 
-  /* PRICE */
   .price-card {
     margin:0 30px; position:relative;
     background:linear-gradient(165deg,rgba(16,14,8,1) 0%,rgba(10,9,5,1) 60%,rgba(16,13,7,1) 100%);
@@ -111,17 +82,8 @@
   .price-card .cn1{top:-1px;left:-1px} .price-card .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
   .price-card .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .price-card .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
   .price-inner { padding:50px 36px 44px; text-align:center; position:relative; z-index:1; }
-  .price-inner::before {
-    content:''; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);
-    width:300px; height:220px; background:radial-gradient(ellipse,rgba(197,160,89,0.05) 0%,transparent 70%);
-    pointer-events:none; animation:breathe 5s ease infinite;
-  }
-  .price-tag {
-    display:inline-block; font-family:'Cinzel',serif; font-size:8px; font-weight:600;
-    letter-spacing:5px; text-transform:uppercase; color:#050505;
-    background:linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059);
-    background-size:300% 100%; animation:shimmer 4s ease infinite; padding:5px 18px; margin-bottom:26px;
-  }
+  .price-inner::before { content:''; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); width:300px; height:220px; background:radial-gradient(ellipse,rgba(197,160,89,0.05) 0%,transparent 70%); pointer-events:none; animation:breathe 5s ease infinite; }
+  .price-tag { display:inline-block; font-family:'Cinzel',serif; font-size:8px; font-weight:600; letter-spacing:5px; text-transform:uppercase; color:#050505; background:linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059); background-size:300% 100%; animation:shimmer 4s ease infinite; padding:5px 18px; margin-bottom:26px; }
   .price-row { display:flex; align-items:baseline; justify-content:center; gap:12px; margin-bottom:8px; }
   .price-cur { font-family:'Inter',sans-serif; font-size:18px; font-weight:300; color:rgba(197,160,89,0.4); align-self:flex-start; margin-top:14px; }
   .price-num { font-family:'Cinzel',serif; font-size:78px; font-weight:700; line-height:1; letter-spacing:-2px; color:#d4af6a; }
@@ -129,22 +91,13 @@
   .price-desc { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.25); margin:10px 0 18px; }
   .price-note { font-family:'Inter',sans-serif; font-size:10px; font-weight:300; letter-spacing:2px; text-transform:uppercase; color:rgba(197,160,89,0.28); animation:pulse 3s ease infinite; }
 
-  /* CTA */
   .cta-wrap { text-align:center; padding:34px 30px 0; }
   .cta-btn {
     display:block; padding:26px 0; text-decoration:none;
     background:linear-gradient(180deg, #e0bc72 0%, #c5a059 40%, #a8884a 100%);
-    color:#0a0800;
-    font-family:'Cinzel',serif; font-size:11px; font-weight:700; letter-spacing:7px; text-transform:uppercase;
-    border:none;
-    border-top:1px solid rgba(255,220,120,0.5);
-    border-bottom:1px solid rgba(100,70,20,0.8);
-    box-shadow:
-      0 2px 0 rgba(80,55,10,0.9),
-      0 4px 0 rgba(60,40,5,0.6),
-      0 6px 0 rgba(40,25,0,0.3),
-      0 8px 20px rgba(0,0,0,0.5),
-      inset 0 1px 0 rgba(255,235,150,0.3);
+    color:#0a0800; font-family:'Cinzel',serif; font-size:11px; font-weight:700; letter-spacing:7px; text-transform:uppercase;
+    border:none; border-top:1px solid rgba(255,220,120,0.5); border-bottom:1px solid rgba(100,70,20,0.8);
+    box-shadow:0 2px 0 rgba(80,55,10,0.9),0 4px 0 rgba(60,40,5,0.6),0 6px 0 rgba(40,25,0,0.3),0 8px 20px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,235,150,0.3);
     transition:all 0.15s ease; transform:translateY(0);
   }
   .cta-btn:hover {
@@ -154,7 +107,6 @@
   }
   .cta-sub { text-align:center; padding:14px 30px 0; font-size:10px; font-weight:300; letter-spacing:3px; text-transform:uppercase; color:rgba(197,160,89,0.25); }
 
-  /* FOOTER */
   .footer { border-top:1px solid rgba(197,160,89,0.05); padding:40px; text-align:center; position:relative; }
   .footer::before { content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%); width:180px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.15),transparent); }
   .footer-b { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:600; letter-spacing:8px; color:rgba(255,255,255,0.09); margin-bottom:10px; }
@@ -179,15 +131,15 @@
     <div class="hero-ov"></div>
     <div class="hero-c">
       <div class="hero-eyebrow">Queen Karin &nbsp;·&nbsp; Locktober 2026</div>
-      <h1 class="hero-t">You clicked.<br><em>Then left.</em></h1>
-      <p class="hero-sub">Interesting choice, darling.</p>
+      <h1 class="hero-t">Here.<br><em>This one.</em></h1>
+      <p class="hero-sub">The actual link. Click this one.</p>
     </div>
   </div>
 
   <!-- TICKER -->
   <div class="ticker">
     <div class="ticker-t">
-      <span>you <b>clicked the link</b></span><span class="ticker-sep">&diams;</span><span>you <b>read the page</b></span><span class="ticker-sep">&diams;</span><span>you <b>did not buy</b></span><span class="ticker-sep">&diams;</span><span>we <b>both know why</b></span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span><span>you <b>clicked the link</b></span><span class="ticker-sep">&diams;</span><span>you <b>read the page</b></span><span class="ticker-sep">&diams;</span><span>you <b>did not buy</b></span><span class="ticker-sep">&diams;</span><span>we <b>both know why</b></span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span>
+      <span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span><span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span>
     </div>
   </div>
 
@@ -197,26 +149,30 @@
   <!-- COPY -->
   <div class="copy">
     <p>
-      You opened the email.<br>
-      You clicked the button.<br>
-      You read the whole page.<br>
-      <strong>You closed the tab.</strong>
+      I know. The internet is full of links.<br>
+      Most of them go nowhere interesting.<br>
+      <strong>This one is different.</strong>
     </p>
     <p>
-      I respect the commitment to suffering.
+      October 1st, your cage locks.<br>
+      Every morning, a task from me arrives.<br>
+      I filmed it. For you. For this month.<br>
+      <strong>You complete it. You upload proof. I watch it.</strong>
     </p>
     <p>
-      Let me guess what happened in your head:<br>
-      <em>"Maybe next year."</em><br>
-      <em>"Let me think about it."</em><br>
-      <em>"I am not ready."</em>
-    </p>
-    <p>
-      Darling. You clicked a link about<br>
-      getting locked by a Queen for 31 days.<br>
-      <strong>Ready was never the plan.</strong>
+      A real app. Real control.<br>
+      <em>Nothing like it in the scene.</em>
     </p>
   </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- CTA 1 -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">This Is the One. Click It.</a>
+  </div>
+  <div class="cta-sub">&euro;111 this weekend. &euro;199 after Monday. Starts Oct 1st.</div>
 
   <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
@@ -225,25 +181,16 @@
   <div class="callout">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
     <div class="callout-inner">
-      <div class="callout-label">What this is, one more time</div>
+      <div class="callout-label">Why you actually want this</div>
       <div class="callout-text">
-        A real app. Your lock. Your dashboard.<br>
-        A personal task from me every single morning.<br>
-        I filmed it. I watch your proof. I decide if it counts.<br><br>
-        <strong>31 days of someone actually paying attention to you.</strong><br><br>
-        Is that not exactly what you came here for?
+        You have been looking for someone who<br>
+        <strong>actually shows up. Every day. For real.</strong><br><br>
+        Not a clip store. Not a chatbot.<br>
+        Me. Your task. Your proof. My eyes on it.<br><br>
+        <strong>31 days of being someone's actual priority.</strong>
       </div>
     </div>
   </div>
-
-  <!-- SEP -->
-  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
-
-  <!-- CTA 1 -->
-  <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Stop Thinking. Start October.</a>
-  </div>
-  <div class="cta-sub">&euro;111 until Monday. &euro;199 after. Starts Oct 1st.</div>
 
   <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
@@ -265,9 +212,9 @@
 
   <!-- CTA 2 -->
   <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Fine. I Want In.</a>
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Join Locktober</a>
   </div>
-  <div class="cta-sub">Good. Now go before the spot is gone.</div>
+  <div class="cta-sub">October 1st. The spot is still there. Go.</div>
 
   <!-- SEP -->
   <div class="sep" style="padding:44px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
