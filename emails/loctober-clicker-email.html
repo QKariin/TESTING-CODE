@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Queen Karin — LOCKTOBER</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  Subject: i saw you click.
+  Preheader: You went all the way there. And then you just... left. Interesting choice.
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body {
+    width:100% !important; min-width:100% !important; margin:0 !important; padding:0 !important;
+    background:#050505; font-family:'Inter',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; color:#fff; overflow-x:hidden;
+  }
+  @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes breathe { 0%,100%{opacity:0.03} 50%{opacity:0.07} }
+  @keyframes borderGlow { 0%,100%{border-color:rgba(197,160,89,0.1)} 50%{border-color:rgba(197,160,89,0.3)} }
+  @keyframes pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+  @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  .wrap { width:100%; max-width:620px; margin:0 auto; background:#050505; overflow:hidden; }
+
+  /* HERO */
+  .hero { position:relative; width:100%; overflow:hidden; }
+  .hero img { width:100%; display:block; filter:brightness(0.25) saturate(1.1) contrast(1.1); }
+  .hero-ov {
+    position:absolute; inset:0; z-index:2;
+    background:linear-gradient(180deg, rgba(5,5,5,0.05) 0%, transparent 30%, transparent 40%, rgba(5,5,5,0.65) 65%, rgba(5,5,5,0.98) 84%, #050505 100%);
+  }
+  .hero-c { position:absolute; bottom:0; left:0; right:0; padding:0 44px 52px; z-index:4; text-align:center; }
+  .hero-eyebrow {
+    font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px;
+    text-transform:uppercase; color:rgba(197,160,89,0.5); margin-bottom:20px;
+    animation:fadeInUp 0.8s ease 0.2s both;
+  }
+  .hero-t {
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:58px; font-weight:300;
+    line-height:1.05; color:#fff; margin-bottom:18px; animation:fadeInUp 0.8s ease 0.35s both;
+  }
+  .hero-t em { font-style:italic; color:#d4af6a; }
+  .hero-sub {
+    font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300; font-style:italic;
+    color:rgba(255,255,255,0.3); animation:fadeInUp 0.8s ease 0.5s both;
+  }
+
+  /* TICKER */
+  .ticker {
+    background:#050505; border-top:1px solid rgba(197,160,89,0.1); border-bottom:1px solid rgba(197,160,89,0.1);
+    padding:13px 0; overflow:hidden; white-space:nowrap;
+  }
+  .ticker-t { display:inline-block; animation:tickerScroll 30s linear infinite; }
+  .ticker-t span { display:inline-block; font-family:'Cinzel',serif; font-size:10px; font-weight:400; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.22); padding:0 16px; }
+  .ticker-t span b { color:#c5a059; font-weight:600; }
+  .ticker-sep { display:inline-block; color:rgba(197,160,89,0.18); font-size:5px; vertical-align:middle; padding:0 4px; }
+
+  /* SEP */
+  .sep { display:flex; align-items:center; justify-content:center; gap:14px; padding:48px 0; }
+  .sep-l { width:80px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.18),transparent); }
+  .sep-d { width:4px; height:4px; background:rgba(197,160,89,0.18); transform:rotate(45deg); flex-shrink:0; }
+
+  /* COPY */
+  .copy { padding:0 52px; text-align:center; }
+  .copy p {
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300;
+    line-height:1.95; color:rgba(255,255,255,0.48);
+  }
+  .copy p + p { margin-top:32px; }
+  .copy strong { color:rgba(255,255,255,0.92); font-weight:400; }
+  .copy em { font-style:italic; color:rgba(212,175,106,0.8); }
+
+  /* CALLOUT */
+  .callout {
+    margin:0 30px; position:relative;
+    background:linear-gradient(165deg,rgba(14,13,8,1) 0%,rgba(9,8,5,1) 100%);
+    border:1px solid rgba(197,160,89,0.13); overflow:hidden; animation:borderGlow 5s ease infinite;
+  }
+  .callout .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
+  .callout .cn::before,.callout .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.2); }
+  .callout .cn::before { height:1px; width:100%; top:0; left:0; }
+  .callout .cn::after { width:1px; height:100%; top:0; left:0; }
+  .callout .cn1{top:-1px;left:-1px} .callout .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
+  .callout .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .callout .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
+  .callout-inner { padding:44px 40px; text-align:center; position:relative; z-index:1; }
+  .callout-inner::before {
+    content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:340px; height:240px; background:radial-gradient(ellipse,rgba(197,160,89,0.04) 0%,transparent 70%);
+    pointer-events:none; animation:breathe 6s ease infinite;
+  }
+  .callout-label { font-family:'Cinzel',serif; font-size:9px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.45); margin-bottom:22px; position:relative; }
+  .callout-text {
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300; font-style:italic;
+    line-height:1.85; color:rgba(255,255,255,0.42); max-width:420px; margin:0 auto; position:relative;
+  }
+  .callout-text strong { color:rgba(255,255,255,0.9); font-weight:400; font-style:normal; }
+
+  /* PRICE */
+  .price-card {
+    margin:0 30px; position:relative;
+    background:linear-gradient(165deg,rgba(16,14,8,1) 0%,rgba(10,9,5,1) 60%,rgba(16,13,7,1) 100%);
+    border:1px solid rgba(197,160,89,0.13); overflow:hidden; animation:borderGlow 5s ease infinite;
+  }
+  .price-card .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
+  .price-card .cn::before,.price-card .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.2); }
+  .price-card .cn::before { height:1px; width:100%; top:0; left:0; }
+  .price-card .cn::after { width:1px; height:100%; top:0; left:0; }
+  .price-card .cn1{top:-1px;left:-1px} .price-card .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
+  .price-card .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .price-card .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
+  .price-inner { padding:50px 36px 44px; text-align:center; position:relative; z-index:1; }
+  .price-inner::before {
+    content:''; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);
+    width:300px; height:220px; background:radial-gradient(ellipse,rgba(197,160,89,0.05) 0%,transparent 70%);
+    pointer-events:none; animation:breathe 5s ease infinite;
+  }
+  .price-tag {
+    display:inline-block; font-family:'Cinzel',serif; font-size:8px; font-weight:600;
+    letter-spacing:5px; text-transform:uppercase; color:#050505;
+    background:linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059);
+    background-size:300% 100%; animation:shimmer 4s ease infinite; padding:5px 18px; margin-bottom:26px;
+  }
+  .price-row { display:flex; align-items:baseline; justify-content:center; gap:12px; margin-bottom:8px; }
+  .price-cur { font-family:'Inter',sans-serif; font-size:18px; font-weight:300; color:rgba(197,160,89,0.4); align-self:flex-start; margin-top:14px; }
+  .price-num { font-family:'Cinzel',serif; font-size:78px; font-weight:700; line-height:1; letter-spacing:-2px; color:#d4af6a; }
+  .price-old { font-family:'Cinzel',serif; font-size:24px; font-weight:400; color:rgba(255,255,255,0.1); text-decoration:line-through; text-decoration-color:rgba(197,160,89,0.28); }
+  .price-desc { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.25); margin:10px 0 18px; }
+  .price-note { font-family:'Inter',sans-serif; font-size:10px; font-weight:300; letter-spacing:2px; text-transform:uppercase; color:rgba(197,160,89,0.28); animation:pulse 3s ease infinite; }
+
+  /* CTA */
+  .cta-wrap { text-align:center; padding:34px 30px 0; }
+  .cta-btn {
+    display:block; padding:26px 0; text-decoration:none;
+    background:linear-gradient(180deg, #e0bc72 0%, #c5a059 40%, #a8884a 100%);
+    color:#0a0800;
+    font-family:'Cinzel',serif; font-size:11px; font-weight:700; letter-spacing:7px; text-transform:uppercase;
+    border:none;
+    border-top:1px solid rgba(255,220,120,0.5);
+    border-bottom:1px solid rgba(100,70,20,0.8);
+    box-shadow:
+      0 2px 0 rgba(80,55,10,0.9),
+      0 4px 0 rgba(60,40,5,0.6),
+      0 6px 0 rgba(40,25,0,0.3),
+      0 8px 20px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,235,150,0.3);
+    transition:all 0.15s ease; transform:translateY(0);
+  }
+  .cta-btn:hover {
+    background:linear-gradient(180deg, #ecca7a 0%, #d4af6a 40%, #b89452 100%);
+    box-shadow:0 1px 0 rgba(80,55,10,0.9),0 2px 0 rgba(60,40,5,0.6),0 4px 12px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,235,150,0.4);
+    transform:translateY(2px); letter-spacing:8px;
+  }
+  .cta-sub { text-align:center; padding:14px 30px 0; font-size:10px; font-weight:300; letter-spacing:3px; text-transform:uppercase; color:rgba(197,160,89,0.25); }
+
+  /* FOOTER */
+  .footer { border-top:1px solid rgba(197,160,89,0.05); padding:40px; text-align:center; position:relative; }
+  .footer::before { content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%); width:180px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.15),transparent); }
+  .footer-b { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:600; letter-spacing:8px; color:rgba(255,255,255,0.09); margin-bottom:10px; }
+  .footer a { font-size:10px; color:rgba(255,255,255,0.07); text-decoration:none; letter-spacing:3px; }
+
+  @media (max-width:520px) {
+    .hero-t { font-size:40px; } .hero-c { padding:0 22px 36px; }
+    .copy { padding:0 22px; } .copy p { font-size:19px; }
+    .callout,.price-card { margin:0 14px; } .callout-inner { padding:32px 22px; } .callout-text { font-size:19px; }
+    .price-inner { padding:36px 20px 30px; } .price-num { font-size:60px; }
+    .cta-wrap { padding:24px 14px 0; } .cta-btn { font-size:11px; letter-spacing:4px; }
+    .sep { padding:34px 0; } .footer { padding:30px 20px; }
+  }
+</style>
+</head>
+<body bgcolor="#050505" style="background-color:#050505;">
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-bg.png" alt="">
+    <div class="hero-ov"></div>
+    <div class="hero-c">
+      <div class="hero-eyebrow">Queen Karin &nbsp;·&nbsp; Locktober 2026</div>
+      <h1 class="hero-t">You clicked.<br><em>Then left.</em></h1>
+      <p class="hero-sub">Interesting choice, darling.</p>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-t">
+      <span>you <b>clicked the link</b></span><span class="ticker-sep">&diams;</span><span>you <b>read the page</b></span><span class="ticker-sep">&diams;</span><span>you <b>did not buy</b></span><span class="ticker-sep">&diams;</span><span>we <b>both know why</b></span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span><span>you <b>clicked the link</b></span><span class="ticker-sep">&diams;</span><span>you <b>read the page</b></span><span class="ticker-sep">&diams;</span><span>you <b>did not buy</b></span><span class="ticker-sep">&diams;</span><span>we <b>both know why</b></span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- COPY -->
+  <div class="copy">
+    <p>
+      You opened the email.<br>
+      You clicked the button.<br>
+      You read the whole page.<br>
+      <strong>You closed the tab.</strong>
+    </p>
+    <p>
+      I respect the commitment to suffering.
+    </p>
+    <p>
+      Let me guess what happened in your head:<br>
+      <em>"Maybe next year."</em><br>
+      <em>"Let me think about it."</em><br>
+      <em>"I am not ready."</em>
+    </p>
+    <p>
+      Darling. You clicked a link about<br>
+      getting locked by a Queen for 31 days.<br>
+      <strong>Ready was never the plan.</strong>
+    </p>
+  </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- CALLOUT -->
+  <div class="callout">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="callout-inner">
+      <div class="callout-label">What this is, one more time</div>
+      <div class="callout-text">
+        A real app. Your lock. Your dashboard.<br>
+        A personal task from me every single morning.<br>
+        I filmed it. I watch your proof. I decide if it counts.<br><br>
+        <strong>31 days of someone actually paying attention to you.</strong><br><br>
+        Is that not exactly what you came here for?
+      </div>
+    </div>
+  </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- CTA 1 -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Stop Thinking. Start October.</a>
+  </div>
+  <div class="cta-sub">&euro;111 until Monday. &euro;199 after. Starts Oct 1st.</div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- PRICE -->
+  <div class="price-card">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="price-inner">
+      <div class="price-tag">This Weekend Only</div>
+      <div class="price-row">
+        <span class="price-cur">&euro;</span>
+        <span class="price-num">111</span>
+        <span class="price-old">&euro;199</span>
+      </div>
+      <div class="price-desc">31 days. Daily task videos. Personal proof review. Real app. Real control.</div>
+      <div class="price-note">Monday it goes back to &euro;199. No exceptions.</div>
+    </div>
+  </div>
+
+  <!-- CTA 2 -->
+  <div class="cta-wrap">
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Fine. I Want In.</a>
+  </div>
+  <div class="cta-sub">Good. Now go before the spot is gone.</div>
+
+  <!-- SEP -->
+  <div class="sep" style="padding:44px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-b">QUEEN KARIN</div>
+    <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
+  </div>
+
+</div>
+</body>
+</html>
