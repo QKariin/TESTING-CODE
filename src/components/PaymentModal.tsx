@@ -594,7 +594,7 @@ export default function PaymentModal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
                         {tiers.map(t => (
                             <a key={t.label} href={t.url} target="_blank" rel="noopener noreferrer"
-                                onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: t.thronePrice, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: t.label }) }); } catch {} }}
+                                onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cardBody?.memberId || cryptoPayBody?.memberId || '', amount: t.thronePrice, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: t.label }) }); } catch {} }}
                                 style={{ position: 'relative', width: '100%', padding: '18px 20px', background: t.tag ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.03)', border: `1px solid ${t.tag ? 'rgba(197,160,89,0.25)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', boxSizing: 'border-box' as const }}>
                                 {t.tag && <div style={{ position: 'absolute', top: -8, right: 14, fontFamily: 'Rajdhani,sans-serif', fontSize: '0.5rem', fontWeight: 700, color: '#000', background: '#c5a059', padding: '2px 8px', borderRadius: 4, letterSpacing: 2 }}>{t.tag}</div>}
                                 <div>
@@ -648,7 +648,7 @@ export default function PaymentModal({
                     </button>
                     {/* CARD (YouPay) */}
                     <a href={youpayUrl || "https://youpay.me/qkarin"} target="_blank" rel="noopener noreferrer"
-                        onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'youpay', tier_id: label }) }); } catch {} }}
+                        onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cardBody?.memberId || cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'youpay', tier_id: label }) }); } catch {} }}
                         style={{ width: '100%', padding: '16px 20px', background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 10, color: 'rgba(139,92,246,0.9)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/><path d="M2 10h20" stroke="rgba(139,92,246,0.8)" strokeWidth="1.5"/></svg>
                         CARD
@@ -669,7 +669,7 @@ export default function PaymentModal({
                     )}
                     {throneUrl && (
                         <a href={throneUrl} target="_blank" rel="noopener noreferrer"
-                            onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: label }) }); } catch {} }}
+                            onClick={() => { try { fetch('/api/payment-logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ member_id: cardBody?.memberId || cryptoPayBody?.memberId || '', amount: amountEur, payment_type: label?.toLowerCase().includes('paywall') ? 'paywall' : 'tribute', currency_id: 'throne', tier_id: label }) }); } catch {} }}
                             style={{ width: '100%', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.4)', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 12, textDecoration: 'none' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 19h20v2H2v-2zm2-3l2-8 4 4 2-6 2 6 4-4 2 8H4z" fill="rgba(255,255,255,0.35)"/></svg>
                             THRONE
