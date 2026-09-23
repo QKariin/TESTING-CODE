@@ -4,581 +4,340 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Queen Karin — LOCKTOBER</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
-  Subject: Nothing in the femdom scene comes close.
-  Preheader: Real app. Daily tasks from me personally. I hold the key. 5 spots. €111 until Monday.
+  Subject: Is there still a spot for you?
+  Preheader: The only real Locktober program. Custom app. Daily tasks from me. Real lock. Check now.
 -->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html, body {
-    width: 100% !important;
-    min-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #050505;
-    font-family: 'Inter', -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    color: #fff;
-    overflow-x: hidden;
+    width: 100% !important; min-width: 100% !important;
+    margin: 0 !important; padding: 0 !important;
+    background: #050505; font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased; color: #fff; overflow-x: hidden;
   }
+  @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes breathe { 0%,100%{opacity:0.03} 50%{opacity:0.08} }
+  @keyframes borderGlow { 0%,100%{border-color:rgba(197,160,89,0.1)} 50%{border-color:rgba(197,160,89,0.32)} }
+  @keyframes pulse { 0%,100%{opacity:0.35} 50%{opacity:1} }
+  @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 
-  @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes breathe {
-    0%, 100% { opacity: 0.03; }
-    50% { opacity: 0.07; }
-  }
-  @keyframes borderGlow {
-    0%, 100% { border-color: rgba(197,160,89,0.1); }
-    50% { border-color: rgba(197,160,89,0.3); }
-  }
-  @keyframes tickerScroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-  }
+  .wrap { width:100%; max-width:620px; margin:0 auto; background:#050505; overflow:hidden; position:relative; }
 
-  .wrap {
-    width: 100%; max-width: 620px; margin: 0 auto;
-    overflow: hidden; background: #050505; position: relative;
-  }
-  .wrap::after {
-    content: '';
-    position: absolute; top: 300px; left: 50%;
-    width: 500px; height: 500px;
-    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
-    transform: translateX(-50%); pointer-events: none;
-    animation: breathe 6s ease infinite;
-  }
-
-  /* ── HERO ── */
-  .hero {
-    position: relative; width: 100%; overflow: hidden; background: #050505;
-  }
-  .hero img {
-    width: 100%; display: block;
-    filter: brightness(0.3) saturate(1.1) contrast(1.1);
-  }
+  /* HERO */
+  .hero { position:relative; width:100%; overflow:hidden; }
+  .hero img { width:100%; display:block; filter:brightness(0.28) saturate(1.1) contrast(1.1); }
   .hero-ov {
-    position: absolute; inset: 0; z-index: 2;
-    background:
-      radial-gradient(ellipse at center bottom, rgba(197,160,89,0.06) 0%, transparent 55%),
-      linear-gradient(180deg, rgba(5,5,5,0.15) 0%, transparent 20%, transparent 35%, rgba(5,5,5,0.55) 58%, rgba(5,5,5,0.95) 80%, #050505 100%);
+    position:absolute; inset:0; z-index:2;
+    background: linear-gradient(180deg, rgba(5,5,5,0.1) 0%, transparent 25%, transparent 40%, rgba(5,5,5,0.6) 62%, rgba(5,5,5,0.97) 82%, #050505 100%);
   }
-  .hero-c {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    padding: 0 44px 44px; z-index: 4; text-align: center;
-  }
-  .hero-tag {
-    display: inline-block;
-    font-size: 9px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase; color: #050505;
-    background: linear-gradient(135deg, #c5a059, #a8884a);
-    padding: 7px 20px; margin-bottom: 22px;
-    animation: fadeInUp 1s ease 0.3s both;
+  .hero-c { position:absolute; bottom:0; left:0; right:0; padding:0 44px 48px; z-index:4; text-align:center; }
+  .hero-eyebrow {
+    font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px;
+    text-transform:uppercase; color:rgba(197,160,89,0.6); margin-bottom:18px;
+    animation:fadeInUp 0.9s ease 0.2s both;
   }
   .hero-t {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 52px; font-weight: 300; line-height: 1.05; color: #fff;
-    margin-bottom: 14px; animation: fadeInUp 1s ease 0.5s both;
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:56px; font-weight:300;
+    line-height:1.05; color:#fff; margin-bottom:16px; animation:fadeInUp 0.9s ease 0.4s both;
   }
-  .hero-t em { font-style: italic; color: #d4af6a; font-weight: 300; }
+  .hero-t em { font-style:italic; color:#d4af6a; }
   .hero-sub {
-    font-size: 13px; font-weight: 200; color: rgba(255,255,255,0.4);
-    letter-spacing: 2px; text-transform: uppercase;
-    animation: fadeInUp 1s ease 0.7s both;
+    font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:300; font-style:italic;
+    color:rgba(255,255,255,0.35); animation:fadeInUp 0.9s ease 0.6s both;
   }
 
-  /* ── TICKER ── */
+  /* TICKER */
   .ticker {
-    background: linear-gradient(180deg, rgba(8,7,4,1) 0%, rgba(6,5,3,1) 100%);
-    border-top: 1px solid rgba(197,160,89,0.15);
-    border-bottom: 1px solid rgba(197,160,89,0.15);
-    padding: 14px 0; overflow: hidden; white-space: nowrap;
+    background:#050505; border-top:1px solid rgba(197,160,89,0.12);
+    border-bottom:1px solid rgba(197,160,89,0.12);
+    padding:13px 0; overflow:hidden; white-space:nowrap;
   }
-  .ticker-t {
-    display: inline-block; animation: tickerScroll 28s linear infinite;
-  }
+  .ticker-t { display:inline-block; animation:tickerScroll 30s linear infinite; }
   .ticker-t span {
-    display: inline-block;
-    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400;
-    letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(255,255,255,0.3); padding: 0 14px;
+    display:inline-block; font-family:'Cinzel',serif; font-size:10px;
+    font-weight:400; letter-spacing:4px; text-transform:uppercase;
+    color:rgba(255,255,255,0.25); padding:0 16px;
   }
-  .ticker-t span b { color: #d4af6a; font-weight: 600; }
-  .ticker-sep {
-    display: inline-block; color: rgba(197,160,89,0.25);
-    font-size: 6px; vertical-align: middle; padding: 0 4px;
-  }
+  .ticker-t span b { color:#c5a059; font-weight:600; }
+  .ticker-sep { display:inline-block; color:rgba(197,160,89,0.2); font-size:5px; vertical-align:middle; padding:0 4px; }
 
-  /* ── SEPARATOR ── */
-  .sep {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
-    padding: 40px 0;
-  }
-  .sep-l { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent); }
-  .sep-d { width: 4px; height: 4px; background: rgba(197,160,89,0.2); transform: rotate(45deg); flex-shrink: 0; }
+  /* SEP */
+  .sep { display:flex; align-items:center; justify-content:center; gap:14px; padding:44px 0; }
+  .sep-l { width:80px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.18),transparent); }
+  .sep-d { width:4px; height:4px; background:rgba(197,160,89,0.18); transform:rotate(45deg); flex-shrink:0; }
 
-  /* ── TEXT SECTIONS ── */
-  .txt {
-    padding: 0 44px; text-align: center;
+  /* MAIN COPY */
+  .copy { padding:0 48px; text-align:center; }
+  .copy-kicker {
+    font-family:'Cinzel',serif; font-size:10px; font-weight:600; letter-spacing:6px;
+    text-transform:uppercase; color:rgba(197,160,89,0.5); margin-bottom:28px; display:block;
   }
-  .txt-head {
-    display: block;
-    font-family: 'Cinzel', serif; font-size: 28px; font-weight: 600;
-    letter-spacing: 3px; color: #d4af6a; margin-bottom: 6px;
+  .copy p {
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:21px; font-weight:300;
+    line-height:1.9; color:rgba(255,255,255,0.5); margin-bottom:0;
   }
-  .txt-subhead {
-    display: block;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px; font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.35); letter-spacing: 2px; margin-bottom: 24px;
-  }
-  .txt p {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 20px; font-weight: 300; line-height: 1.9;
-    color: rgba(255,255,255,0.55); text-align: center;
-  }
-  .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
-  .txt em { font-style: italic; color: rgba(232,201,122,0.7); }
+  .copy p + p { margin-top:28px; }
+  .copy strong { color:rgba(255,255,255,0.9); font-weight:400; }
+  .copy em { font-style:italic; color:rgba(212,175,106,0.75); }
 
-  /* ── COMPARE BOX ── */
-  .compare {
-    margin: 0 30px;
-    display: table; width: calc(100% - 60px);
+  /* FEATURE LIST */
+  .features { padding:0 44px; }
+  .f-item {
+    display:flex; align-items:flex-start; gap:18px;
+    padding:20px 0; border-bottom:1px solid rgba(197,160,89,0.06);
   }
-  .compare-col {
-    display: table-cell; width: 50%; vertical-align: top;
-    padding: 36px 28px;
+  .f-item:last-child { border-bottom:none; }
+  .f-num {
+    font-family:'Cinzel',serif; font-size:11px; font-weight:600; letter-spacing:2px;
+    color:rgba(197,160,89,0.3); flex-shrink:0; padding-top:3px; width:24px;
   }
-  .compare-col:first-child {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-right: none;
+  .f-text {
+    font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:300;
+    line-height:1.6; color:rgba(255,255,255,0.45);
   }
-  .compare-col:last-child {
-    background: linear-gradient(165deg, rgba(18,16,10,1) 0%, rgba(12,10,6,1) 100%);
-    border: 1px solid rgba(197,160,89,0.18);
-    animation: borderGlow 5s ease infinite;
-  }
-  .compare-label {
-    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
-    letter-spacing: 5px; text-transform: uppercase; margin-bottom: 22px;
-  }
-  .compare-col:first-child .compare-label { color: rgba(255,255,255,0.2); }
-  .compare-col:last-child .compare-label { color: #d4af6a; }
-  .compare-item {
-    font-family: 'Cormorant Garamond', serif; font-size: 16px;
-    font-weight: 300; line-height: 1.6; margin-bottom: 12px;
-  }
-  .compare-col:first-child .compare-item { color: rgba(255,255,255,0.2); }
-  .compare-col:last-child .compare-item { color: rgba(255,255,255,0.75); }
-  .compare-col:last-child .compare-item strong { color: #d4af6a; font-weight: 400; }
+  .f-text strong { color:rgba(255,255,255,0.85); font-weight:400; }
 
-  /* ── CALLOUT BOX ── */
-  .callout {
-    margin: 0 30px;
-    background: linear-gradient(165deg, rgba(14,12,7,1) 0%, rgba(10,9,5,1) 50%, rgba(16,13,6,1) 100%);
-    border: 1px solid rgba(197,160,89,0.15);
-    animation: borderGlow 5s ease infinite;
-    overflow: hidden; position: relative;
-  }
-  .callout .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-  .callout .cn::before, .callout .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
-  .callout .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .callout .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .callout .cn1 { top: -1px; left: -1px; }
-  .callout .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
-  .callout .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .callout .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
-  .callout-inner {
-    padding: 40px 36px; text-align: center; position: relative; z-index: 1;
-  }
-  .callout-inner::before {
-    content: '';
-    position: absolute; top: 45%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 350px; height: 250px;
-    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
-    pointer-events: none; animation: breathe 5s ease infinite;
-  }
-  .callout-label {
-    font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
-    letter-spacing: 6px; text-transform: uppercase;
-    color: rgba(197,160,89,0.6); margin-bottom: 20px; position: relative;
-  }
-  .callout-text {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 22px; font-weight: 300; font-style: italic;
-    line-height: 1.8; color: rgba(255,255,255,0.45);
-    max-width: 440px; margin: 0 auto; position: relative;
-  }
-  .callout-text strong { color: rgba(255,255,255,0.9); font-weight: 400; }
-
-  /* ── PRICE BLOCK ── */
+  /* PRICE */
   .price-card {
-    margin: 0 30px;
-    position: relative;
-    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
-    border: 1px solid rgba(197,160,89,0.12);
-    overflow: hidden;
-    animation: borderGlow 5s ease infinite;
+    margin:0 30px; position:relative;
+    background:linear-gradient(165deg, rgba(16,14,8,1) 0%, rgba(10,9,5,1) 60%, rgba(16,13,7,1) 100%);
+    border:1px solid rgba(197,160,89,0.14); overflow:hidden;
+    animation:borderGlow 5s ease infinite;
   }
-  .price-card .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-  .price-card .cn::before, .price-card .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
-  .price-card .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .price-card .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .price-card .cn1 { top: -1px; left: -1px; }
-  .price-card .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
-  .price-card .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .price-card .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
-  .price-inner {
-    padding: 48px 36px 40px; text-align: center; position: relative; z-index: 1;
-  }
+  .price-card .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
+  .price-card .cn::before,.price-card .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.22); }
+  .price-card .cn::before { height:1px; width:100%; top:0; left:0; }
+  .price-card .cn::after { width:1px; height:100%; top:0; left:0; }
+  .price-card .cn1 { top:-1px; left:-1px; }
+  .price-card .cn2 { top:-1px; right:-1px; transform:scaleX(-1); }
+  .price-card .cn3 { bottom:-1px; left:-1px; transform:scaleY(-1); }
+  .price-card .cn4 { bottom:-1px; right:-1px; transform:scale(-1); }
+  .price-inner { padding:48px 36px 42px; text-align:center; position:relative; z-index:1; }
   .price-inner::before {
-    content: '';
-    position: absolute; top: 40%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px; height: 200px;
-    background: radial-gradient(ellipse, rgba(197,160,89,0.05) 0%, transparent 70%);
-    pointer-events: none; animation: breathe 5s ease infinite;
+    content:''; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%);
+    width:300px; height:220px;
+    background:radial-gradient(ellipse, rgba(197,160,89,0.05) 0%, transparent 70%);
+    pointer-events:none; animation:breathe 5s ease infinite;
   }
   .price-tag {
-    display: inline-block;
-    font-family: 'Inter', sans-serif; font-size: 8px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase; color: #050505;
-    background: linear-gradient(135deg, #d4af6a, #c5a059, #e8c97a, #c5a059);
-    background-size: 300% 100%; animation: shimmer 4s ease infinite;
-    padding: 5px 16px; margin-bottom: 22px;
+    display:inline-block; font-family:'Cinzel',serif; font-size:8px; font-weight:600;
+    letter-spacing:5px; text-transform:uppercase; color:#050505;
+    background:linear-gradient(135deg,#d4af6a,#c5a059,#e8c97a,#c5a059);
+    background-size:300% 100%; animation:shimmer 4s ease infinite;
+    padding:5px 18px; margin-bottom:24px;
   }
-  .price-row {
-    display: flex; align-items: baseline; justify-content: center; gap: 14px;
-    margin-bottom: 8px;
-  }
-  .price-cur {
-    font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 300;
-    color: rgba(197,160,89,0.5); align-self: flex-start; margin-top: 12px;
-  }
-  .price-num {
-    font-family: 'Cinzel', serif; font-size: 72px; font-weight: 700;
-    line-height: 1; letter-spacing: -2px; color: #d4af6a;
-  }
-  .price-old {
-    font-family: 'Cinzel', serif; font-size: 26px; font-weight: 400;
-    color: rgba(255,255,255,0.12);
-    text-decoration: line-through; text-decoration-color: rgba(197,160,89,0.35);
-  }
-  .price-for {
-    font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300;
-    font-style: italic; color: rgba(255,255,255,0.3); margin-bottom: 16px;
-  }
-  .price-save {
-    display: inline-block;
-    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
-    letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(197,160,89,0.8);
-    border: 1px solid rgba(197,160,89,0.2);
-    padding: 7px 18px; margin-bottom: 14px;
-  }
-  .price-note {
-    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 300;
-    letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(197,160,89,0.35); animation: pulse 3s ease infinite;
-  }
+  .price-row { display:flex; align-items:baseline; justify-content:center; gap:12px; margin-bottom:6px; }
+  .price-cur { font-family:'Inter',sans-serif; font-size:18px; font-weight:300; color:rgba(197,160,89,0.45); align-self:flex-start; margin-top:14px; }
+  .price-num { font-family:'Cinzel',serif; font-size:76px; font-weight:700; line-height:1; letter-spacing:-2px; color:#d4af6a; }
+  .price-old { font-family:'Cinzel',serif; font-size:24px; font-weight:400; color:rgba(255,255,255,0.1); text-decoration:line-through; text-decoration-color:rgba(197,160,89,0.3); }
+  .price-desc { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.28); margin:10px 0 18px; }
+  .price-note { font-family:'Inter',sans-serif; font-size:10px; font-weight:300; letter-spacing:2px; text-transform:uppercase; color:rgba(197,160,89,0.3); animation:pulse 3s ease infinite; }
 
-  /* ── CTA ── */
-  .cta-wrap { text-align: center; padding: 30px 30px 0; }
+  /* CTA */
+  .cta-wrap { text-align:center; padding:32px 30px 0; }
   .cta-btn {
-    display: block; padding: 22px 0; text-decoration: none;
-    background: linear-gradient(135deg, #c5a059, #a8884a);
-    color: #050505;
-    font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
-    letter-spacing: 6px; text-transform: uppercase;
-    border: 1px solid rgba(197,160,89,0.3);
+    display:block; padding:24px 0; text-decoration:none;
+    background:linear-gradient(135deg,#c5a059,#a8884a);
+    color:#050505; font-family:'Cinzel',serif; font-size:12px; font-weight:700;
+    letter-spacing:6px; text-transform:uppercase;
   }
   .cta-sub {
-    text-align: center; padding: 12px 30px 0;
-    font-size: 10px; font-weight: 300; letter-spacing: 3px;
-    text-transform: uppercase; color: rgba(197,160,89,0.3);
+    text-align:center; padding:14px 30px 0;
+    font-size:10px; font-weight:300; letter-spacing:3px;
+    text-transform:uppercase; color:rgba(197,160,89,0.28);
   }
 
-  /* ── SPOTS ── */
-  .spots { text-align: center; padding: 36px 30px 0; }
-  .spots-n {
-    font-family: 'Cinzel', serif; font-size: 100px; font-weight: 700;
-    line-height: 1; letter-spacing: -4px;
-    background: linear-gradient(180deg, rgba(212,175,106,0.6) 0%, rgba(197,160,89,0.12) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  /* CLOSING */
+  .closing {
+    margin:0 30px; position:relative;
+    background:linear-gradient(165deg, rgba(14,13,8,1) 0%, rgba(9,8,5,1) 100%);
+    border:1px solid rgba(197,160,89,0.1); overflow:hidden;
+    animation:borderGlow 6s ease infinite;
   }
-  .spots-l {
-    font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
-    letter-spacing: 8px; text-transform: uppercase;
-    color: rgba(197,160,89,0.4); margin-top: 4px;
+  .closing .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
+  .closing .cn::before,.closing .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.2); }
+  .closing .cn::before { height:1px; width:100%; top:0; left:0; }
+  .closing .cn::after { width:1px; height:100%; top:0; left:0; }
+  .closing .cn1 { top:-1px; left:-1px; }
+  .closing .cn2 { top:-1px; right:-1px; transform:scaleX(-1); }
+  .closing .cn3 { bottom:-1px; left:-1px; transform:scaleY(-1); }
+  .closing .cn4 { bottom:-1px; right:-1px; transform:scale(-1); }
+  .closing-inner { padding:48px 40px; text-align:center; position:relative; z-index:1; }
+  .closing-inner::before {
+    content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:340px; height:240px;
+    background:radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    pointer-events:none; animation:breathe 6s ease infinite;
   }
-  .spots-p {
-    font-family: 'Cormorant Garamond', serif; font-size: 15px;
-    font-weight: 300; font-style: italic;
-    color: rgba(255,255,255,0.2); margin-top: 14px; line-height: 1.7;
+  .closing-text {
+    font-family:'Cormorant Garamond',Georgia,serif; font-size:24px; font-weight:300;
+    font-style:italic; line-height:1.8; color:rgba(255,255,255,0.4);
+    max-width:420px; margin:0 auto; position:relative;
   }
+  .closing-text strong { color:rgba(255,255,255,0.88); font-weight:400; font-style:normal; }
+  .closing-sig { margin-top:28px; font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.35); }
 
-  /* ── QUOTE BOX ── */
-  .quote-box {
-    margin: 0 30px;
-    position: relative;
-    background: linear-gradient(165deg, rgba(18,18,18,1) 0%, rgba(10,10,10,1) 50%, rgba(18,14,8,1) 100%);
-    border: 1px solid rgba(197,160,89,0.12);
-    overflow: hidden; animation: borderGlow 5s ease infinite;
-  }
-  .quote-box .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-  .quote-box .cn::before, .quote-box .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
-  .quote-box .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
-  .quote-box .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
-  .quote-box .cn1 { top: -1px; left: -1px; }
-  .quote-box .cn2 { top: -1px; right: -1px; transform: scaleX(-1); }
-  .quote-box .cn3 { bottom: -1px; left: -1px; transform: scaleY(-1); }
-  .quote-box .cn4 { bottom: -1px; right: -1px; transform: scale(-1); }
-  .quote-inner {
-    padding: 48px 36px; text-align: center; position: relative; z-index: 1;
-  }
-  .quote-inner::before {
-    content: '';
-    position: absolute; top: 45%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 350px; height: 250px;
-    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
-    pointer-events: none; animation: breathe 5s ease infinite;
-  }
-  .quote-label {
-    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600;
-    letter-spacing: 8px; text-transform: uppercase;
-    color: #d4af6a; margin-bottom: 28px; position: relative;
-  }
-  .quote-text {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 23px; font-weight: 300; font-style: italic;
-    line-height: 1.75; color: rgba(255,255,255,0.4);
-    max-width: 440px; margin: 0 auto; position: relative;
-  }
-  .quote-text strong { color: rgba(255,255,255,0.85); font-weight: 400; }
-  .quote-sig {
-    margin-top: 24px; font-family: 'Inter', sans-serif;
-    font-size: 9px; font-weight: 300; letter-spacing: 5px;
-    text-transform: uppercase; color: rgba(197,160,89,0.4);
-  }
+  /* FOOTER */
+  .footer { border-top:1px solid rgba(197,160,89,0.05); padding:40px; text-align:center; position:relative; }
+  .footer::before { content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%); width:180px; height:1px; background:linear-gradient(90deg,transparent,rgba(197,160,89,0.18),transparent); }
+  .footer-b { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:600; letter-spacing:8px; color:rgba(255,255,255,0.1); margin-bottom:10px; }
+  .footer a { font-size:10px; color:rgba(255,255,255,0.08); text-decoration:none; letter-spacing:3px; }
 
-  /* ── FOOTER ── */
-  .footer {
-    border-top: 1px solid rgba(197,160,89,0.06);
-    padding: 40px 40px; text-align: center; position: relative;
-  }
-  .footer::before {
-    content: '';
-    position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-    width: 200px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.2), transparent);
-  }
-  .footer-b {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 16px; font-weight: 600; letter-spacing: 8px;
-    color: rgba(255,255,255,0.12); margin-bottom: 10px;
-  }
-  .footer a {
-    font-size: 10px; color: rgba(255,255,255,0.1); text-decoration: none;
-    letter-spacing: 3px;
-  }
-
-  /* ── MOBILE ── */
-  @media (max-width: 520px) {
-    .hero-t { font-size: 38px; }
-    .hero-c { padding: 0 22px 32px; }
-    .txt { padding: 0 20px; }
-    .txt p { font-size: 17px; line-height: 1.8; }
-    .txt-head { font-size: 22px; letter-spacing: 2px; }
-    .compare { display: block; margin: 0 14px; width: calc(100% - 28px); }
-    .compare-col { display: block; width: 100%; padding: 28px 20px; border-right: none !important; border-bottom: none; }
-    .compare-col:first-child { border-bottom: none; }
-    .callout { margin: 0 14px; }
-    .callout-inner { padding: 28px 20px; }
-    .callout-text { font-size: 18px; }
-    .price-card { margin: 0 14px; }
-    .price-inner { padding: 36px 20px 32px; }
-    .price-num { font-size: 56px; }
-    .price-old { font-size: 20px; }
-    .cta-wrap { padding: 24px 14px 0; }
-    .cta-btn { font-size: 11px; letter-spacing: 4px; }
-    .spots-n { font-size: 76px; }
-    .quote-box { margin: 0 14px; }
-    .quote-inner { padding: 32px 20px; }
-    .quote-text { font-size: 19px; }
-    .sep { padding: 32px 0; }
-    .footer { padding: 30px 20px; }
+  @media (max-width:520px) {
+    .hero-t { font-size:40px; }
+    .hero-c { padding:0 24px 36px; }
+    .copy { padding:0 22px; }
+    .copy p { font-size:18px; }
+    .features { padding:0 22px; }
+    .f-text { font-size:17px; }
+    .price-card,.closing { margin:0 14px; }
+    .price-inner { padding:36px 20px 30px; }
+    .price-num { font-size:58px; }
+    .closing-inner { padding:36px 22px; }
+    .closing-text { font-size:20px; }
+    .cta-wrap { padding:24px 14px 0; }
+    .cta-btn { font-size:11px; letter-spacing:4px; }
+    .sep { padding:32px 0; }
+    .footer { padding:30px 20px; }
   }
 </style>
 </head>
 <body bgcolor="#050505" style="background-color:#050505;">
 <div class="wrap">
 
-  <!-- ── HERO ── -->
+  <!-- HERO -->
   <div class="hero">
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-bg.png" alt="">
     <div class="hero-ov"></div>
     <div class="hero-c">
-      <div class="hero-tag">Queen Karin · Locktober 2026</div>
-      <h1 class="hero-t">There Is Nothing<br><em>Like This.</em></h1>
-      <p class="hero-sub">Not in the scene. Not anywhere.</p>
+      <div class="hero-eyebrow">Queen Karin &nbsp;·&nbsp; Locktober 2026</div>
+      <h1 class="hero-t">October is<br><em>nine days away.</em></h1>
+      <p class="hero-sub">Check if there is still a spot for you.</p>
     </div>
   </div>
 
-  <!-- ── TICKER ── -->
+  <!-- TICKER -->
   <div class="ticker">
     <div class="ticker-t">
-      <span>real <b>keyholder app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b></span><span class="ticker-sep">&diams;</span><span>Queen Karin <b>watches every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of actual control</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots remaining</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>until Monday</b></span><span class="ticker-sep">&diams;</span><span>real <b>keyholder app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b></span><span class="ticker-sep">&diams;</span><span>Queen Karin <b>watches every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of actual control</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots remaining</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>until Monday</b></span><span class="ticker-sep">&diams;</span>
+      <span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b> from Queen Karin</span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span><span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b> from Queen Karin</span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span>
     </div>
   </div>
 
-  <!-- ── SEPARATOR ── -->
+  <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── INTRO COPY ── -->
-  <div class="txt">
-    <span class="txt-head">The Rest of the Scene</span>
-    <span class="txt-subhead">versus what this actually is</span>
+  <!-- MAIN COPY -->
+  <div class="copy">
+    <span class="copy-kicker">What this is</span>
+    <p>
+      I built an app. A real one — your dashboard, your lock status,
+      your score, your history. <strong>Nothing like it exists anywhere in the scene.</strong>
+    </p>
+    <p>
+      Every morning of October you get a new task.
+      I filmed it personally, for this month, for you.
+      <strong>You complete it. You upload proof. I watch it.</strong>
+      I decide if it counts.
+    </p>
+    <p>
+      Miss a task — I add days.
+      Submit something lazy — rejected.
+      <strong>31 days of actual control.</strong>
+      Not a hashtag. Not an honour system. Real.
+    </p>
   </div>
 
-  <!-- ── SEPARATOR (small) ── -->
-  <div class="sep" style="padding: 16px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
-
-  <!-- ── COMPARE ── -->
-  <div class="compare">
-    <div class="compare-col">
-      <div class="compare-label">Everything else</div>
-      <div class="compare-item">A hashtag and a padlock photo</div>
-      <div class="compare-item">A PDF "task list" from three years ago</div>
-      <div class="compare-item">Honor system. Self-reported. Forgettable.</div>
-      <div class="compare-item">One message if you are lucky</div>
-      <div class="compare-item">No app. No structure. No real control.</div>
-    </div>
-    <div class="compare-col">
-      <div class="compare-label">This Program</div>
-      <div class="compare-item"><strong>Custom-built app.</strong> Your dashboard. Your lock. Real.</div>
-      <div class="compare-item"><strong>A new task from me personally. Every single day.</strong></div>
-      <div class="compare-item"><strong>You film proof. I watch it. I decide if it counts.</strong></div>
-      <div class="compare-item"><strong>Miss a task — I add days. No negotiation.</strong></div>
-      <div class="compare-item"><strong>31 days of actual control. Not a fantasy.</strong></div>
-    </div>
-  </div>
-
-  <!-- ── SEPARATOR ── -->
+  <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── CALLOUT ── -->
-  <div class="callout">
-    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
-    <div class="callout-inner">
-      <div class="callout-label">What you actually get</div>
-      <div class="callout-text">
-        October 1st, your cage locks. I hold the key inside
-        <strong>an app I built myself</strong> — your profile, your score,
-        your history, all of it tracked.<br><br>
-        Every morning a new task appears. I filmed it for you personally.
-        You complete it. You upload proof.
-        <strong>I watch it and decide whether you earned the day.</strong><br><br>
-        There is no app like this. There is no keyholder doing this.
-        This is the only place where Locktober is
-        <strong>actually real.</strong>
-      </div>
+  <!-- FEATURE LIST -->
+  <div class="features">
+    <div class="f-item">
+      <div class="f-num">01</div>
+      <div class="f-text"><strong>Custom-built keyholding app.</strong> Your profile, your lock, your task history. All live. All real.</div>
+    </div>
+    <div class="f-item">
+      <div class="f-num">02</div>
+      <div class="f-text"><strong>A new task video from me every single morning.</strong> Filmed for this program. Not recycled clips.</div>
+    </div>
+    <div class="f-item">
+      <div class="f-num">03</div>
+      <div class="f-text"><strong>I personally review every proof you submit.</strong> I am watching. I am paying attention.</div>
+    </div>
+    <div class="f-item">
+      <div class="f-num">04</div>
+      <div class="f-text"><strong>Real consequences. Real rewards.</strong> Your behaviour shapes your October.</div>
+    </div>
+    <div class="f-item">
+      <div class="f-num">05</div>
+      <div class="f-text">I keep this <strong>small on purpose.</strong> So every single one of you gets my actual attention.</div>
     </div>
   </div>
 
-  <!-- ── SEPARATOR ── -->
+  <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── CTA 1 ── -->
+  <!-- CTA 1 -->
   <div class="cta-wrap">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">I Want the Real Thing</a>
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Check If There Is Still a Spot</a>
   </div>
-  <div class="cta-sub">5 spots. &euro;111 until Monday. Starts Oct 1st.</div>
+  <div class="cta-sub">&euro;111 this weekend &nbsp;·&nbsp; &euro;199 after Monday &nbsp;·&nbsp; Starts Oct 1st</div>
 
-  <!-- ── SEPARATOR ── -->
+  <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── PRICE ── -->
+  <!-- PRICE -->
   <div class="price-card">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
     <div class="price-inner">
-      <div class="price-tag">Locktober 2026</div>
+      <div class="price-tag">Weekend Price</div>
       <div class="price-row">
         <span class="price-cur">&euro;</span>
         <span class="price-num">111</span>
         <span class="price-old">&euro;199</span>
       </div>
-      <div class="price-for">31 days. Daily personal tasks. Proof review. Custom app. Real control.</div>
-      <div class="price-save">Save &euro;88 — This Weekend Only</div>
-      <div class="price-note">Monday morning this becomes &euro;199. No exceptions.</div>
+      <div class="price-desc">31 days · daily tasks · personal review · real app · real control</div>
+      <div class="price-note">Monday this goes back to &euro;199 — no exceptions</div>
     </div>
   </div>
 
-  <!-- ── CTA 2 ── -->
+  <!-- CTA 2 -->
   <div class="cta-wrap">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Secure Your Spot</a>
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Secure Your October</a>
   </div>
-  <div class="cta-sub">&euro;111 this weekend only. &euro;199 after Monday.</div>
+  <div class="cta-sub">If it is still available — it is yours.</div>
 
-  <!-- ── SEPARATOR ── -->
+  <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── SPOTS ── -->
-  <div class="spots">
-    <div class="spots-n">5</div>
-    <div class="spots-l">Spots Remaining</div>
-    <div class="spots-p">I keep this small on purpose. Small enough that I can give<br>every single one of you my actual attention.</div>
-  </div>
-
-  <!-- ── SEPARATOR ── -->
-  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
-
-  <!-- ── QUEEN QUOTE ── -->
-  <div class="quote-box">
+  <!-- CLOSING -->
+  <div class="closing">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
-    <div class="quote-inner">
-      <div class="quote-label">From Queen Karin</div>
-      <div class="quote-text">
-        I built this app from scratch because nothing
-        that existed was good enough.<br><br>
-        Every task video is filmed by me, for this month,
-        for these five people. Not recycled content.
-        Not a clip store. Not a chatbot.<br><br>
-        <strong>You will be locked. I will be watching.
-        That is the only promise I make —
-        and I keep every single one.</strong>
+    <div class="closing-inner">
+      <div class="closing-text">
+        I built this because I wanted to do this properly.<br><br>
+        Not a clip. Not a chatbot. Not a spreadsheet you fill in yourself
+        hoping someone notices.<br><br>
+        <strong>A real keyholder. A real app. A real October.</strong><br><br>
+        If you want it — go check if it is still there.
       </div>
-      <div class="quote-sig">Queen Karin</div>
+      <div class="closing-sig">Queen Karin</div>
     </div>
   </div>
 
-  <!-- ── FINAL CTA ── -->
-  <div class="cta-wrap" style="padding-top: 40px;">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Join the Only Real Locktober</a>
+  <!-- FINAL CTA -->
+  <div class="cta-wrap" style="padding-top:42px;">
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">See If Your Spot Is Still There</a>
   </div>
-  <div class="cta-sub">5 spots. &euro;111 until Monday. October 1st.</div>
+  <div class="cta-sub">October 1st. &euro;111 this weekend only.</div>
 
-  <!-- ── SEPARATOR ── -->
-  <div class="sep" style="padding: 40px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+  <!-- SEP -->
+  <div class="sep" style="padding:44px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── FOOTER ── -->
+  <!-- FOOTER -->
   <div class="footer">
     <div class="footer-b">QUEEN KARIN</div>
     <a href="https://throne.qkarin.com" target="_blank">throne.qkarin.com</a>
