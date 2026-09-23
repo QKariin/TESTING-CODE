@@ -6,8 +6,8 @@
 <title>Queen Karin — LOCKTOBER</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
-  Subject: the link. here it is.
-  Preheader: The real one. Where you actually join. October 1st. €111 this weekend.
+  Subject: this is what your October looks like.
+  Preheader: Wake up. Open the app. Your task is already waiting. Do you want this or not?
 -->
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -33,7 +33,7 @@
   }
   .hero-c { position:absolute; bottom:0; left:0; right:0; padding:0 44px 52px; z-index:4; text-align:center; }
   .hero-eyebrow { font-family:'Cinzel',serif; font-size:9px; font-weight:500; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.5); margin-bottom:20px; animation:fadeInUp 0.8s ease 0.2s both; }
-  .hero-t { font-family:'Cormorant Garamond',Georgia,serif; font-size:58px; font-weight:300; line-height:1.05; color:#fff; margin-bottom:18px; animation:fadeInUp 0.8s ease 0.35s both; }
+  .hero-t { font-family:'Cormorant Garamond',Georgia,serif; font-size:54px; font-weight:300; line-height:1.05; color:#fff; margin-bottom:18px; animation:fadeInUp 0.8s ease 0.35s both; }
   .hero-t em { font-style:italic; color:#d4af6a; }
   .hero-sub { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300; font-style:italic; color:rgba(255,255,255,0.3); animation:fadeInUp 0.8s ease 0.5s both; }
 
@@ -53,22 +53,27 @@
   .copy strong { color:rgba(255,255,255,0.92); font-weight:400; }
   .copy em { font-style:italic; color:rgba(212,175,106,0.8); }
 
-  .callout {
+  /* DAY SCENE BOX */
+  .scene {
     margin:0 30px; position:relative;
     background:linear-gradient(165deg,rgba(14,13,8,1) 0%,rgba(9,8,5,1) 100%);
     border:1px solid rgba(197,160,89,0.13); overflow:hidden; animation:borderGlow 5s ease infinite;
   }
-  .callout .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
-  .callout .cn::before,.callout .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.2); }
-  .callout .cn::before { height:1px; width:100%; top:0; left:0; }
-  .callout .cn::after { width:1px; height:100%; top:0; left:0; }
-  .callout .cn1{top:-1px;left:-1px} .callout .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
-  .callout .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .callout .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
-  .callout-inner { padding:44px 40px; text-align:center; position:relative; z-index:1; }
-  .callout-inner::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:340px; height:240px; background:radial-gradient(ellipse,rgba(197,160,89,0.04) 0%,transparent 70%); pointer-events:none; animation:breathe 6s ease infinite; }
-  .callout-label { font-family:'Cinzel',serif; font-size:9px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.45); margin-bottom:22px; position:relative; }
-  .callout-text { font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:300; font-style:italic; line-height:1.85; color:rgba(255,255,255,0.42); max-width:420px; margin:0 auto; position:relative; }
-  .callout-text strong { color:rgba(255,255,255,0.9); font-weight:400; font-style:normal; }
+  .scene .cn { position:absolute; width:22px; height:22px; pointer-events:none; }
+  .scene .cn::before,.scene .cn::after { content:''; position:absolute; background:rgba(197,160,89,0.2); }
+  .scene .cn::before { height:1px; width:100%; top:0; left:0; }
+  .scene .cn::after { width:1px; height:100%; top:0; left:0; }
+  .scene .cn1{top:-1px;left:-1px} .scene .cn2{top:-1px;right:-1px;transform:scaleX(-1)}
+  .scene .cn3{bottom:-1px;left:-1px;transform:scaleY(-1)} .scene .cn4{bottom:-1px;right:-1px;transform:scale(-1)}
+  .scene-inner { padding:44px 40px; position:relative; z-index:1; }
+  .scene-inner::before { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:340px; height:240px; background:radial-gradient(ellipse,rgba(197,160,89,0.04) 0%,transparent 70%); pointer-events:none; animation:breathe 6s ease infinite; }
+  .scene-label { font-family:'Cinzel',serif; font-size:9px; font-weight:600; letter-spacing:6px; text-transform:uppercase; color:rgba(197,160,89,0.4); margin-bottom:28px; position:relative; text-align:center; }
+  .scene-line { display:flex; align-items:flex-start; gap:16px; margin-bottom:20px; position:relative; }
+  .scene-line:last-child { margin-bottom:0; }
+  .scene-time { font-family:'Cinzel',serif; font-size:9px; font-weight:600; letter-spacing:2px; color:rgba(197,160,89,0.35); flex-shrink:0; padding-top:4px; width:52px; }
+  .scene-text { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:300; line-height:1.65; color:rgba(255,255,255,0.5); }
+  .scene-text strong { color:rgba(255,255,255,0.88); font-weight:400; }
+  .scene-text em { font-style:italic; color:rgba(212,175,106,0.75); }
 
   .price-card {
     margin:0 30px; position:relative;
@@ -113,9 +118,10 @@
   .footer a { font-size:10px; color:rgba(255,255,255,0.07); text-decoration:none; letter-spacing:3px; }
 
   @media (max-width:520px) {
-    .hero-t { font-size:40px; } .hero-c { padding:0 22px 36px; }
+    .hero-t { font-size:38px; } .hero-c { padding:0 22px 36px; }
     .copy { padding:0 22px; } .copy p { font-size:19px; }
-    .callout,.price-card { margin:0 14px; } .callout-inner { padding:32px 22px; } .callout-text { font-size:19px; }
+    .scene,.price-card { margin:0 14px; } .scene-inner { padding:32px 22px; }
+    .scene-text { font-size:17px; }
     .price-inner { padding:36px 20px 30px; } .price-num { font-size:60px; }
     .cta-wrap { padding:24px 14px 0; } .cta-btn { font-size:11px; letter-spacing:4px; }
     .sep { padding:34px 0; } .footer { padding:30px 20px; }
@@ -131,15 +137,15 @@
     <div class="hero-ov"></div>
     <div class="hero-c">
       <div class="hero-eyebrow">Queen Karin &nbsp;·&nbsp; Locktober 2026</div>
-      <h1 class="hero-t">Here.<br><em>This one.</em></h1>
-      <p class="hero-sub">The actual link. Click this one.</p>
+      <h1 class="hero-t">This is what<br><em>your October looks like.</em></h1>
+      <p class="hero-sub">If you are in. Are you?</p>
     </div>
   </div>
 
   <!-- TICKER -->
   <div class="ticker">
     <div class="ticker-t">
-      <span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span><span><b>real keyholding app</b></span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span>
+      <span>october <b>1st</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span><span>october <b>1st</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of real control</span><span class="ticker-sep">&diams;</span><span>daily task <b>videos from Queen Karin</b></span><span class="ticker-sep">&diams;</span><span>she watches <b>every proof</b></span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>this weekend</b></span><span class="ticker-sep">&diams;</span>
     </div>
   </div>
 
@@ -149,19 +155,54 @@
   <!-- COPY -->
   <div class="copy">
     <p>
-      I know. The internet is full of links.<br>
-      Most of them go nowhere interesting.<br>
-      <strong>This one is different.</strong>
+      You expressed interest.<br>
+      So let me show you exactly what you are getting into.<br>
+      <em>A day in October with me.</em>
     </p>
+  </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- DAY SCENE -->
+  <div class="scene">
+    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
+    <div class="scene-inner">
+      <div class="scene-label">October 7th. A Wednesday.</div>
+
+      <div class="scene-line">
+        <div class="scene-time">07:00</div>
+        <div class="scene-text">You open the app. <strong>Your daily task from me is already there.</strong> A video. My voice. Today's challenge.</div>
+      </div>
+      <div class="scene-line">
+        <div class="scene-time">08:30</div>
+        <div class="scene-text">You complete it. You film proof. <strong>You upload it.</strong> The app logs it. I get notified.</div>
+      </div>
+      <div class="scene-line">
+        <div class="scene-time">11:00</div>
+        <div class="scene-text"><strong>I watch your proof.</strong> I decide if it counts. If it does — you earn the day. If it does not — we have a conversation.</div>
+      </div>
+      <div class="scene-line">
+        <div class="scene-time">All day</div>
+        <div class="scene-text">You are locked. You know I am watching. <em>That is not a feeling you get anywhere else.</em></div>
+      </div>
+      <div class="scene-line">
+        <div class="scene-time">Night</div>
+        <div class="scene-text">You check your score. Your rank. Your streak. <strong>24 more days to go.</strong> You would not trade this for anything.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEP -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- COPY 2 -->
+  <div class="copy">
     <p>
-      October 1st, your cage locks.<br>
-      Every morning, a task from me arrives.<br>
-      I filmed it. For you. For this month.<br>
-      <strong>You complete it. You upload proof. I watch it.</strong>
-    </p>
-    <p>
-      A real app. Real control.<br>
-      <em>Nothing like it in the scene.</em>
+      That is every day of October.<br>
+      <strong>Someone else is about to take that spot.</strong><br>
+      Not because they want it more than you.<br>
+      Because they decided faster.
     </p>
   </div>
 
@@ -170,27 +211,9 @@
 
   <!-- CTA 1 -->
   <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">This Is the One. Click It.</a>
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">I Want This October</a>
   </div>
   <div class="cta-sub">&euro;111 this weekend. &euro;199 after Monday. Starts Oct 1st.</div>
-
-  <!-- SEP -->
-  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
-
-  <!-- CALLOUT -->
-  <div class="callout">
-    <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
-    <div class="callout-inner">
-      <div class="callout-label">Why you actually want this</div>
-      <div class="callout-text">
-        You have been looking for someone who<br>
-        <strong>actually shows up. Every day. For real.</strong><br><br>
-        Not a clip store. Not a chatbot.<br>
-        Me. Your task. Your proof. My eyes on it.<br><br>
-        <strong>31 days of being someone's actual priority.</strong>
-      </div>
-    </div>
-  </div>
 
   <!-- SEP -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
@@ -212,9 +235,9 @@
 
   <!-- CTA 2 -->
   <div class="cta-wrap">
-    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Join Locktober</a>
+    <a href="https://throne.qkarin.com/locktober" class="cta-btn" target="_blank">Secure My Spot Before It Is Gone</a>
   </div>
-  <div class="cta-sub">October 1st. The spot is still there. Go.</div>
+  <div class="cta-sub">October 1st. The spot is still there. Barely.</div>
 
   <!-- SEP -->
   <div class="sep" style="padding:44px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
