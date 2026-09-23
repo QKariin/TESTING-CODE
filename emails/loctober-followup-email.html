@@ -6,8 +6,8 @@
 <title>Queen Karin — LOCKTOBER</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400;500&family=Cinzel:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
-  Subject: You saw the email. You did nothing.
-  Preheader: 5 spots left. Price goes up Monday. This is the last time I ask.
+  Subject: Nothing in the femdom scene comes close.
+  Preheader: Real app. Daily tasks from me personally. I hold the key. 5 spots. €111 until Monday.
 -->
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,10 +42,6 @@
     0%, 100% { border-color: rgba(197,160,89,0.1); }
     50% { border-color: rgba(197,160,89,0.3); }
   }
-  @keyframes redGlow {
-    0%, 100% { border-color: rgba(139,0,0,0.2); }
-    50% { border-color: rgba(180,0,0,0.5); }
-  }
   @keyframes tickerScroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
@@ -74,12 +70,12 @@
   }
   .hero img {
     width: 100%; display: block;
-    filter: brightness(0.35) saturate(1.2) contrast(1.1);
+    filter: brightness(0.3) saturate(1.1) contrast(1.1);
   }
   .hero-ov {
     position: absolute; inset: 0; z-index: 2;
     background:
-      radial-gradient(ellipse at center bottom, rgba(139,0,0,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at center bottom, rgba(197,160,89,0.06) 0%, transparent 55%),
       linear-gradient(180deg, rgba(5,5,5,0.15) 0%, transparent 20%, transparent 35%, rgba(5,5,5,0.55) 58%, rgba(5,5,5,0.95) 80%, #050505 100%);
   }
   .hero-c {
@@ -89,15 +85,14 @@
   .hero-tag {
     display: inline-block;
     font-size: 9px; font-weight: 500;
-    letter-spacing: 5px; text-transform: uppercase; color: #fff;
-    background: linear-gradient(135deg, #8b0000, #a00000, #8b0000);
-    background-size: 300% 100%;
-    animation: fadeInUp 1s ease 0.3s both;
+    letter-spacing: 5px; text-transform: uppercase; color: #050505;
+    background: linear-gradient(135deg, #c5a059, #a8884a);
     padding: 7px 20px; margin-bottom: 22px;
+    animation: fadeInUp 1s ease 0.3s both;
   }
   .hero-t {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 50px; font-weight: 300; line-height: 1.05; color: #fff;
+    font-size: 52px; font-weight: 300; line-height: 1.05; color: #fff;
     margin-bottom: 14px; animation: fadeInUp 1s ease 0.5s both;
   }
   .hero-t em { font-style: italic; color: #d4af6a; font-weight: 300; }
@@ -109,23 +104,23 @@
 
   /* ── TICKER ── */
   .ticker {
-    background: linear-gradient(180deg, rgba(12,4,4,1) 0%, rgba(8,3,3,1) 100%);
-    border-top: 1px solid rgba(139,0,0,0.3);
-    border-bottom: 1px solid rgba(139,0,0,0.3);
+    background: linear-gradient(180deg, rgba(8,7,4,1) 0%, rgba(6,5,3,1) 100%);
+    border-top: 1px solid rgba(197,160,89,0.15);
+    border-bottom: 1px solid rgba(197,160,89,0.15);
     padding: 14px 0; overflow: hidden; white-space: nowrap;
   }
   .ticker-t {
-    display: inline-block; animation: tickerScroll 25s linear infinite;
+    display: inline-block; animation: tickerScroll 28s linear infinite;
   }
   .ticker-t span {
     display: inline-block;
     font-family: 'Cinzel', serif; font-size: 11px; font-weight: 400;
     letter-spacing: 4px; text-transform: uppercase;
-    color: rgba(255,255,255,0.35); padding: 0 14px;
+    color: rgba(255,255,255,0.3); padding: 0 14px;
   }
   .ticker-t span b { color: #d4af6a; font-weight: 600; }
   .ticker-sep {
-    display: inline-block; color: rgba(139,0,0,0.4);
+    display: inline-block; color: rgba(197,160,89,0.25);
     font-size: 6px; vertical-align: middle; padding: 0 4px;
   }
 
@@ -160,16 +155,49 @@
   .txt strong { color: rgba(255,255,255,0.9); font-weight: 400; }
   .txt em { font-style: italic; color: rgba(232,201,122,0.7); }
 
+  /* ── COMPARE BOX ── */
+  .compare {
+    margin: 0 30px;
+    display: table; width: calc(100% - 60px);
+  }
+  .compare-col {
+    display: table-cell; width: 50%; vertical-align: top;
+    padding: 36px 28px;
+  }
+  .compare-col:first-child {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-right: none;
+  }
+  .compare-col:last-child {
+    background: linear-gradient(165deg, rgba(18,16,10,1) 0%, rgba(12,10,6,1) 100%);
+    border: 1px solid rgba(197,160,89,0.18);
+    animation: borderGlow 5s ease infinite;
+  }
+  .compare-label {
+    font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
+    letter-spacing: 5px; text-transform: uppercase; margin-bottom: 22px;
+  }
+  .compare-col:first-child .compare-label { color: rgba(255,255,255,0.2); }
+  .compare-col:last-child .compare-label { color: #d4af6a; }
+  .compare-item {
+    font-family: 'Cormorant Garamond', serif; font-size: 16px;
+    font-weight: 300; line-height: 1.6; margin-bottom: 12px;
+  }
+  .compare-col:first-child .compare-item { color: rgba(255,255,255,0.2); }
+  .compare-col:last-child .compare-item { color: rgba(255,255,255,0.75); }
+  .compare-col:last-child .compare-item strong { color: #d4af6a; font-weight: 400; }
+
   /* ── CALLOUT BOX ── */
   .callout {
     margin: 0 30px;
-    background: linear-gradient(165deg, rgba(25,8,8,1) 0%, rgba(18,5,5,1) 50%, rgba(22,8,4,1) 100%);
-    border: 1px solid rgba(139,0,0,0.3);
-    animation: redGlow 5s ease infinite;
+    background: linear-gradient(165deg, rgba(14,12,7,1) 0%, rgba(10,9,5,1) 50%, rgba(16,13,6,1) 100%);
+    border: 1px solid rgba(197,160,89,0.15);
+    animation: borderGlow 5s ease infinite;
     overflow: hidden; position: relative;
   }
   .callout .cn { position: absolute; width: 24px; height: 24px; pointer-events: none; }
-  .callout .cn::before, .callout .cn::after { content: ''; position: absolute; background: rgba(139,0,0,0.4); }
+  .callout .cn::before, .callout .cn::after { content: ''; position: absolute; background: rgba(197,160,89,0.25); }
   .callout .cn::before { height: 1px; width: 100%; top: 0; left: 0; }
   .callout .cn::after { width: 1px; height: 100%; top: 0; left: 0; }
   .callout .cn1 { top: -1px; left: -1px; }
@@ -184,13 +212,13 @@
     position: absolute; top: 45%; left: 50%;
     transform: translate(-50%, -50%);
     width: 350px; height: 250px;
-    background: radial-gradient(ellipse, rgba(139,0,0,0.06) 0%, transparent 70%);
-    pointer-events: none;
+    background: radial-gradient(ellipse, rgba(197,160,89,0.04) 0%, transparent 70%);
+    pointer-events: none; animation: breathe 5s ease infinite;
   }
   .callout-label {
     font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
     letter-spacing: 6px; text-transform: uppercase;
-    color: rgba(220,60,60,0.7); margin-bottom: 20px; position: relative;
+    color: rgba(197,160,89,0.6); margin-bottom: 20px; position: relative;
   }
   .callout-text {
     font-family: 'Cormorant Garamond', Georgia, serif;
@@ -280,12 +308,6 @@
     font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
     letter-spacing: 6px; text-transform: uppercase;
     border: 1px solid rgba(197,160,89,0.3);
-    transition: all 0.5s ease;
-  }
-  .cta-btn:hover {
-    background: linear-gradient(135deg, #d4af6a, #c5a059);
-    letter-spacing: 8px;
-    box-shadow: 0 4px 40px rgba(197,160,89,0.2);
   }
   .cta-sub {
     text-align: center; padding: 12px 30px 0;
@@ -375,9 +397,8 @@
   }
   .footer a {
     font-size: 10px; color: rgba(255,255,255,0.1); text-decoration: none;
-    letter-spacing: 3px; transition: color 0.4s ease;
+    letter-spacing: 3px;
   }
-  .footer a:hover { color: #c5a059; }
 
   /* ── MOBILE ── */
   @media (max-width: 520px) {
@@ -386,6 +407,9 @@
     .txt { padding: 0 20px; }
     .txt p { font-size: 17px; line-height: 1.8; }
     .txt-head { font-size: 22px; letter-spacing: 2px; }
+    .compare { display: block; margin: 0 14px; width: calc(100% - 28px); }
+    .compare-col { display: block; width: 100%; padding: 28px 20px; border-right: none !important; border-bottom: none; }
+    .compare-col:first-child { border-bottom: none; }
     .callout { margin: 0 14px; }
     .callout-inner { padding: 28px 20px; }
     .callout-text { font-size: 18px; }
@@ -412,16 +436,48 @@
     <img src="https://ntrerrxudvgbjyscmdvh.supabase.co/storage/v1/object/public/media/promo/locktober-bg.png" alt="">
     <div class="hero-ov"></div>
     <div class="hero-c">
-      <div class="hero-tag">5 Spots Left</div>
-      <h1 class="hero-t">You Saw It.<br><em>You Did Nothing.</em></h1>
-      <p class="hero-sub">This is the last time I send this.</p>
+      <div class="hero-tag">Queen Karin · Locktober 2026</div>
+      <h1 class="hero-t">There Is Nothing<br><em>Like This.</em></h1>
+      <p class="hero-sub">Not in the scene. Not anywhere.</p>
     </div>
   </div>
 
   <!-- ── TICKER ── -->
   <div class="ticker">
     <div class="ticker-t">
-      <span><b>5</b> spots left</span><span class="ticker-sep">&diams;</span><span>price rises <b>Monday</b></span><span class="ticker-sep">&diams;</span><span>2 already <b>taken</b> since yesterday</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots left</span><span class="ticker-sep">&diams;</span><span>price rises <b>Monday</b></span><span class="ticker-sep">&diams;</span><span>2 already <b>taken</b> since yesterday</span><span class="ticker-sep">&diams;</span><span><b>31</b> days locked</span><span class="ticker-sep">&diams;</span><span>real <b>keyholder</b> app</span><span class="ticker-sep">&diams;</span>
+      <span>real <b>keyholder app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b></span><span class="ticker-sep">&diams;</span><span>Queen Karin <b>watches every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of actual control</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots remaining</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>until Monday</b></span><span class="ticker-sep">&diams;</span><span>real <b>keyholder app</b></span><span class="ticker-sep">&diams;</span><span>daily <b>personal tasks</b></span><span class="ticker-sep">&diams;</span><span>Queen Karin <b>watches every proof</b></span><span class="ticker-sep">&diams;</span><span><b>31 days</b> of actual control</span><span class="ticker-sep">&diams;</span><span><b>5</b> spots remaining</span><span class="ticker-sep">&diams;</span><span>&euro;111 <b>until Monday</b></span><span class="ticker-sep">&diams;</span>
+    </div>
+  </div>
+
+  <!-- ── SEPARATOR ── -->
+  <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── INTRO COPY ── -->
+  <div class="txt">
+    <span class="txt-head">The Rest of the Scene</span>
+    <span class="txt-subhead">versus what this actually is</span>
+  </div>
+
+  <!-- ── SEPARATOR (small) ── -->
+  <div class="sep" style="padding: 16px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
+
+  <!-- ── COMPARE ── -->
+  <div class="compare">
+    <div class="compare-col">
+      <div class="compare-label">Everything else</div>
+      <div class="compare-item">A hashtag and a padlock photo</div>
+      <div class="compare-item">A PDF "task list" from three years ago</div>
+      <div class="compare-item">Honor system. Self-reported. Forgettable.</div>
+      <div class="compare-item">One message if you are lucky</div>
+      <div class="compare-item">No app. No structure. No real control.</div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-label">This Program</div>
+      <div class="compare-item"><strong>Custom-built app.</strong> Your dashboard. Your lock. Real.</div>
+      <div class="compare-item"><strong>A new task from me personally. Every single day.</strong></div>
+      <div class="compare-item"><strong>You film proof. I watch it. I decide if it counts.</strong></div>
+      <div class="compare-item"><strong>Miss a task — I add days. No negotiation.</strong></div>
+      <div class="compare-item"><strong>31 days of actual control. Not a fantasy.</strong></div>
     </div>
   </div>
 
@@ -432,16 +488,17 @@
   <div class="callout">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
     <div class="callout-inner">
-      <div class="callout-label">I know you opened it.</div>
+      <div class="callout-label">What you actually get</div>
       <div class="callout-text">
-        You got the first email. You read it.
-        You thought about it. You told yourself
-        <strong>you would come back to it later.</strong><br><br>
-        You did not come back to it.<br><br>
-        Two spots are already gone.
-        <strong>Five remain.</strong>
-        Monday morning the price goes back to &euro;199
-        and I stop thinking about you entirely.
+        October 1st, your cage locks. I hold the key inside
+        <strong>an app I built myself</strong> — your profile, your score,
+        your history, all of it tracked.<br><br>
+        Every morning a new task appears. I filmed it for you personally.
+        You complete it. You upload proof.
+        <strong>I watch it and decide whether you earned the day.</strong><br><br>
+        There is no app like this. There is no keyholder doing this.
+        This is the only place where Locktober is
+        <strong>actually real.</strong>
       </div>
     </div>
   </div>
@@ -449,30 +506,11 @@
   <!-- ── SEPARATOR ── -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
 
-  <!-- ── BODY COPY ── -->
-  <div class="txt">
-    <span class="txt-head">One more time.</span>
-    <span class="txt-subhead">because you clearly need it spelled out.</span>
-    <p>
-      October 1st, your cage locks.<br>
-      I hold the key inside a <strong>real keyholder app</strong> I built myself.<br><br>
-      Every morning, a new task appears in your dashboard.
-      You film it. You submit it. I watch it personally and decide
-      whether you deserve to continue.<br><br>
-      Miss a task, I add days. Submit something lazy, rejected.
-      Skip entirely, I decide if you are even worth keeping.<br><br>
-      <strong>31 days. No breaks. No early release. No mercy.</strong><br><br>
-      This is not a fantasy. This is the program.
-      The only question is whether you are going to keep
-      <em>pretending</em> you will do it next year.
-    </p>
-  </div>
-
   <!-- ── CTA 1 ── -->
   <div class="cta-wrap">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Take the Spot</a>
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">I Want the Real Thing</a>
   </div>
-  <div class="cta-sub">5 spots. &euro;111 until Monday. Then it is gone.</div>
+  <div class="cta-sub">5 spots. &euro;111 until Monday. Starts Oct 1st.</div>
 
   <!-- ── SEPARATOR ── -->
   <div class="sep"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
@@ -481,21 +519,21 @@
   <div class="price-card">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
     <div class="price-inner">
-      <div class="price-tag">Last Chance Price</div>
+      <div class="price-tag">Locktober 2026</div>
       <div class="price-row">
         <span class="price-cur">&euro;</span>
         <span class="price-num">111</span>
         <span class="price-old">&euro;199</span>
       </div>
-      <div class="price-for">31 days of real control. Daily tasks. Personal review. Full app access.</div>
-      <div class="price-save">Save &euro;88</div>
+      <div class="price-for">31 days. Daily personal tasks. Proof review. Custom app. Real control.</div>
+      <div class="price-save">Save &euro;88 — This Weekend Only</div>
       <div class="price-note">Monday morning this becomes &euro;199. No exceptions.</div>
     </div>
   </div>
 
   <!-- ── CTA 2 ── -->
   <div class="cta-wrap">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Claim Your Spot Now</a>
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Secure Your Spot</a>
   </div>
   <div class="cta-sub">&euro;111 this weekend only. &euro;199 after Monday.</div>
 
@@ -506,7 +544,7 @@
   <div class="spots">
     <div class="spots-n">5</div>
     <div class="spots-l">Spots Remaining</div>
-    <div class="spots-p">Two went since yesterday. I am not holding yours.<br>When they are gone, they are gone.</div>
+    <div class="spots-p">I keep this small on purpose. Small enough that I can give<br>every single one of you my actual attention.</div>
   </div>
 
   <!-- ── SEPARATOR ── -->
@@ -516,29 +554,26 @@
   <div class="quote-box">
     <div class="cn cn1"></div><div class="cn cn2"></div><div class="cn cn3"></div><div class="cn cn4"></div>
     <div class="quote-inner">
-      <div class="quote-label">Last thing.</div>
+      <div class="quote-label">From Queen Karin</div>
       <div class="quote-text">
-        I do not chase. I do not beg. I do not send
-        a third email.<br><br>
-        If you are still reading this and you have not
-        bought your spot, you already know what
-        is going to happen. Monday comes.
-        The price goes up. The spots fill.
-        And you spend October exactly the way
-        you spent every other October.<br><br>
-        <strong>Or you stop hesitating and you buy the spot right now.</strong><br><br>
-        It is a simple choice.
-        You have made it complicated enough already.
+        I built this app from scratch because nothing
+        that existed was good enough.<br><br>
+        Every task video is filmed by me, for this month,
+        for these five people. Not recycled content.
+        Not a clip store. Not a chatbot.<br><br>
+        <strong>You will be locked. I will be watching.
+        That is the only promise I make —
+        and I keep every single one.</strong>
       </div>
-      <div class="quote-sig">Karin</div>
+      <div class="quote-sig">Queen Karin</div>
     </div>
   </div>
 
   <!-- ── FINAL CTA ── -->
   <div class="cta-wrap" style="padding-top: 40px;">
-    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Give Me Your October</a>
+    <a href="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c" class="cta-btn" target="_blank">Join the Only Real Locktober</a>
   </div>
-  <div class="cta-sub">5 spots. &euro;111 until Monday. Starts Oct 1st.</div>
+  <div class="cta-sub">5 spots. &euro;111 until Monday. October 1st.</div>
 
   <!-- ── SEPARATOR ── -->
   <div class="sep" style="padding: 40px 0;"><div class="sep-l"></div><div class="sep-d"></div><div class="sep-l"></div></div>
