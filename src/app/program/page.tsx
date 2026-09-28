@@ -869,6 +869,17 @@ export default function ProgramPage() {
                                     .subscribe();
                                 (window as any)._programDailySub = notifySub;
                             }
+                        } else {
+                            // Session not active — show release overlay or redirect to profile
+                            const relStatus = vd.session?.status;
+                            if (relStatus === 'released_early' || relStatus === 'completed' || relStatus === 'denied') {
+                                try { localStorage.removeItem('program_cooldowns'); } catch {}
+                                setReleaseOverlay({ reason: vd.session.release_reason || '' });
+                            } else {
+                                // No active session at all — go back to profile
+                                window.location.href = '/profile';
+                                return;
+                            }
                         }
 
                         // ALL state set — dismiss splash immediately (no artificial delay)
@@ -1333,6 +1344,9 @@ export default function ProgramPage() {
             </button>
         </div>
     );
+
+    // Null guard — if session was released and data is gone, don't crash the render
+    if (!programData) return <div style={{ height: '100dvh', width: '100vw', background: '#050508' }} />;
 
     // ── Pressure: actual percentage based on days elapsed vs total ──
     const pressurePct = Math.min(100, Math.round((daysIn / Math.max(lockDays, 1)) * 100));
