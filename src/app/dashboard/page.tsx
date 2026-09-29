@@ -1562,7 +1562,19 @@ export default function DashboardPage() {
                                     <div style={{ flex: 2, fontFamily: 'monospace', fontSize: '0.75rem', color: '#c5a059' }}>{log.member_id || 'unknown'}</div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{log.payment_type?.toUpperCase()}</div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: '#c5a059', fontWeight: 700 }}>€{log.amount}</div>
-                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>{log.tier_id || log.currency_id}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>{log.tier_id || '—'}</div>
+                                    <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(197,160,89,0.7)', letterSpacing: 1, fontWeight: 600 }}>
+                                        {(() => {
+                                            const cid = (log.currency_id || '').toLowerCase();
+                                            if (cid === 'throne') return 'THRONE';
+                                            if (cid === 'youpay') return 'YOUPAY';
+                                            if (cid === 'paypal') return 'PAYPAL';
+                                            if (cid === 'stripe') return 'STRIPE';
+                                            if (['btc','eth','usdt','usdc','ltc','trx','bnb','sol','xmr'].includes(cid)) return `CRYPTO · ${cid.toUpperCase()}`;
+                                            if (!isNaN(Number(cid)) && cid !== '') return 'PASSIMPAY';
+                                            return cid.toUpperCase() || '—';
+                                        })()}
+                                    </div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)' }}>{new Date(log.created_at).toLocaleString()}</div>
                                 </div>
                             ))}
