@@ -63,11 +63,11 @@ body.desktop-preview #mobBottomNav { display: none !important; }
         left: 0 !important;
         overflow: hidden !important;
     }
-    /* Profile bottom nav — re-show it inside the centered mobile column */
+    /* Profile bottom nav — re-show it, centered to match the mobile column */
     body:not(.desktop-preview) #mobBottomNav {
         display: flex !important;
         width: 430px !important;
-        left: 0 !important;
+        left: calc(50vw - 215px) !important;
     }
     /* Chat overlay is outside MOBILE_APP — needs its own centering */
     body:not(.desktop-preview) #mobChatOverlay {
