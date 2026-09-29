@@ -81,35 +81,27 @@
     border-left: 1px solid rgba(197, 160, 89, 0.1);
     order: 2;
     position: relative;
-    background: linear-gradient(175deg, #0d0c0b 0%, #090607 100%);
+    background: linear-gradient(170deg, #0a0608 0%, #06040a 50%, #080508 100%);
 }
 
 #reviewNormalContent {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto;
+    flex: 1;
     overflow-y: auto;
     box-sizing: border-box;
 }
 
-/* Task description text */
+/* Task description text — now styled inline, reset base */
 #mText {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    color: rgba(255,255,255,0.72);
-    line-height: 1.65;
-    letter-spacing: 0.2px;
+    font-size: 0.88rem;
+    color: rgba(220,205,175,0.65);
+    line-height: 1.6;
 }
 
-/* Small cinematic label above the text */
 #mText::before {
-    content: 'TASK DIRECTIVE';
-    display: block;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.42rem;
-    color: rgba(197,160,89,0.4);
-    letter-spacing: 3px;
-    margin-bottom: 8px;
+    content: none;
 }
 
 #reviewRewardOverlay {
@@ -922,51 +914,76 @@
 
 .reward-tier-btn {
     flex: 1;
-    background: rgba(4, 3, 1, 0.7);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
+    height: 100px;
+    background: rgba(6, 4, 8, 0.95);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-top: 2px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    gap: 6px;
+}
+
+.reward-tier-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    transition: background 0.2s;
 }
 
 .reward-tier-btn:hover {
-    border-color: rgba(197,160,89,0.35);
-    background: rgba(197,160,89,0.06);
+    border-color: rgba(197,160,89,0.25);
+    background: rgba(197,160,89,0.05);
+}
+
+.reward-tier-btn:hover::before {
+    background: rgba(197,160,89,0.4);
 }
 
 .reward-tier-btn.selected {
-    border-color: rgba(197,160,89,0.6);
-    background: linear-gradient(160deg, rgba(197,160,89,0.14) 0%, rgba(140,105,45,0.08) 100%);
-    box-shadow: 0 0 28px rgba(197,160,89,0.15), inset 0 1px 0 rgba(255,220,100,0.1);
+    border-color: rgba(197,160,89,0.45);
+    background: linear-gradient(180deg, rgba(197,160,89,0.1) 0%, rgba(100,72,20,0.08) 100%);
+    box-shadow: 0 0 40px rgba(197,160,89,0.12), 0 0 0 1px rgba(197,160,89,0.15);
+}
+
+.reward-tier-btn.selected::before {
+    background: linear-gradient(90deg, transparent, #c5a059, transparent);
 }
 
 .rt-pts {
     font-family: 'Cinzel', serif;
     font-weight: 700;
-    font-size: 1.6rem;
-    color: rgba(255,255,255,0.35);
+    font-size: 2rem;
+    color: rgba(255,255,255,0.2);
     line-height: 1;
+    transition: all 0.2s;
 }
 
 .rt-lbl {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
-    font-size: 0.38rem;
-    color: rgba(255,255,255,0.25);
-    letter-spacing: 3px;
-    margin-top: 6px;
+    font-size: 0.34rem;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    transition: all 0.2s;
 }
 
 .reward-tier-btn.selected .rt-pts {
     color: #c5a059;
-    text-shadow: 0 0 20px rgba(197,160,89,0.5);
+    text-shadow: 0 0 30px rgba(197,160,89,0.6), 0 0 60px rgba(197,160,89,0.2);
 }
 
 .reward-tier-btn.selected .rt-lbl {
-    color: rgba(197,160,89,0.7);
+    color: rgba(197,160,89,0.65);
 }
 
 /* ── LUXURY REVIEW PANEL ─────────────────────────────────────────────── */
