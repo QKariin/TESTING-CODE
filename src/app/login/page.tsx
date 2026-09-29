@@ -17,6 +17,13 @@ export default function LoginPage() {
         const redirect = params.get('redirect');
         if (redirect) localStorage.setItem('post_login_redirect', redirect);
 
+        const urlError = params.get('error');
+        if (urlError === 'session_lost') {
+            setError('Twitter opened in its own browser — please try again directly in Chrome or Safari.');
+        } else if (urlError === 'auth_failed') {
+            setError('Login failed. Please try again.');
+        }
+
         setMounted(true);
 
         const supabase = createClient();
@@ -49,7 +56,7 @@ export default function LoginPage() {
         const supabase = createClient();
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'twitter',
-            options: { redirectTo: `${window.location.origin}/auth/callback`, scopes: 'users.read tweet.read' }
+            options: { redirectTo: `${window.location.origin}/auth/callback` }
         });
         if (error) { setError(error.message); setLoading(false); }
     };

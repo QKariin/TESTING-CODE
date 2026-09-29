@@ -36,9 +36,20 @@ export async function GET(request: NextRequest) {
         }
     );
 
-    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    let data: any = null;
+    let exchangeError: any = null;
+    try {
+        const result = await supabase.auth.exchangeCodeForSession(code);
+        data = result.data;
+        exchangeError = result.error;
+    } catch (err: any) {
+        // Thrown when PKCE code_verifier cookie is missing (browser context switched —
+        // e.g. user opened login in Chrome but Twitter intercepted and opened its in-app browser)
+        console.error('[auth/callback] exchangeCodeForSession threw:', err?.message);
+        return NextResponse.redirect(`${origin}/login?error=session_lost`);
+    }
 
-    if (exchangeError || !data.user) {
+    if (exchangeError || !data?.user) {
         return NextResponse.redirect(`${origin}/login?error=auth_failed`);
     }
 
