@@ -50,17 +50,29 @@ body.desktop-preview #DESKTOP_APP { display: flex !important; }
 body.desktop-preview #MOBILE_APP { display: none !important; }
 body.desktop-preview #mobBottomNav { display: none !important; }
 
-/* On desktop viewports, center the mobile layout in a phone-width column */
+/* On desktop viewports, center the mobile layout in a phone-width column.
+   transform on #MOBILE_APP makes it the containing block for position:fixed children. */
 @media screen and (min-width: 769px) {
     body:not(.desktop-preview) #MOBILE_APP {
+        transform: translateX(calc(50vw - 215px)) !important;
         width: 430px !important;
-        left: calc(50vw - 215px) !important;
-        right: auto !important;
+        left: 0 !important;
+        overflow: hidden !important;
     }
+    /* viewMobileHome has inline width:100vw — !important overrides inline styles */
+    body:not(.desktop-preview) #viewMobileHome {
+        width: 430px !important;
+        max-width: 430px !important;
+    }
+    /* mobBottomNav is inside MOBILE_APP — left:0 is relative to transformed parent */
     body:not(.desktop-preview) #mobBottomNav {
         width: 430px !important;
+        left: 0 !important;
+    }
+    /* Chat overlay is outside MOBILE_APP — needs its own centering */
+    body:not(.desktop-preview) #mobChatOverlay {
+        width: 430px !important;
         left: calc(50vw - 215px) !important;
-        right: auto !important;
     }
 }
 
