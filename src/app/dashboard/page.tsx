@@ -1559,7 +1559,10 @@ export default function DashboardPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {paymentLogs.map((log, i) => (
                                 <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.1)', borderRadius: 8, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 20 }}>
-                                    <div style={{ flex: 2, fontFamily: 'monospace', fontSize: '0.75rem', color: '#c5a059' }}>{log.member_id || 'unknown'}</div>
+                                    <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {log.member_name && <div style={{ fontFamily: "'Rajdhani',sans-serif", fontSize: '0.8rem', color: '#fff', fontWeight: 600, letterSpacing: 1 }}>{log.member_name}</div>}
+                                        <div style={{ fontFamily: 'monospace', fontSize: '0.65rem', color: log.member_name ? 'rgba(197,160,89,0.45)' : '#c5a059' }}>{log.member_id || 'unknown'}</div>
+                                    </div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{log.payment_type?.toUpperCase()}</div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.7rem', color: '#c5a059', fontWeight: 700 }}>€{log.amount}</div>
                                     <div style={{ flex: 1, fontFamily: "'Rajdhani',sans-serif", fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>{log.tier_id || '—'}</div>
