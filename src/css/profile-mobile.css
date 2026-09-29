@@ -54,15 +54,13 @@ body.desktop-preview #mobBottomNav { display: none !important; }
 @media screen and (min-width: 769px) {
     body:not(.desktop-preview) #MOBILE_APP {
         width: 430px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        border-left: 1px solid rgba(255,255,255,0.04);
-        border-right: 1px solid rgba(255,255,255,0.04);
+        left: calc(50vw - 215px) !important;
+        right: auto !important;
     }
     body:not(.desktop-preview) #mobBottomNav {
         width: 430px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: calc(50vw - 215px) !important;
+        right: auto !important;
     }
 }
 
