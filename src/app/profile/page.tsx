@@ -1668,7 +1668,7 @@ export default function ProfilePage() {
             </div>
 
             <div id="MOBILE_APP" style={{ display: 'none' }}>
-                <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', maxWidth: '100vw', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
+                <div id="viewMobileHome" style={{ position: 'fixed', top: 0, left: 0, width: '100%', maxWidth: '100%', height: '100dvh', overflowY: 'auto', overflowX: 'hidden', display: 'block', padding: 0, zIndex: 1, background: 'transparent' }}>
                     <div className="mob-hud-row">
                         <div className="hud-circle-wrap" onClick={() => (window as any).openLobby()}>
                             <div className="hud-circle slave">
