@@ -148,12 +148,19 @@ export function discordChallengeVerified(name: string, taskNum: string, points: 
     });
 }
 
-export function discordRoutineSubmitted(name: string) {
+export function discordRoutineSubmitted(name: string, streak: number = 0, totalDays: number = 0, rank: string = '') {
+    const streakLabel = streak >= 7 ? `🔥 ${streak}-day streak` : streak > 1 ? `⚡ ${streak} days in a row` : '✦ Day 1';
+    const line2 = `Day ${totalDays} total · ${streakLabel}`;
     return sendDiscordEmbed({
         title: 'DAILY ROUTINE',
-        description: `**${name}** submitted their daily routine\n\n[Start your devotion](${APP_LINK})`,
+        description: `**${name}** submitted their daily routine${rank ? ` · *${rank}*` : ''}\n${streakLabel}\n\n[Review in dashboard](${APP_LINK}/dashboard)`,
         color: 4853326,
-        image: { url: cardUrl('routine', 'DAILY ROUTINE', `${name} submitted their daily routine`) },
+        fields: [
+            { name: 'Streak', value: `${streak} day${streak !== 1 ? 's' : ''}`, inline: true },
+            { name: 'Total Days', value: `${totalDays}`, inline: true },
+            ...(rank ? [{ name: 'Rank', value: rank, inline: true }] : []),
+        ],
+        image: { url: cardUrl('routine', 'DAILY ROUTINE', `${name} completed their daily ritual`, line2) },
     });
 }
 

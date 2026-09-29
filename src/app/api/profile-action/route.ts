@@ -121,7 +121,15 @@ export async function POST(req: Request) {
                         }).catch(() => {});
                     }
 
-                    if (payload.isRoutine) discordRoutineSubmitted(name).catch(() => {});
+                    if (payload.isRoutine) {
+                        // Fetch streak data for richer Discord card
+                        const email = (profile?.member_id || memberId || '').toLowerCase();
+                        const { data: ur } = await supabaseAdmin.from('user_routines').select('current_streak, history').eq('member_id', email).maybeSingle();
+                        const streak = ur?.current_streak || 1;
+                        const totalDays = (ur?.history || []).filter((e: any) => e.status === 'approve' || e.status === 'approved').length + 1;
+                        const rank = profile?.hierarchy || '';
+                        discordRoutineSubmitted(name, streak, totalDays, rank).catch(() => {});
+                    }
                 } catch (_) {}
                 break;
 
