@@ -580,7 +580,7 @@ export default function HomeClient({ initialReviews = [] }: { initialReviews?: R
                     }}>
                         QUEEN KARIN
                     </div>
-                    <a href="/tribute" style={{
+                    <a href="/login" style={{
                         fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 600,
                         color: 'rgba(197,160,89,0.8)', letterSpacing: '5px', textDecoration: 'none',
                         padding: '6px 22px',
