@@ -50,6 +50,22 @@ body.desktop-preview #DESKTOP_APP { display: flex !important; }
 body.desktop-preview #MOBILE_APP { display: none !important; }
 body.desktop-preview #mobBottomNav { display: none !important; }
 
+/* On desktop viewports, center the mobile layout in a phone-width column */
+@media screen and (min-width: 769px) {
+    body:not(.desktop-preview) #MOBILE_APP {
+        width: 430px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        border-left: 1px solid rgba(255,255,255,0.04);
+        border-right: 1px solid rgba(255,255,255,0.04);
+    }
+    body:not(.desktop-preview) #mobBottomNav {
+        width: 430px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+}
+
 @media screen and (max-width: 9999px) {
     /* ── Prevent iOS long-press popup on all images and background-image elements ── */
     #MOBILE_APP img,
