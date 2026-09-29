@@ -191,11 +191,15 @@ export default function ProfilePage() {
     }, [profile]);
 
     // Track mobile viewport
+    // ?layout=desktop forces desktop preview (for development only — to switch back, remove this block)
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768);
-        check();
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
+        const isDesktopPreview = new URLSearchParams(window.location.search).get('layout') === 'desktop';
+        if (isDesktopPreview) {
+            document.body.classList.add('desktop-preview');
+            setIsMobile(false);
+        } else {
+            setIsMobile(true); // always mobile unless ?layout=desktop
+        }
     }, []);
 
     // Discreet MediaSession — override what shows on CarPlay/Bluetooth/lock screen for ALL audio/video

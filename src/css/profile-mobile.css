@@ -41,13 +41,16 @@
 }
 
 /* Nav hidden on desktop - shown only on mobile */
-@media screen and (min-width: 769px) {
-    #mobBottomNav {
-        display: none;
-    }
-}
+/* @media screen and (min-width: 769px) — disabled while mobile layout is shown for all viewports */
 
-@media screen and (max-width: 768px) {
+/* Always show mobile layout — to revert: change max-width back to 768px and restore the min-width block above */
+
+/* Desktop preview mode — accessed via ?layout=desktop */
+body.desktop-preview #DESKTOP_APP { display: flex !important; }
+body.desktop-preview #MOBILE_APP { display: none !important; }
+body.desktop-preview #mobBottomNav { display: none !important; }
+
+@media screen and (max-width: 9999px) {
     /* ── Prevent iOS long-press popup on all images and background-image elements ── */
     #MOBILE_APP img,
     #MOBILE_APP img * {
