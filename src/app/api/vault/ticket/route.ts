@@ -22,11 +22,15 @@ export async function POST(req: NextRequest) {
     }
 
     const admin = getAdmin();
-    const { data: profile } = await admin
-        .from('profiles')
-        .select('ID, parameters')
-        .ilike('member_id', memberId)
-        .maybeSingle();
+
+    // Try email match first, then UUID fallback
+    let profile: any = null;
+    const r1 = await admin.from('profiles').select('ID, parameters').ilike('member_id', memberId).maybeSingle();
+    profile = r1.data;
+    if (!profile) {
+        const r2 = await admin.from('profiles').select('ID, parameters').eq('ID', memberId).maybeSingle();
+        profile = r2.data;
+    }
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
@@ -50,11 +54,13 @@ export async function GET(req: NextRequest) {
     if (!memberId) return NextResponse.json({ error: 'Missing memberId' }, { status: 400 });
 
     const admin = getAdmin();
-    const { data: profile } = await admin
-        .from('profiles')
-        .select('parameters')
-        .ilike('member_id', memberId)
-        .maybeSingle();
+    let profileData: any = null;
+    const r1 = await admin.from('profiles').select('parameters').ilike('member_id', memberId).maybeSingle();
+    profileData = r1.data;
+    if (!profileData) {
+        const r2 = await admin.from('profiles').select('parameters').eq('ID', memberId).maybeSingle();
+        profileData = r2.data;
+    }
 
-    return NextResponse.json({ hasTicket: !!(profile?.parameters?.locktober_ticket) });
+    return NextResponse.json({ hasTicket: !!(profileData?.parameters?.locktober_ticket) });
 }
