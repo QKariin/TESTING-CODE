@@ -144,8 +144,8 @@
     cursor: pointer;
     border-radius: 5px;
     letter-spacing: 3px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 0.65rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
     transition: all 0.22s ease;
     position: relative;
     overflow: hidden;
@@ -371,7 +371,7 @@
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(197, 160, 89, 0.3);
     color: var(--gold);
-    font-family: 'Orbitron';
+    font-family: 'Rajdhani', sans-serif;
     padding: 8px 10px;
     text-align: left;
     border-radius: 4px;
@@ -1069,7 +1069,7 @@
     flex: 1;
     padding: 14px 10px;
     border-radius: 5px;
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Cinzel', serif;
     font-size: 0.6rem;
     font-weight: 900;
     letter-spacing: 2px;
