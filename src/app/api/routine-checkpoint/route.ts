@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createClient } from '@/utils/supabase/server';
 import { findProfile } from '@/lib/lookup';
+import { discordRoutineSubmitted } from '@/lib/discord';
 
 async function getCallerEmail(): Promise<string | null> {
     try {
@@ -110,6 +111,18 @@ export async function POST(request: NextRequest) {
             await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', prof.ID);
         }
     } catch (_) { }
+
+    // Discord notification
+    try {
+        const { data: nameRow } = await supabaseAdmin.from('profiles').select('name, hierarchy').ilike('member_id', email).maybeSingle();
+        const name = nameRow?.name || 'A subject';
+        const rank = nameRow?.hierarchy || '';
+        const { data: ur } = await supabaseAdmin.from('user_routines').select('current_streak, history').eq('member_id', email).maybeSingle();
+        const streak = ur?.current_streak || 1;
+        const hist = Array.isArray(ur?.history) ? ur.history : [];
+        const totalDays = hist.filter((e: any) => e.status === 'approve' || e.status === 'approved').length;
+        discordRoutineSubmitted(name, streak, totalDays, rank).catch(() => {});
+    } catch (_) {}
 
     return NextResponse.json({ success: true });
 }
