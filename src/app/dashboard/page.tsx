@@ -366,14 +366,21 @@ function LeadsInlinePanel() {
     const [syncing, setSyncing] = useState(false);
     const [syncMsg, setSyncMsg] = useState('');
 
-    useEffect(() => {
+    const fetchLeads = () => {
         fetch('/api/leads').then(r => r.json()).then(d => {
             if (d.success) setLeads(d.leads);
         }).catch(() => {}).finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchLeads();
         // Auto-sync leads to OneSignal on load
         fetch('/api/push/sync-leads', { method: 'POST' }).then(r => r.json()).then(d => {
             if (d.synced > 0) setSyncMsg(`${d.synced} synced`);
         }).catch(() => {});
+        // Refresh every 30s so new knockers appear without reloading
+        const iv = setInterval(fetchLeads, 30000);
+        return () => clearInterval(iv);
     }, []);
 
     const syncLeads = async () => {

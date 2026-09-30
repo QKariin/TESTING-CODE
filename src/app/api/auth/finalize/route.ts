@@ -29,21 +29,26 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         if (profile) {
+            console.log('[auth/finalize] existing member:', email);
             return NextResponse.json({ hasProfile: true });
         }
 
         // No profile — log as lead
+        console.log('[auth/finalize] no profile found, logging lead:', email, 'provider:', provider);
         const now = new Date().toISOString();
-        const { data: existing } = await admin.from('leads').select('id, attempts').eq('email', email).maybeSingle();
+        const { data: existing, error: selectErr } = await admin.from('leads').select('id, attempts').eq('email', email).maybeSingle();
+        if (selectErr) console.error('[auth/finalize] leads select error:', selectErr.message);
         if (existing) {
-            await admin.from('leads').update({ last_seen: now, attempts: (existing.attempts || 1) + 1 }).eq('email', email);
+            const { error: updErr } = await admin.from('leads').update({ last_seen: now, attempts: (existing.attempts || 1) + 1 }).eq('email', email);
+            if (updErr) console.error('[auth/finalize] leads update error:', updErr.message);
         } else {
-            await admin.from('leads').insert({ email, provider: provider || 'unknown', first_seen: now, last_seen: now, attempts: 1 });
+            const { error: insErr } = await admin.from('leads').insert({ email, provider: provider || 'unknown', first_seen: now, last_seen: now, attempts: 1 });
+            if (insErr) console.error('[auth/finalize] leads insert error:', insErr.message);
         }
 
         return NextResponse.json({ hasProfile: false });
     } catch (err: any) {
-        console.error('[auth/finalize]', err.message);
+        console.error('[auth/finalize] CATCH:', err.message, 'email:', err._email);
         return NextResponse.json({ hasProfile: false });
     }
 }
