@@ -195,12 +195,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
         : '';
     if (headerEl) {
         headerEl.innerHTML = `
-            <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:5px;text-transform:uppercase;margin-bottom:10px;">Subject</div>
-            <div style="display:flex;align-items:center;gap:14px;">
-                <div style="width:44px;height:44px;border-radius:50%;border:1px solid rgba(197,160,89,0.25);background:rgba(197,160,89,0.04);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:1.1rem;color:rgba(197,160,89,0.7);flex-shrink:0;">${avatarInitial}</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(197,160,89,0.18);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.5);flex-shrink:0;">${avatarInitial}</div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-family:Cinzel,serif;font-size:1rem;color:rgba(240,228,200,0.92);font-weight:600;letter-spacing:3px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${memberDisplay}</div>
-                    ${statusBadge ? `<div style="margin-top:5px;">${statusBadge}</div>` : ''}
+                    <div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(242,230,205,0.92);font-weight:600;letter-spacing:3px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${memberDisplay}</div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:4px;margin-top:3px;display:flex;align-items:center;gap:8px;">SUBJECT${statusBadge ? `&nbsp;·&nbsp;${statusBadge}` : ''}</div>
                 </div>
             </div>`;
     }
@@ -210,11 +209,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const _seed = _d.getFullYear() * 10000 + (_d.getMonth() + 1) * 100 + _d.getDate();
     const _dailyCode = String((_seed * 7 + 1337) % 9000 + 1000);
 
-    textEl.innerHTML = `<div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.3);letter-spacing:5px;text-transform:uppercase;margin-bottom:10px;">Task Directive</div>`
-        + `<div style="font-family:Rajdhani,sans-serif;font-size:1rem;color:rgba(235,220,190,0.88);line-height:1.65;margin-bottom:16px;">${clean(taskText || 'No description provided.')}</div>`
-        + `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(197,160,89,0.04);border:1px solid rgba(197,160,89,0.14);border-radius:6px;">
-            <span style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.35);letter-spacing:4px;text-transform:uppercase;">Daily Code</span>
-            <span style="font-family:Cinzel,serif;font-size:1.1rem;font-weight:700;color:rgba(197,160,89,0.8);letter-spacing:8px;">${_dailyCode}</span>
+    textEl.innerHTML = `<div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.25);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;">Task</div>`
+        + `<div style="font-family:Rajdhani,sans-serif;font-size:1.05rem;color:rgba(238,224,196,0.88);line-height:1.72;margin-bottom:16px;">${clean(taskText || 'No description provided.')}</div>`
+        + `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:4px;text-transform:uppercase;">Code</span>
+            <span style="font-family:Cinzel,serif;font-size:1rem;font-weight:700;color:rgba(197,160,89,0.65);letter-spacing:10px;">${_dailyCode}</span>
         </div>`;
 
     // Clear note from previous session
@@ -234,44 +233,44 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
         setSelectedStickerId(null);
 
         actionsEl.innerHTML = `
-            <div style="width:100%;display:flex;flex-direction:column;gap:0;">
+            <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
 
-                <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);">Verdict</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.25);letter-spacing:4px;text-transform:uppercase;">Merit</div>
 
-                <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50');var d=document.getElementById('bonusDisp');if(d)d.textContent='50';" style="flex:1;padding:14px 6px 12px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <div class="rt-pts" style="font-family:Cinzel,serif;font-size:1.8rem;font-weight:700;letter-spacing:-1px;line-height:1;">50</div>
-                        <div class="rt-lbl" style="font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:2px;margin-top:6px;opacity:0.55;">STANDARD</div>
+                <div style="display:flex;gap:2px;background:rgba(255,255,255,0.03);border-radius:8px;padding:3px;">
+                    <div id="tier_50" class="reward-tier-btn selected" onclick="window.setRewardTier(50,'tier_50');var d=document.getElementById('bonusDisp');if(d)d.textContent='50';" style="flex:1;border-radius:6px;text-align:center;">
+                        <div class="rt-pts">50</div>
+                        <div class="rt-lbl">STANDARD</div>
                     </div>
-                    <div id="tier_70" class="reward-tier-btn" onclick="window.setRewardTier(70,'tier_70');var d=document.getElementById('bonusDisp');if(d)d.textContent='70';" style="flex:1;padding:14px 6px 12px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <div class="rt-pts" style="font-family:Cinzel,serif;font-size:1.8rem;font-weight:700;letter-spacing:-1px;line-height:1;">70</div>
-                        <div class="rt-lbl" style="font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:2px;margin-top:6px;opacity:0.55;">IMPRESSIVE</div>
+                    <div id="tier_70" class="reward-tier-btn" onclick="window.setRewardTier(70,'tier_70');var d=document.getElementById('bonusDisp');if(d)d.textContent='70';" style="flex:1;border-radius:6px;text-align:center;">
+                        <div class="rt-pts">70</div>
+                        <div class="rt-lbl">IMPRESSIVE</div>
                     </div>
-                    <div id="tier_100" class="reward-tier-btn" onclick="window.setRewardTier(100,'tier_100');var d=document.getElementById('bonusDisp');if(d)d.textContent='100';" style="flex:1;padding:14px 6px 12px;border-radius:8px;text-align:center;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <div class="rt-pts" style="font-family:Cinzel,serif;font-size:1.8rem;font-weight:700;letter-spacing:-1px;line-height:1;">100</div>
-                        <div class="rt-lbl" style="font-family:Rajdhani,sans-serif;font-size:0.6rem;letter-spacing:2px;margin-top:6px;opacity:0.55;">EXCELLENT</div>
+                    <div id="tier_100" class="reward-tier-btn" onclick="window.setRewardTier(100,'tier_100');var d=document.getElementById('bonusDisp');if(d)d.textContent='100';" style="flex:1;border-radius:6px;text-align:center;">
+                        <div class="rt-pts">100</div>
+                        <div class="rt-lbl">EXCELLENT</div>
                     </div>
                 </div>
 
-                <div style="display:flex;gap:10px;margin-bottom:12px;align-items:stretch;">
-                    <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:5px;">
-                        <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.3);letter-spacing:3px;text-transform:uppercase;">Points</div>
-                        <div style="display:flex;align-items:center;border:1px solid rgba(255,255,255,0.08);border-radius:8px;overflow:hidden;background:rgba(10,10,10,0.9);height:44px;">
-                            <button onclick="var i=document.getElementById('rewardBonus');var d=document.getElementById('bonusDisp');if(i){var v=Math.max(0,parseInt(i.value||'50')-5);i.value=String(v);if(d)d.textContent=String(v);}" style="width:34px;height:44px;background:transparent;border:none;border-right:1px solid rgba(255,255,255,0.06);color:rgba(197,160,89,0.45);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;">&#x2212;</button>
-                            <div id="bonusDisp" style="width:46px;text-align:center;font-family:Cinzel,serif;font-size:1rem;color:rgba(197,160,89,0.85);font-weight:700;line-height:1;">50</div>
-                            <button onclick="var i=document.getElementById('rewardBonus');var d=document.getElementById('bonusDisp');if(i){var v=Math.min(999,parseInt(i.value||'50')+5);i.value=String(v);if(d)d.textContent=String(v);}" style="width:34px;height:44px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.06);color:rgba(197,160,89,0.45);font-size:1.1rem;cursor:pointer;line-height:1;padding:0;">+</button>
+                <div style="display:flex;gap:8px;align-items:stretch;">
+                    <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;">
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.25);letter-spacing:3px;text-transform:uppercase;">Pts</div>
+                        <div style="display:flex;align-items:center;border:1px solid rgba(255,255,255,0.07);border-radius:7px;overflow:hidden;background:rgba(6,6,6,0.9);height:42px;">
+                            <button onclick="var i=document.getElementById('rewardBonus');var d=document.getElementById('bonusDisp');if(i){var v=Math.max(0,parseInt(i.value||'50')-5);i.value=String(v);if(d)d.textContent=String(v);}" style="width:30px;height:42px;background:transparent;border:none;border-right:1px solid rgba(255,255,255,0.05);color:rgba(200,180,140,0.45);font-size:1rem;cursor:pointer;padding:0;">−</button>
+                            <div id="bonusDisp" style="width:38px;text-align:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.75);font-weight:700;">50</div>
+                            <button onclick="var i=document.getElementById('rewardBonus');var d=document.getElementById('bonusDisp');if(i){var v=Math.min(999,parseInt(i.value||'50')+5);i.value=String(v);if(d)d.textContent=String(v);}" style="width:30px;height:42px;background:transparent;border:none;border-left:1px solid rgba(255,255,255,0.05);color:rgba(200,180,140,0.45);font-size:1rem;cursor:pointer;padding:0;">+</button>
                         </div>
                         <input type="number" id="rewardBonus" value="50" style="display:none;">
                     </div>
-                    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
-                        <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.3);letter-spacing:3px;text-transform:uppercase;">Note</div>
-                        <input type="text" id="reviewComment" placeholder="Verdict, observation, or praise..." style="width:100%;flex:1;background:rgba(10,10,10,0.8);border:1px solid rgba(255,255,255,0.08);color:rgba(225,210,180,0.85);font-family:Rajdhani,sans-serif;padding:10px 12px;border-radius:8px;font-size:0.9rem;outline:none;box-sizing:border-box;letter-spacing:0.5px;min-height:44px;transition:border-color 0.2s;" onfocus="this.style.borderColor='rgba(197,160,89,0.3)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                        <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.25);letter-spacing:3px;text-transform:uppercase;">Note</div>
+                        <input type="text" id="reviewComment" placeholder="Verdict, observation..." style="width:100%;background:rgba(6,6,6,0.9);border:1px solid rgba(255,255,255,0.07);color:rgba(230,215,185,0.85);font-family:Rajdhani,sans-serif;padding:9px 12px;border-radius:7px;font-size:0.9rem;outline:none;box-sizing:border-box;height:42px;transition:border-color 0.2s;" onfocus="this.style.borderColor='rgba(197,160,89,0.25)'" onblur="this.style.borderColor='rgba(255,255,255,0.07)'">
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;">
-                    <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(40,4,4,0.6);color:rgba(190,55,55,0.8);border:1px solid rgba(100,10,10,0.5);border-radius:8px;padding:14px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:3px;font-weight:700;cursor:pointer;transition:all 0.15s;">REJECT</button>
-                    <button class="btn-main" onclick="window.confirmReward()" style="background:rgba(197,160,89,0.1);color:rgba(220,195,120,0.9);border:1px solid rgba(197,160,89,0.3);border-radius:8px;padding:14px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:3px;font-weight:700;cursor:pointer;transition:all 0.15s;">CONFIRM REWARD</button>
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:7px;">
+                    <button class="btn-main" onclick="window.reviewTask('reject')" style="background:rgba(25,3,3,0.9);color:rgba(170,45,45,0.8);border:1px solid rgba(70,6,6,0.7);border-radius:7px;padding:13px 8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:3px;font-weight:700;cursor:pointer;transition:all 0.15s;">REJECT</button>
+                    <button class="btn-main" onclick="window.confirmReward()" style="background:rgba(197,160,89,0.07);color:rgba(210,185,115,0.85);border:1px solid rgba(197,160,89,0.22);border-radius:7px;padding:13px 8px;font-family:Rajdhani,sans-serif;font-size:0.7rem;letter-spacing:3px;font-weight:700;cursor:pointer;transition:all 0.15s;">CONFIRM REWARD</button>
                 </div>
 
             </div>`

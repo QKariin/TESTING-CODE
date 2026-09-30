@@ -914,76 +914,65 @@
 
 .reward-tier-btn {
     flex: 1;
-    height: 100px;
-    background: rgba(6, 4, 8, 0.95);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-top: 2px solid rgba(255,255,255,0.06);
-    border-radius: 12px;
+    height: auto;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s;
     position: relative;
     overflow: hidden;
-    gap: 6px;
+    gap: 3px;
+    padding: 11px 8px;
 }
 
-.reward-tier-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: rgba(255,255,255,0.06);
-    transition: background 0.2s;
-}
+.reward-tier-btn::before { display: none; }
 
 .reward-tier-btn:hover {
-    border-color: rgba(197,160,89,0.25);
-    background: rgba(197,160,89,0.05);
+    background: rgba(255,255,255,0.04);
+    border-color: transparent;
 }
 
-.reward-tier-btn:hover::before {
-    background: rgba(197,160,89,0.4);
-}
+.reward-tier-btn:hover::before { display: none; }
 
 .reward-tier-btn.selected {
-    border-color: rgba(197,160,89,0.4);
-    background: rgba(6, 4, 8, 0.95);
+    background: rgba(197,160,89,0.08);
+    border-color: transparent;
     box-shadow: none;
 }
 
-.reward-tier-btn.selected::before {
-    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.6), transparent);
-}
+.reward-tier-btn.selected::before { display: none; }
 
 .rt-pts {
     font-family: 'Cinzel', serif;
     font-weight: 700;
-    font-size: 2rem;
-    color: rgba(255,255,255,0.15);
+    font-size: 1.5rem;
+    color: rgba(255,255,255,0.18);
     line-height: 1;
-    transition: all 0.2s;
+    transition: color 0.15s;
 }
 
 .rt-lbl {
     font-family: 'Rajdhani', sans-serif;
-    font-weight: 600;
-    font-size: 0.65rem;
+    font-weight: 500;
+    font-size: 0.6rem;
     color: rgba(255,255,255,0.15);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    transition: all 0.2s;
+    transition: color 0.15s;
 }
 
 .reward-tier-btn.selected .rt-pts {
-    color: rgba(197,160,89,0.9);
+    color: rgba(197,160,89,0.88);
     text-shadow: none;
 }
 
 .reward-tier-btn.selected .rt-lbl {
-    color: rgba(197,160,89,0.55);
+    color: rgba(197,160,89,0.5);
 }
 
 /* ── LUXURY REVIEW PANEL ─────────────────────────────────────────────── */
