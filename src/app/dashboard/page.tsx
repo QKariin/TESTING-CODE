@@ -786,6 +786,7 @@ export default function DashboardPage() {
     const [queenOnlyChat, setQueenOnlyChat] = useState(false);
     const [vaultRequest, setVaultRequest] = useState<any>(null);
     const [vaultLoading, setVaultLoading] = useState(false);
+    const [locktoberTicket, setLocktoberTicket] = useState(false);
     const [extendDays, setExtendDays] = useState(1);
     const [extendingLock, setExtendingLock] = useState(false);
     const [expandedSubs, setExpandedSubs] = useState<Set<string>>(new Set());
@@ -930,6 +931,7 @@ export default function DashboardPage() {
         // Expose lock state setter so vanilla updateDetail can push state into React
         (window as any)._setActiveLocks = setActiveLocks;
         (window as any)._setQueenOnlyChat = setQueenOnlyChat;
+        (window as any)._setLocktoberTicket = setLocktoberTicket;
         (window as any)._setVaultRequest = (req: any) => {
             setVaultRequest(req);
             (window as any)._isVaultActive = req?.status === 'active';
@@ -2721,6 +2723,32 @@ export default function DashboardPage() {
                                                     LOCK
                                                 </button>
                                             )}
+
+                                            {/* ── LOCKTOBER TICKET ── */}
+                                            <button
+                                                style={{
+                                                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px',
+                                                    background: locktoberTicket ? 'rgba(197,160,89,0.14)' : 'rgba(197,160,89,0.03)',
+                                                    border: `1px solid ${locktoberTicket ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.18)'}`,
+                                                    borderRadius: 6,
+                                                    color: locktoberTicket ? '#c5a059' : 'rgba(197,160,89,0.4)',
+                                                    fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', letterSpacing: '2px', cursor: 'pointer',
+                                                }}
+                                                onClick={async () => {
+                                                    const id = (window as any).currId;
+                                                    if (!id) return;
+                                                    const newVal = !locktoberTicket;
+                                                    await fetch('/api/vault/ticket', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ action: newVal ? 'give' : 'revoke', memberId: id }),
+                                                    });
+                                                    setLocktoberTicket(newVal);
+                                                }}
+                                            >
+                                                <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M20 12c0-1.1.9-2 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v4c1.1 0 2 .9 2 2s-.9 2-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c-1.1 0-2-.9-2-2zm-2-1.46c-.83.51-1.5 1.27-1.86 2.19L16 13l-.14-.27C15.5 11.81 14.83 11.05 14 10.54V9h6v1.54zM8.14 12.73C7.78 11.81 7.11 11.05 6.28 10.54V9h6v1.54c-.83.51-1.5 1.27-1.86 2.19L10.28 13l-.14.27c-.36-.92-1.03-1.68-1.86-2.19L8.14 12.73z"/></svg>
+                                                {locktoberTicket ? 'TICKET ISSUED' : 'LOCKTOBER TICKET'}
+                                            </button>
                                         </div>
                                     )}
                                 </div>

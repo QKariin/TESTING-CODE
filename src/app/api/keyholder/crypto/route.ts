@@ -8,6 +8,7 @@ const CRYPTAPI_BASE = 'https://api.cryptapi.io';
 const TIERS: Record<string, { amountEur: number; days: number }> = {
     weekly:    { amountEur: 55,  days: 7  },
     monthly:   { amountEur: 150, days: 30 },
+    locktober: { amountEur: 150, days: 31 },
     quarterly: { amountEur: 300, days: 90 },
 };
 

@@ -5545,11 +5545,12 @@ if (typeof window !== 'undefined') {
 // ─── VAULT LOCK REQUEST ────────────────────────────────────────────────────────
 
 const LOCK_TIERS = [
-    { key: '7',   days: 7,   coins: 5500,  eur: 55,   label: '7 DAYS' },
-    { key: '14',  days: 14,  coins: 10000, eur: 100,  label: '14 DAYS' },
-    { key: '30',  days: 30,  coins: 15000, eur: 150,  label: '1 MONTH' },
-    { key: '90',  days: 90,  coins: 30000, eur: 300,  label: '90 DAYS' },
-    { key: '365', days: 365, coins: 66600, eur: 666,  label: '365 DAYS' },
+    { key: 'locktober', days: 31,  coins: 0,     eur: 0,    label: 'LOCKTOBER', special: true  },
+    { key: '7',         days: 7,   coins: 5500,  eur: 55,   label: '7 DAYS',    special: false },
+    { key: '14',        days: 14,  coins: 10000, eur: 100,  label: '14 DAYS',   special: false },
+    { key: '30',        days: 30,  coins: 15000, eur: 150,  label: '1 MONTH',   special: false },
+    { key: '90',        days: 90,  coins: 30000, eur: 300,  label: '90 DAYS',   special: false },
+    { key: '365',       days: 365, coins: 66600, eur: 666,  label: '365 DAYS',  special: false },
 ];
 
 export async function openVaultLockRequest() {
@@ -5598,15 +5599,17 @@ export async function openVaultLockRequest() {
                 ${LOCK_TIERS.map((t, i) => {
                     const canAfford = wallet >= t.coins;
                     const selected = i === 0 && canAfford;
+                    const borderColor = t.special ? (selected ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.25)') : (selected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)');
+                    const bgColor = t.special ? (selected ? 'rgba(197,160,89,0.08)' : 'rgba(197,160,89,0.04)') : (selected ? 'rgba(255,255,255,0.04)' : 'transparent');
                     return `
-                    <div class="_vaultTierCard" data-tier="${t.key}" style="padding:18px 20px;border-radius:10px;border:1px solid ${selected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'};background:${selected ? 'rgba(255,255,255,0.04)' : 'transparent'};cursor:${canAfford ? 'pointer' : 'default'};opacity:${canAfford ? '1' : '0.3'};display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" ${canAfford ? `onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor='rgba(255,255,255,0.06)';c.style.background='transparent';});this.style.borderColor='rgba(255,255,255,0.15)';this.style.background='rgba(255,255,255,0.04)';window._vaultSelectedTier='${t.key}';"` : ''}>
+                    <div class="_vaultTierCard" data-tier="${t.key}" style="position:relative;padding:18px 20px;border-radius:10px;border:1px solid ${borderColor};background:${bgColor};cursor:${canAfford ? 'pointer' : 'default'};opacity:${canAfford ? '1' : '0.3'};display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" ${canAfford ? `onclick="document.querySelectorAll('._vaultTierCard').forEach(c=>{c.style.borderColor=c.dataset.tier==='locktober'?'rgba(197,160,89,0.25)':'rgba(255,255,255,0.06)';c.style.background=c.dataset.tier==='locktober'?'rgba(197,160,89,0.04)':'transparent';});this.style.borderColor='${t.special ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.15)'}';this.style.background='${t.special ? 'rgba(197,160,89,0.08)' : 'rgba(255,255,255,0.04)'}';window._vaultSelectedTier='${t.key}';"` : ''}>
+                        ${t.special ? `<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-family:Cinzel,serif;font-size:0.5rem;color:#c5a059;letter-spacing:3px;background:#080507;padding:2px 10px;white-space:nowrap;">LOCKTOBER 2026</div>` : ''}
                         <div>
-                            <div style="font-family:Cinzel,serif;font-size:1.05rem;color:rgba(255,255,255,${canAfford ? '0.8' : '0.3'});font-weight:600;letter-spacing:2px;">${t.label}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:rgba(255,255,255,0.3);margin-top:2px;">${t.eur}€</div>
+                            <div style="font-family:Cinzel,serif;font-size:1.05rem;color:${t.special ? '#c5a059' : `rgba(255,255,255,${canAfford ? '0.8' : '0.3'})`};font-weight:600;letter-spacing:2px;">${t.label}</div>
+                            <div style="font-family:Rajdhani,sans-serif;font-size:0.8rem;color:${t.special ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.3)'};margin-top:2px;">${t.special ? 'FREE' : `${t.eur}€`}</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-family:Orbitron,sans-serif;font-size:1rem;color:rgba(255,255,255,${canAfford ? '0.6' : '0.2'});font-weight:600;">${t.coins.toLocaleString()}</div>
-                            <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">COINS</div>
+                            ${t.special ? `<div style="font-family:Cinzel,serif;font-size:0.85rem;color:rgba(197,160,89,0.6);letter-spacing:1px;">31 DAYS</div>` : `<div style="font-family:Cinzel,serif;font-size:1rem;color:rgba(255,255,255,${canAfford ? '0.6' : '0.2'});font-weight:600;">${t.coins.toLocaleString()}</div><div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(255,255,255,0.3);letter-spacing:2px;">COINS</div>`}
                         </div>
                     </div>`;
                 }).join('')}
@@ -5696,52 +5699,60 @@ async function _submitVaultLock(action: string, requestedStart?: string | null) 
     _closeVaultOverlay();
 
     const isInstant = action === 'apply-instant';
-    _showCoinConfirm({
-        title: isInstant ? 'LOCK NOW' : 'KEYHOLDER REQUEST',
-        cost: tierData.coins,
-        wallet,
-        theme: 'vault',
-        onConfirm: async () => {
-            try {
-                const state = getState();
-                const body: any = { action, duration: tierData.days, memberId: state.email || state.memberId };
-                if (requestedStart) body.requestedStart = requestedStart;
-                const res = await fetch('/api/vault/apply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-                const data = await res.json();
-                if (data.error) {
-                    console.error('[VAULT LOCK] Error:', data);
-                    alert(data.error);
-                    return;
-                }
+    const isFree = tierData.coins === 0;
 
-                // Update wallet in state + UI
-                if (data.newWallet !== undefined) {
-                    setState({ wallet: data.newWallet });
-                    const s = getState(); if (s?.raw) s.raw.wallet = data.newWallet;
-                    ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
-                        const e = document.getElementById(id);
-                        if (e) e.textContent = data.newWallet.toLocaleString();
-                    });
-                }
-
-                // Update status button
-                _updateVaultLockButton({ active: true, status: data.status, lockDays: tierData.days, sessionId: data.sessionId } as any);
-
-                // For instant: show video proof upload. For request: show confirmation.
-                if (isInstant && data.status === 'awaiting_video') {
-                    _showVideoProofUpload({ sessionId: data.sessionId, lockDays: tierData.days });
-                } else {
-                    _showVaultConfirmation(false, tierData.days);
-                }
-            } catch (err: any) {
-                alert('Connection error. Try again.');
+    const doSubmit = async () => {
+        try {
+            const state = getState();
+            const body: any = { action, duration: tierData.days, memberId: state.email || state.memberId };
+            if (requestedStart) body.requestedStart = requestedStart;
+            const res = await fetch('/api/vault/apply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (data.error) {
+                console.error('[VAULT LOCK] Error:', data);
+                alert(data.error);
+                return;
             }
-        },
-    });
+
+            // Update wallet in state + UI
+            if (data.newWallet !== undefined) {
+                setState({ wallet: data.newWallet });
+                const s = getState(); if (s?.raw) s.raw.wallet = data.newWallet;
+                ['coins', 'mobCoins', 'walletDisplay', 'mob_walletVal'].forEach(id => {
+                    const e = document.getElementById(id);
+                    if (e) e.textContent = data.newWallet.toLocaleString();
+                });
+            }
+
+            // Update status button
+            _updateVaultLockButton({ active: true, status: data.status, lockDays: tierData.days, sessionId: data.sessionId } as any);
+
+            // For instant: show video proof upload. For request: show confirmation.
+            if (isInstant && data.status === 'awaiting_video') {
+                _showVideoProofUpload({ sessionId: data.sessionId, lockDays: tierData.days });
+            } else {
+                _showVaultConfirmation(false, tierData.days);
+            }
+        } catch (err: any) {
+            alert('Connection error. Try again.');
+        }
+    };
+
+    if (isFree) {
+        doSubmit();
+    } else {
+        _showCoinConfirm({
+            title: isInstant ? 'LOCK NOW' : 'KEYHOLDER REQUEST',
+            cost: tierData.coins,
+            wallet,
+            theme: 'vault',
+            onConfirm: doSubmit,
+        });
+    }
 }
 
 function _showVaultConfirmation(isInstant: boolean, days: number) {
@@ -5885,6 +5896,9 @@ const VAULT_ONBOARD_LIMIT_DESCS: Record<string, string> = {
     "Self-harm": "Nothing that causes real physical injury",
 };
 
+// URL of Queen Karin's Locktober invitation video — update this when the video is ready
+const LOCKTOBER_INVITE_VIDEO_URL = '';
+
 function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     document.getElementById('_vaultVideoOverlay')?.remove();
 
@@ -5905,10 +5919,32 @@ function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     ov.id = '_vaultVideoOverlay';
     ov.style.cssText = 'position:fixed;inset:0;z-index:10000001;display:flex;flex-direction:column;background:#080507;animation:_vFadeIn 0.3s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;';
 
-    let step = 1;
+    const isLocktober = data.lockDays === 31;
+    let step = isLocktober ? 0 : 1;
 
     function renderStep() {
-        if (step === 1) {
+        if (step === 0) {
+            // STEP 0: LOCKTOBER INVITATION VIDEO
+            ov.innerHTML = `
+                <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;text-align:center;">
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.7rem;color:rgba(197,160,89,0.4);letter-spacing:6px;margin-bottom:6px;">OCTOBER 2026</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.6rem;color:#c5a059;letter-spacing:5px;font-weight:700;margin-bottom:28px;">LOCKTOBER</div>
+                    <div style="position:relative;width:100%;background:#000;border-radius:12px;overflow:hidden;border:1px solid rgba(197,160,89,0.2);margin-bottom:28px;aspect-ratio:9/16;max-height:420px;">
+                        ${LOCKTOBER_INVITE_VIDEO_URL
+                            ? `<video src="${LOCKTOBER_INVITE_VIDEO_URL}" controls playsinline autoplay style="width:100%;height:100%;object-fit:cover;display:block;"></video>`
+                            : `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+                                <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(197,160,89,0.3)" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <div style="font-family:Rajdhani,sans-serif;font-size:0.75rem;color:rgba(255,255,255,0.2);letter-spacing:2px;">VIDEO COMING SOON</div>
+                               </div>`
+                        }
+                    </div>
+                    <div style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:32px;">31 days. My lock. My rules.<br>You will kneel, check in, and send me a video every single day.</div>
+                    <button id="_obLocktoberNext" style="width:100%;padding:18px;font-family:Cinzel,serif;font-size:0.7rem;letter-spacing:4px;color:#c5a059;background:rgba(197,160,89,0.08);border:1px solid rgba(197,160,89,0.35);border-radius:10px;cursor:pointer;font-weight:700;">I AM READY. LOCK ME IN.</button>
+                </div>
+            `;
+            ov.querySelector('#_obLocktoberNext')!.addEventListener('click', () => { step = 1; renderStep(); });
+
+        } else if (step === 1) {
             // STEP 1: KINKS
             ov.innerHTML = `
                 <div style="width:100%;max-width:420px;margin:0 auto;padding:60px 24px 100px;">

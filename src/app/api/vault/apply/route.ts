@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { DbService } from '@/lib/supabase-service';
 import { discordVaultLock } from '@/lib/discord';
 import { generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { generateLocktoberProgram } from '@/lib/locktober-program-defaults';
 
 // Fresh admin client — NOT the shared singleton
 function getAdmin() {
@@ -17,9 +18,12 @@ function getAdmin() {
 export const dynamic = 'force-dynamic';
 
 const LOCK_TIERS: Record<string, { days: number; coins: number; label: string; eurPrice: number }> = {
-    '7':  { days: 7,  coins: 5500,  label: '7 Days',  eurPrice: 55  },
-    '30': { days: 30, coins: 15000, label: '30 Days', eurPrice: 150 },
-    '90': { days: 90, coins: 30000, label: '90 Days', eurPrice: 300 },
+    '7':  { days: 7,  coins: 5500,  label: '7 Days',        eurPrice: 55  },
+    '14': { days: 14, coins: 10000, label: '14 Days',       eurPrice: 100 },
+    '30': { days: 30, coins: 15000, label: '30 Days',       eurPrice: 150 },
+    '31': { days: 31, coins: 0,     label: 'Locktober',     eurPrice: 0   },
+    '90': { days: 90, coins: 30000, label: '90 Days',       eurPrice: 300 },
+    '365':{ days: 365,coins: 66600, label: '365 Days',      eurPrice: 666 },
 };
 
 // POST /api/vault/apply
@@ -128,6 +132,14 @@ export async function POST(req: Request) {
         }
 
         // ── COIN PAYMENT FLOW ──
+
+        // LOCKTOBER: require invitation ticket
+        if (tier.days === 31) {
+            if (!profile.parameters?.locktober_ticket) {
+                return NextResponse.json({ error: 'Locktober invitation required. You need a ticket from Queen Karin.' }, { status: 403 });
+            }
+        }
+
         const wallet = Number(profile.wallet || 0);
         if (wallet < tier.coins) {
             return NextResponse.json({
@@ -145,7 +157,7 @@ export async function POST(req: Request) {
         // Create vault session
         const insertPayload: any = {
             member_id: memberId,
-            tier: `${tier.days}d-coins`,
+            tier: tier.days === 31 ? 'locktober' : `${tier.days}d-coins`,
             lock_days: tier.days,
             status,
             coins_paid: tier.coins,
@@ -175,6 +187,12 @@ export async function POST(req: Request) {
             coinsPaid: tier.coins,
             ...(requestedStart && !isInstant ? { requestedStart } : {}),
         };
+
+        // Consume Locktober ticket after session is created
+        if (tier.days === 31) {
+            delete params.locktober_ticket;
+            delete params.locktober_ticket_granted_at;
+        }
 
         // Add to purchase history
         const purchaseHistory: any[] = params.purchaseHistory || [];
@@ -276,31 +294,43 @@ async function _generateMemberProgram(sessionId: string, memberId: string, total
     // Delete any old programs for this member (fresh template copy every time)
     await admin.from('vault_member_program').delete().eq('member_id', memberId);
     const program: Record<string, any[]> = {};
-    try {
-        const { data: template, error: tplErr } = await admin
-            .from('vault_program_template').select('*').order('day_number');
-        if (tplErr) console.error('[vault apply] Template read error:', tplErr.message);
-        if (template && template.length > 0) {
-            console.log(`[vault apply] Copying ${template.length} template days for ${memberId}`);
-            for (const row of template) {
-                program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+
+    if (totalDays === 31) {
+        // LOCKTOBER: use vault_config 'locktober_template', fallback to static defaults
+        try {
+            const { data: ltConfig } = await admin.from('vault_config').select('value').eq('key', 'locktober_template').maybeSingle();
+            if (ltConfig?.value) {
+                const saved = typeof ltConfig.value === 'string' ? JSON.parse(ltConfig.value) : ltConfig.value;
+                Object.assign(program, saved);
+                console.log(`[vault apply] Loaded locktober_template from vault_config for ${memberId}`);
             }
+        } catch (e: any) { console.error('[vault apply] Locktober template read failed:', e?.message); }
+        if (Object.keys(program).length === 0) {
+            Object.assign(program, generateLocktoberProgram());
         }
-    } catch (e: any) {
-        console.error('[vault apply] Template read failed:', e?.message);
-    }
-    if (Object.keys(program).length === 0) {
-        // Fallback: use shared defaults (same as dashboard)
-        Object.assign(program, generateDefaultProgram(totalDays));
     } else {
-        // Fill in any missing days up to totalDays from defaults
-        const defaults = generateDefaultProgram(totalDays);
-        for (let d = 1; d <= totalDays; d++) {
-            if (!program[String(d)]) {
-                program[String(d)] = defaults[String(d)];
+        // Regular lock: use vault_program_template DB table
+        try {
+            const { data: template, error: tplErr } = await admin
+                .from('vault_program_template').select('*').order('day_number');
+            if (tplErr) console.error('[vault apply] Template read error:', tplErr.message);
+            if (template && template.length > 0) {
+                console.log(`[vault apply] Copying ${template.length} template days for ${memberId}`);
+                for (const row of template) {
+                    program[String(row.day_number)] = typeof row.tasks === 'string' ? JSON.parse(row.tasks) : row.tasks;
+                }
+            }
+        } catch (e: any) { console.error('[vault apply] Template read failed:', e?.message); }
+        if (Object.keys(program).length === 0) {
+            Object.assign(program, generateDefaultProgram(totalDays));
+        } else {
+            const defaults = generateDefaultProgram(totalDays);
+            for (let d = 1; d <= totalDays; d++) {
+                if (!program[String(d)]) program[String(d)] = defaults[String(d)];
             }
         }
     }
+
     await admin.from('vault_member_program').insert({
         session_id: sessionId,
         member_id: memberId,

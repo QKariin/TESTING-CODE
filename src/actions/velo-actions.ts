@@ -103,7 +103,7 @@ export async function getAdminDashboardData() {
             getAdmin().from('tasks').select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"'),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
             getAdmin().from('user_routines').select('*').not('pending_id', 'is', null),
-            getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
+            getAdmin().from('vault_sessions').select('member_id, tier').eq('status', 'active'),
         ]);
 
         if (pError) throw pError;
@@ -117,6 +117,9 @@ export async function getAdminDashboardData() {
         // Set of emails with active vault sessions (keyholder-locked)
         const vaultLockedEmails = new Set(
             (vaultSessions || []).map((s: any) => (s.member_id || '').toLowerCase())
+        );
+        const vaultLocktoberEmails = new Set(
+            (vaultSessions || []).filter((s: any) => s.tier === 'locktober').map((s: any) => (s.member_id || '').toLowerCase())
         );
 
         // Map tasks data to profiles - 3 strategies (collect ALL matches, pick richest row):
@@ -139,6 +142,7 @@ export async function getAdminDashboardData() {
             }, matches[0]);
             const mapped = mapUserForDashboard(p, t);
             if (vaultLockedEmails.has(profileEmail)) mapped.vaultLocked = true;
+            if (vaultLocktoberEmails.has(profileEmail)) mapped.vaultLocktober = true;
             return mapped;
         });
 
@@ -846,7 +850,7 @@ export async function getMasterData() {
             getAdmin().from('profiles').select('*').limit(1000),
             getAdmin().from('tasks').select('"ID", member_id, taskdom_active_task, taskdom_pending_state, "Taskdom_CompletedTasks", "kneelCount", "today kneeling", lastWorship, "Score"').limit(1000),
             getAdmin().auth.admin.listUsers({ perPage: 1000 }),
-            getAdmin().from('vault_sessions').select('member_id').eq('status', 'active'),
+            getAdmin().from('vault_sessions').select('member_id, tier').eq('status', 'active'),
         ]);
 
         if (pError) throw pError;
@@ -859,6 +863,9 @@ export async function getMasterData() {
         // Set of emails with active vault sessions
         const vaultLockedEmails = new Set(
             (vaultSessions || []).map((s: any) => (s.member_id || '').toLowerCase())
+        );
+        const vaultLocktoberEmails = new Set(
+            (vaultSessions || []).filter((s: any) => s.tier === 'locktober').map((s: any) => (s.member_id || '').toLowerCase())
         );
 
         return (profiles || []).map((item: any) => {
@@ -877,6 +884,7 @@ export async function getMasterData() {
             }, matches[0]);
             const mapped = mapUserForDashboard(item, uTasks);
             if (vaultLockedEmails.has(profileEmail)) mapped.vaultLocked = true;
+            if (vaultLocktoberEmails.has(profileEmail)) mapped.vaultLocktober = true;
             return mapped;
         });
     } catch (err) {

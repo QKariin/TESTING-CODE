@@ -3408,6 +3408,43 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
             <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 16px 24px' }}>
                 <input ref={overlayFileInputRef} type="file" accept="image/*,video/*" style={{ display: 'none' }} onChange={handleOverlayUpload} />
 
+                {/* ── LOCKTOBER 2026 ── */}
+                <div style={{ marginBottom: 14 }}>
+                    <div style={{
+                        position: 'relative', borderRadius: 14, overflow: 'hidden',
+                        border: profile?.parameters?.locktober_ticket ? '1px solid rgba(197,160,89,0.5)' : '1px solid rgba(197,160,89,0.2)',
+                        minHeight: 180,
+                        background: 'linear-gradient(160deg, rgba(12,8,4,0.98) 0%, rgba(20,12,4,0.95) 100%)',
+                    }}>
+                        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(197,160,89,0.08) 0%, transparent 70%)' }} />
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: profile?.parameters?.locktober_ticket ? 'linear-gradient(90deg, transparent, #c5a059, #e040fb, #c5a059, transparent)' : 'linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent)' }} />
+                        <div style={{ position: 'relative', padding: '28px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', minHeight: 180 }}>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '6px', textTransform: 'uppercase', marginBottom: 4 }}>October 2026</div>
+                            <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px', textAlign: 'center', marginBottom: 6 }}>LOCKTOBER</div>
+                            <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>31 days locked under Her control.</div>
+                            {profile?.parameters?.locktober_ticket ? (
+                                <button onClick={() => (window as any).openVaultLockRequest?.()} style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                    margin: '0 auto', padding: '10px 28px', borderRadius: 10,
+                                    border: '1px solid rgba(197,160,89,0.5)', background: 'linear-gradient(135deg, rgba(197,160,89,0.12), rgba(197,160,89,0.06))',
+                                    color: '#c5a059', fontFamily: 'Cinzel, serif', fontSize: '0.5rem', fontWeight: 700,
+                                    letterSpacing: '3px', cursor: 'pointer',
+                                }}>
+                                    JOIN LOCKTOBER
+                                </button>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 18px', borderRadius: 8, border: '1px solid rgba(197,160,89,0.15)', background: 'rgba(0,0,0,0.3)' }}>
+                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="rgba(197,160,89,0.4)"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                        <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.45rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px' }}>INVITE ONLY</span>
+                                    </div>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>Queen Karin issues tickets</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 {/* ── KEYHOLDER — single card like challenge cards ── */}
                 <div style={{ marginBottom: 24 }}>
                     <div style={{

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { kneelTarget, defaultDayTasks, generateDefaultProgram } from '@/lib/vault-program-defaults';
+import { generateLocktoberProgram } from '@/lib/locktober-program-defaults';
 import { MECH_LIST, MECH_PRESETS } from '@/lib/mechanisms';
 
 const F = "'Rajdhani', sans-serif";
@@ -56,6 +57,13 @@ const PHASES = [
     { name: 'DEVOTION', sub: 'Proving', days: [22,23,24,25,26,27,28,29,30], color: GOLD },
 ];
 
+const LOCKTOBER_PHASES = [
+    { name: 'OBEDIENCE', sub: 'Foundation', days: [1,2,3,4,5,6,7], color: GOLD },
+    { name: 'DISCIPLINE', sub: 'Building', days: [8,9,10,11,12,13,14], color: '#8b0000' },
+    { name: 'ENDURANCE', sub: 'Testing', days: [15,16,17,18,19,20,21], color: '#9b59b6' },
+    { name: 'DEVOTION', sub: 'Proving', days: [22,23,24,25,26,27,28,29,30,31], color: GOLD },
+];
+
 const CONFIG_SECTIONS = [
     { key: 'spin_wheel', title: 'SPIN WHEEL', desc: 'What they land on' },
     { key: 'card_deck', title: 'TASK CARDS', desc: 'Random task draws' },
@@ -66,7 +74,7 @@ const CONFIG_SECTIONS = [
 ];
 
 interface Task { type: string; target: number; label: string; }
-type ViewMode = 'program' | 'config' | 'member';
+type ViewMode = 'program' | 'locktober' | 'config' | 'member';
 
 /* ── DEFAULT 30-DAY FORMULA ── */
 // _kt and _ddt now imported from @/lib/vault-program-defaults
@@ -103,6 +111,8 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const [loading, setLoading] = useState(false);
     const [templateDays, setTemplateDays] = useState<Record<string,Task[]>>(generateDefaultProgram() as Record<string,Task[]>);
     const [selectedDay, setSelectedDay] = useState<number|null>(null);
+    const [locktoberDays, setLocktoberDays] = useState<Record<string,Task[]>>(generateLocktoberProgram() as Record<string,Task[]>);
+    const [locktoberSelectedDay, setLocktoberSelectedDay] = useState<number|null>(null);
     const [lockedMembers, setLockedMembers] = useState<any[]>([]);
     const [configSection, setConfigSection] = useState('spin_wheel');
     const [configData, setConfigData] = useState<Record<string,any>>({});
@@ -114,9 +124,11 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const [showMemberProfile, setShowMemberProfile] = useState(true);
     const [dragIdx, setDragIdx] = useState<number|null>(null);
 
-    useEffect(() => { loadTemplate(); loadConfig(); loadLockedMembers(); if(initialMember) setTimeout(()=>loadMemberProgram(),150); }, []);
+    useEffect(() => { loadTemplate(); loadLocktoberTemplate(); loadConfig(); loadLockedMembers(); if(initialMember) setTimeout(()=>loadMemberProgram(),150); }, []);
 
     const loadLockedMembers = async () => { try { const r = await fetch('/api/vault/program?listLocked=true'); const j = await r.json(); if(j.locked) setLockedMembers(j.locked); } catch{} };
+    const loadLocktoberTemplate = async () => { try { const r = await fetch('/api/vault/program?template=locktober'); const j = await r.json(); if(j.template?.length>0){ const d: Record<string,Task[]>={}; for(const row of j.template){ d[String(row.day_number)]=typeof row.tasks==='string'?JSON.parse(row.tasks):row.tasks; } setLocktoberDays(d); } } catch{} };
+    const saveLocktoberTemplate = async () => { setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_template',templateType:'locktober',days:locktoberDays})}); } catch{} setSaving(false); };
     const loadTemplate = async () => { try { const r = await fetch('/api/vault/program?template=true'); const j = await r.json(); if(j.template?.length>0){ const d: Record<string,Task[]>={}; for(const row of j.template){ const tasks: Task[] = typeof row.tasks==='string'?JSON.parse(row.tasks):row.tasks; const dn = row.day_number; if(!tasks.some((t:Task)=>t.type==='kneel')){const kt=_kt(dn);tasks.unshift({type:'kneel',target:kt,label:`Kneel ${kt} times`} as Task);} if(!tasks.some((t:Task)=>t.type==='chastity_check')){const ki=tasks.findIndex((t:Task)=>t.type==='kneel');tasks.splice(ki+1,0,{type:'chastity_check',target:1,label:'Chastity check-in'} as Task);} d[String(dn)]=tasks; } setTemplateDays(d); } else { /* DB has no template — auto-save the defaults so member program generation uses the same data */ const defaults = generateDefaultProgram() as Record<string,Task[]>; try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_template',days:defaults})}); console.log('[KeyholderProgram] Auto-saved default template to DB'); } catch{} } } catch{} };
     const loadConfig = async () => { try { const r = await fetch('/api/vault/program?config=true'); const j = await r.json(); if(j.config){ const m: Record<string,any>={}; for(const row of j.config){ m[row.key]=typeof row.value==='string'?JSON.parse(row.value):row.value; } setConfigData(m); } } catch{} };
     const loadMemberProgram = async (emailOverride?: string) => { const email = emailOverride || memberEmail; if(!email) return; setLoading(true); setMemberAbout(''); try { const r = await fetch(`/api/vault/program?memberId=${encodeURIComponent(email)}`); const j = await r.json(); if(j.program?.program){const mp=typeof j.program.program==='string'?JSON.parse(j.program.program):j.program.program;for(const[ds,tasks]of Object.entries(mp)){if(!Array.isArray(tasks))continue;const dn=parseInt(ds,10);if(!(tasks as Task[]).some((t:Task)=>t.type==='kneel')){const kt=_kt(dn);(tasks as Task[]).unshift({type:'kneel',target:kt,label:`Kneel ${kt} times`} as Task);}if(!(tasks as Task[]).some((t:Task)=>t.type==='chastity_check')){const ki=(tasks as Task[]).findIndex((t:Task)=>t.type==='kneel');(tasks as Task[]).splice(ki+1,0,{type:'chastity_check',target:1,label:'Chastity check-in'} as Task);}}setMemberProgram(mp);}else{setMemberProgram(null);} const base = lockedMembers.find((m:any)=>m.memberId.toLowerCase()===email.toLowerCase())||{}; if(j.profile) { base.kinks = j.profile.kinks || ''; base.limits = j.profile.limits || ''; } setMemberInfo(base); } catch{} try { const cr = await fetch(`/api/chat/history`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ memberId: email }) }); const cj = await cr.json(); if(cj.messages) { const firstUserMsg = cj.messages.find((m: any) => m.sender_email === email && m.content && !m.content.startsWith('http') && !m.content.startsWith('[SYSTEM') && !m.content.startsWith('[system') && m.type !== 'system' && m.type !== 'wishlist' && m.content.length > 20); if(firstUserMsg) setMemberAbout(firstUserMsg.content); } } catch{} setLoading(false); };
@@ -125,10 +137,10 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
     const saveConfig = async (key: string, value: any) => { setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save_config',key,value})}); } catch{} setSaving(false); };
     const saveMemberDay = async (dayNum: number, tasks: Task[]) => { if(!memberEmail) return; setSaving(true); try { await fetch('/api/vault/program',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'update_day',memberId:memberEmail,dayNumber:dayNum,tasks})}); } catch{} setSaving(false); };
 
-    const getDays = () => view==='member'&&memberProgram?memberProgram:templateDays;
-    const setDays = (d: Record<string,Task[]>) => { if(view==='member') setMemberProgram(d); else setTemplateDays(d); };
-    const getSel = () => view==='member'?memberSelectedDay:selectedDay;
-    const setSel = (d: number|null) => { if(view==='member') setMemberSelectedDay(d); else setSelectedDay(d); };
+    const getDays = () => view==='member'&&memberProgram?memberProgram:view==='locktober'?locktoberDays:templateDays;
+    const setDays = (d: Record<string,Task[]>) => { if(view==='member') setMemberProgram(d); else if(view==='locktober') setLocktoberDays(d); else setTemplateDays(d); };
+    const getSel = () => view==='member'?memberSelectedDay:view==='locktober'?locktoberSelectedDay:selectedDay;
+    const setSel = (d: number|null) => { if(view==='member') setMemberSelectedDay(d); else if(view==='locktober') setLocktoberSelectedDay(d); else setSelectedDay(d); };
 
     // Auto-save member program when edited (debounced)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout>|null>(null);
@@ -167,13 +179,13 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
                 <button onClick={onClose} style={{ background: 'none', border: 'none', color: GOLD, fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{'\u2190'}</button>
                 <h1 style={{ fontFamily: FC, fontSize: '.8rem', color: GOLD, letterSpacing: 8, margin: 0, flex: 1, textTransform: 'uppercase' }}>Keyholder Program</h1>
                 <div style={{ display: 'flex', gap: 0, background: 'rgba(197,160,89,.08)', borderRadius: 6, border: `1px solid rgba(197,160,89,.2)` }}>
-                    {(['program','config','member'] as ViewMode[]).map(v => (
+                    {(['program','locktober','config','member'] as ViewMode[]).map(v => (
                         <button key={v} onClick={() => setView(v)} style={{
                             padding: '9px 22px', border: 'none', borderRadius: 5, cursor: 'pointer', fontFamily: FC,
                             fontSize: '.5rem', letterSpacing: 3, transition: 'all .25s',
-                            background: view===v ? 'rgba(197,160,89,.18)' : 'transparent',
-                            color: view===v ? GOLD : TEXT_DIM,
-                        }}>{v.toUpperCase()}</button>
+                            background: view===v ? (v==='locktober' ? 'rgba(197,160,89,.25)' : 'rgba(197,160,89,.18)') : 'transparent',
+                            color: view===v ? GOLD : (v==='locktober' ? 'rgba(197,160,89,.6)' : TEXT_DIM),
+                        }}>{v === 'locktober' ? 'LOCKTOBER' : v.toUpperCase()}</button>
                     ))}
                 </div>
             </div>
@@ -222,6 +234,7 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
             {/* MAIN */}
             <div style={{ flex: 1, overflow: 'hidden', display: 'flex', position: 'relative', zIndex: 1 }}>
                 {view==='program' && <ProgramView days={templateDays} sel={selectedDay} setSel={setSelectedDay} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveTemplate={saveTemplate} saving={saving} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
+                {view==='locktober' && <ProgramView days={locktoberDays} sel={locktoberSelectedDay} setSel={setLocktoberSelectedDay} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveTemplate={saveLocktoberTemplate} saving={saving} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} phases={LOCKTOBER_PHASES} label="LOCKTOBER TEMPLATE" />}
                 {view==='config' && <ConfigView configData={configData} setConfigData={setConfigData} configSection={configSection} setConfigSection={setConfigSection} onSave={saveConfig} saving={saving} />}
                 {view==='member' && <MemberView email={memberEmail} setEmail={setMemberEmail} program={memberProgram} sel={memberSelectedDay} setSel={setMemberSelectedDay} info={memberInfo} locked={lockedMembers} onLoad={loadMemberProgram} onGenerate={generateMemberProgram} updateTask={updateTask} addTask={addTask} removeTask={removeTask} moveTask={moveTask} saveMemberDay={saveMemberDay} saving={saving} loading={loading} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} memberAbout={memberAbout} showMemberProfile={showMemberProfile} setShowMemberProfile={setShowMemberProfile} />}
             </div>
@@ -230,18 +243,19 @@ export function KeyholderProgramContent({ onClose, initialMember }: { onClose: (
 }
 
 /* ═══════════════ PROGRAM VIEW ═══════════════ */
-function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveTask, saveTemplate, saving, dragIdx, setDragIdx, configData, setView, setConfigSection }: any) {
+function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveTask, saveTemplate, saving, dragIdx, setDragIdx, configData, setView, setConfigSection, phases: phasesProp, label }: any) {
+    const phases = phasesProp || PHASES;
     return (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
             <div style={{ width: sel ? '32%' : '100%', transition: 'width .4s ease', overflowY: 'auto', padding: '20px 28px', background: 'rgba(10,10,16,0.5)' }} className="kscr">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>
-                        <div style={{ fontFamily: FC, fontSize: '.55rem', color: 'rgba(255,255,255,.6)', letterSpacing: 5 }}>MASTER TEMPLATE</div>
+                        <div style={{ fontFamily: FC, fontSize: '.55rem', color: 'rgba(255,255,255,.6)', letterSpacing: 5 }}>{label || 'MASTER TEMPLATE'}</div>
                         <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM, marginTop: 4, letterSpacing: 1 }}>Chastity check auto-included. Click day to edit tasks.</div>
                     </div>
                     <button onClick={saveTemplate} className="kbtn" style={{ padding: '10px 30px', borderRadius: 6, border: `1px solid rgba(197,160,89,.3)`, background: 'rgba(197,160,89,.1)', color: GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 4 }}>{saving ? 'SAVING...' : 'SAVE'}</button>
                 </div>
-                {PHASES.map(phase => (
+                {phases.map((phase: any) => (
                     <div key={phase.name} style={{ marginBottom: 28 }} className="kfade">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                             <div style={{ width: 3, height: 24, borderRadius: 2, background: phase.color, opacity: .8 }} />
@@ -279,14 +293,15 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
                     </div>
                 ))}
             </div>
-            {sel && <TaskPanel dayNum={sel} tasks={days[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any) => updateTask(sel,i,f,v)} addTask={(t:string,l?:string,tgt?:number,cfg?:any) => addTask(sel,t,l,tgt,cfg)} removeTask={(i:number) => removeTask(sel,i)} moveTask={(a:number,b:number) => moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} />}
+            {sel && <TaskPanel dayNum={sel} tasks={days[String(sel)]||[]} onClose={() => setSel(null)} updateTask={(i:number,f:string,v:any) => updateTask(sel,i,f,v)} addTask={(t:string,l?:string,tgt?:number,cfg?:any) => addTask(sel,t,l,tgt,cfg)} removeTask={(i:number) => removeTask(sel,i)} moveTask={(a:number,b:number) => moveTask(sel,a,b)} dragIdx={dragIdx} setDragIdx={setDragIdx} configData={configData} setView={setView} setConfigSection={setConfigSection} phases={phases} />}
         </div>
     );
 }
 
 /* ═══════════════ TASK PANEL — glass cards ═══════════════ */
-function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, moveTask, dragIdx, setDragIdx, configData, setView, setConfigSection }: any) {
-    const phase = PHASES.find(p => p.days.includes(dayNum));
+function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, moveTask, dragIdx, setDragIdx, configData, setView, setConfigSection, phases: phasesProp }: any) {
+    const phases = phasesProp || PHASES;
+    const phase = phases.find((p: any) => p.days.includes(dayNum));
     const [addOpen, setAddOpen] = useState(false);
     const [editIdx, setEditIdx] = useState<number|null>(null);
     // Mechanism-first add flow

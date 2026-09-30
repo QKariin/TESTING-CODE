@@ -34,6 +34,7 @@ function timeAgo(dateStr: string) {
 const TIERS = [
     { id: 'weekly',    price: '55',  period: '7 DAYS',   label: 'WEEKLY',    desc: 'A full week locked. Prove you are worthy of Her attention.', badge: null },
     { id: 'monthly',   price: '150', period: '30 DAYS',  label: 'MONTHLY',   desc: 'Complete surrender. One month under absolute control.', badge: 'POPULAR' },
+    { id: 'locktober', price: '150', period: '31 DAYS',  label: 'LOCKTOBER', desc: 'The full month of October. Locked until November 1st. One month of absolute devotion to Her.', badge: 'LOCKTOBER 2026' },
     { id: 'quarterly', price: '300', period: '90 DAYS',  label: 'QUARTERLY', desc: 'Three months of total ownership. No breaks. No mercy. No way out.', badge: 'BEST VALUE' },
 ];
 
@@ -139,7 +140,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                     setUserEmail(user.email || null);
                     // Auto-checkout if redirected back with a tier
                     const autoTier = params.get('tier');
-                    if (autoTier && ['weekly', 'monthly', 'quarterly'].includes(autoTier)) {
+                    if (autoTier && ['weekly', 'monthly', 'locktober', 'quarterly'].includes(autoTier)) {
                         // Clean the URL
                         window.history.replaceState({}, '', '/keyholder');
                         handleCheckout(autoTier);
@@ -314,7 +315,7 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
         setShowPayment(true);
     };
 
-    const TIER_PRICES: Record<string, number> = { weekly: 55, monthly: 150, quarterly: 300 };
+    const TIER_PRICES: Record<string, number> = { weekly: 55, monthly: 150, locktober: 150, quarterly: 300 };
 
 
 
@@ -888,20 +889,22 @@ export default function KeyholderClient({ initialReviews = [] }: { initialReview
                             <div className="kh-tiers-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                                 {TIERS.map(t => {
                                     const isRec = t.id === rec.tier;
+                                    const isLocktober = t.id === 'locktober';
                                     return (
                                     <div key={t.id} className="tier-card" onClick={() => !loading && handleCheckout(t.id)} style={{
                                         position: 'relative',
-                                        background: isRec ? 'linear-gradient(170deg, rgba(20,8,14,0.95), rgba(8,2,6,0.98))' : 'linear-gradient(170deg, rgba(12,10,12,0.9), rgba(5,3,5,0.95))',
-                                        border: isRec ? '1px solid rgba(139,0,0,0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                        background: isLocktober ? 'linear-gradient(170deg, rgba(20,14,8,0.95), rgba(8,5,2,0.98))' : isRec ? 'linear-gradient(170deg, rgba(20,8,14,0.95), rgba(8,2,6,0.98))' : 'linear-gradient(170deg, rgba(12,10,12,0.9), rgba(5,3,5,0.95))',
+                                        border: isLocktober ? '1px solid rgba(197,160,89,0.35)' : isRec ? '1px solid rgba(139,0,0,0.3)' : '1px solid rgba(255,255,255,0.05)',
                                         borderRadius: 4, padding: 'clamp(24px,3vw,32px) clamp(16px,2vw,24px)', textAlign: 'center',
                                         animation: isRec ? 'glowPulse 4s ease-in-out infinite' : 'none',
                                     }}>
                                         {(t.badge || isRec) && (
                                             <div style={{
                                                 position: 'absolute', top: 0, left: '50%', transform: 'translate(-50%,-50%)',
-                                                background: isRec ? '#8b0000' : 'rgba(139,0,0,0.12)',
-                                                color: isRec ? '#fff' : 'rgba(139,0,0,0.6)',
-                                                fontFamily: 'Orbitron,sans-serif', fontSize: '0.26rem', letterSpacing: 3,
+                                                background: isLocktober ? 'rgba(197,160,89,0.15)' : isRec ? '#8b0000' : 'rgba(139,0,0,0.12)',
+                                                color: isLocktober ? '#c5a059' : isRec ? '#fff' : 'rgba(139,0,0,0.6)',
+                                                border: isLocktober ? '1px solid rgba(197,160,89,0.3)' : 'none',
+                                                fontFamily: 'Cinzel,serif', fontSize: '0.26rem', letterSpacing: 3,
                                                 padding: '3px 14px', borderRadius: 2, whiteSpace: 'nowrap', fontWeight: 700,
                                             }}>
                                                 {isRec ? 'RECOMMENDED' : t.badge}

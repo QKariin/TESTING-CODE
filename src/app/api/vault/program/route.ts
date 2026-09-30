@@ -10,7 +10,9 @@ export const dynamic = 'force-dynamic';
 // GET /api/vault/program?config=true   — get vault_config (spin wheel, cards, etc.)
 export async function GET(req: NextRequest) {
     const memberId = req.nextUrl.searchParams.get('memberId');
-    const isTemplate = req.nextUrl.searchParams.get('template') === 'true';
+    const templateParam = req.nextUrl.searchParams.get('template');
+    const isTemplate = templateParam === 'true';
+    const isLocktoberTemplate = templateParam === 'locktober';
     const isConfig = req.nextUrl.searchParams.get('config') === 'true';
     const listLocked = req.nextUrl.searchParams.get('listLocked') === 'true';
 
@@ -61,6 +63,22 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json({ locked: results });
+    }
+
+    // ── GET LOCKTOBER TEMPLATE (from vault_config) ──
+    if (isLocktoberTemplate) {
+        const { data } = await supabaseAdmin
+            .from('vault_config')
+            .select('value')
+            .eq('key', 'locktober_template')
+            .maybeSingle();
+        if (data?.value) {
+            const saved: Record<string, any[]> = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+            const rows = Object.entries(saved).map(([d, tasks]) => ({ day_number: parseInt(d), tasks }));
+            rows.sort((a, b) => a.day_number - b.day_number);
+            return NextResponse.json({ template: rows });
+        }
+        return NextResponse.json({ template: [] });
     }
 
     // ── GET CONFIG (spin wheel, cards, quiz, etc.) ──
@@ -139,8 +157,26 @@ export async function POST(req: NextRequest) {
 
     // ── SAVE TEMPLATE (the master formula) ──
     if (action === 'save_template') {
-        const { days } = body; // { "1": [...tasks], "2": [...], ... "30": [...] }
+        const { days, templateType } = body;
         if (!days) return NextResponse.json({ error: 'Missing days' }, { status: 400 });
+
+        // Locktober template → vault_config key 'locktober_template'
+        if (templateType === 'locktober') {
+            const { data: existing } = await supabaseAdmin
+                .from('vault_config').select('id').eq('key', 'locktober_template').maybeSingle();
+            if (existing) {
+                await supabaseAdmin.from('vault_config').update({
+                    value: JSON.stringify(days),
+                    updated_at: new Date().toISOString(),
+                }).eq('id', existing.id);
+            } else {
+                await supabaseAdmin.from('vault_config').insert({
+                    key: 'locktober_template',
+                    value: JSON.stringify(days),
+                });
+            }
+            return NextResponse.json({ success: true });
+        }
 
         // Delete old template
         await supabaseAdmin.from('vault_program_template').delete().neq('id', '00000000-0000-0000-0000-000000000000');

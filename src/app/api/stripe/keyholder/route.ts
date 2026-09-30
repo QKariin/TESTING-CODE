@@ -7,6 +7,7 @@ import { findProfile } from '@/lib/lookup';
 const TIERS: Record<string, { amountCents: number; name: string; label: string; days: number }> = {
     weekly:    { amountCents:  5500, name: 'Exclusive Access — 7 Days',   label: '7-day premium membership',   days: 7   },
     monthly:   { amountCents: 15000, name: 'Exclusive Access — 30 Days',  label: '30-day premium membership',  days: 30  },
+    locktober: { amountCents: 15000, name: 'Locktober 2026 — 31 Days',    label: 'Locktober 2026 lock',        days: 31  },
     quarterly: { amountCents: 30000, name: 'Exclusive Access — 90 Days',  label: '90-day premium membership',  days: 90  },
 };
 

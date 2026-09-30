@@ -155,6 +155,19 @@ function buildItemHtml(u: any, now: number): string {
     }
 
     const isVaultLocked = u.vaultLocked === true;
+    const isLocktober = u.vaultLocktober === true;
+
+    if (isLocktober && !isLocked) {
+        return `
+            <div class="u-item ${isActive ? 'active' : ''} ${hasMsg ? 'has-msg' : ''}" data-id="${u.memberId}" onclick="window.selUser('${u.memberId}')" style="cursor:pointer;position:relative;overflow:hidden;background:rgba(197,160,89,0.07);border:1px solid rgba(197,160,89,0.45);justify-content:center;align-items:center;flex-direction:column;gap:3px;min-height:68px;padding:10px 15px;">
+                <img src="${finalPic}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.15;filter:blur(0px);pointer-events:none;" onerror="this.onerror=null;this.src='${DEFAULT_PIC}'">
+                <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(197,160,89,0.8),transparent);pointer-events:none;"></div>
+                <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:rgba(197,160,89,0.9);position:relative;z-index:1;flex-shrink:0;"><path d="${LOCK_PATH}"/></svg>
+                <div style="font-family:'Cinzel',serif;font-size:0.38rem;color:rgba(197,160,89,0.95);letter-spacing:3px;position:relative;z-index:1;">LOCKTOBER</div>
+                <div style="font-family:'Rajdhani',sans-serif;font-size:0.6rem;color:rgba(255,255,255,0.6);letter-spacing:1px;position:relative;z-index:1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${clean(u.name)}</div>
+            </div>
+        `;
+    }
 
     if (isVaultLocked && !isLocked) {
         return `
@@ -340,22 +353,21 @@ function patchCard(list: HTMLElement, u: any, now: number) {
     const isPaywalled = !!(u.parameters?.paywall?.active) || u.paywall === true;
     const isLocked = isSilenced || isPaywalled;
     const isVaultLocked = u.vaultLocked === true;
+    const isLocktober = u.vaultLocktober === true;
     const vaultReqStatus = u.parameters?.vault_request?.status;
     const hasVaultRequest = vaultReqStatus === 'pending' || vaultReqStatus === 'awaiting_video';
 
     // Detect current card type from DOM
     const wasVaultReq = existing.innerHTML.includes('LOCK REQUEST') || existing.innerHTML.includes('VIDEO PROOF');
-    const wasKeyholder = existing.innerHTML.includes('KEYHOLDER');
+    const wasLocktober = existing.innerHTML.includes('LOCKTOBER');
+    const wasKeyholder = existing.innerHTML.includes('KEYHOLDER') && !wasLocktober;
     const wasLockedCard = existing.innerHTML.includes('SILENCED') || existing.innerHTML.includes('PAYWALLED');
     const hasNormalIcons = !!existing.querySelector('.icon-box');
 
-    // Determine what card type should be now
-    const isNowSpecial = (hasVaultRequest && !isLocked) || (isVaultLocked && !isLocked) || isLocked;
-    const wasSpecial = wasVaultReq || wasKeyholder || wasLockedCard;
-
     // Card type changed — must do full replacement (rare)
     const typeChanged = (hasVaultRequest && !wasVaultReq) || (!hasVaultRequest && wasVaultReq)
-        || (isVaultLocked && !wasKeyholder) || (!isVaultLocked && wasKeyholder)
+        || (isLocktober && !wasLocktober) || (!isLocktober && wasLocktober)
+        || (isVaultLocked && !isLocktober && !wasKeyholder) || (!isVaultLocked && wasKeyholder)
         || (isLocked && !wasLockedCard) || (!isLocked && wasLockedCard && !hasNormalIcons);
     if (typeChanged) {
         const wrapper = document.createElement('div');
@@ -365,8 +377,8 @@ function patchCard(list: HTMLElement, u: any, now: number) {
         return;
     }
 
-    // For special cards (locked/vault-request/keyholder), update name + unread state
-    if (isLocked || hasVaultRequest || isVaultLocked) {
+    // For special cards (locked/vault-request/keyholder/locktober), update name + unread state
+    if (isLocked || hasVaultRequest || isVaultLocked || isLocktober) {
         // Update name if changed
         const nameEls = existing.querySelectorAll<HTMLElement>('div[style*="letter-spacing"]');
         nameEls.forEach(el => {

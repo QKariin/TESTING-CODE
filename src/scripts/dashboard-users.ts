@@ -418,6 +418,10 @@ export async function updateDetail(u: any) {
     if (typeof window !== 'undefined' && (window as any)._setVaultRequest) {
         (window as any)._setVaultRequest(u.parameters?.vault_request || null);
     }
+    // Notify React of Locktober ticket state
+    if (typeof window !== 'undefined' && (window as any)._setLocktoberTicket) {
+        (window as any)._setLocktoberTicket(!!(u.parameters?.locktober_ticket));
+    }
 }
 
 function renderKneelSection(u: any) {
