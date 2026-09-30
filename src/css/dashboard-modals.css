@@ -81,7 +81,7 @@
     border-left: 1px solid rgba(197, 160, 89, 0.1);
     order: 2;
     position: relative;
-    background: linear-gradient(170deg, #0a0608 0%, #06040a 50%, #080508 100%);
+    background: #080808;
 }
 
 #reviewNormalContent {
@@ -949,9 +949,9 @@
 }
 
 .reward-tier-btn.selected {
-    border-color: rgba(197,160,89,0.45);
-    background: linear-gradient(180deg, rgba(197,160,89,0.1) 0%, rgba(100,72,20,0.08) 100%);
-    box-shadow: 0 0 40px rgba(197,160,89,0.12), 0 0 0 1px rgba(197,160,89,0.15);
+    border-color: rgba(197,160,89,0.35);
+    background: rgba(197,160,89,0.06);
+    box-shadow: none;
 }
 
 .reward-tier-btn.selected::before {
