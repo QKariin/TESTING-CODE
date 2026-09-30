@@ -1397,6 +1397,29 @@ export default function VaultPage() {
             ══════════════════════════════════════════════ */}
             <div style={{ display: tab === 'vault' ? 'flex' : 'none', flexDirection: 'column', alignItems: 'center', paddingBottom: 100, position: 'relative', zIndex: 1, minHeight: '100vh' }}>
 
+                {/* ── LOCKTOBER TOP BANNER ── */}
+                {isLocktober && (
+                    <div style={{
+                        width: '100%', position: 'relative', overflow: 'hidden',
+                        background: 'linear-gradient(180deg, rgba(10,6,2,1) 0%, rgba(20,12,4,0.95) 60%, rgba(10,6,2,0) 100%)',
+                        padding: '28px 24px 36px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    }}>
+                        {/* shimmer line top */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, rgba(197,160,89,0.9) 30%, #fff8e7 50%, rgba(197,160,89,0.9) 70%, transparent 100%)' }} />
+                        {/* ambient glow */}
+                        <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', width: 300, height: 140, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(197,160,89,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '8px', marginBottom: 6, position: 'relative' }}>OCTOBER 2026</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', color: '#c5a059', letterSpacing: '10px', fontWeight: 700, lineHeight: 1, position: 'relative', textShadow: '0 0 40px rgba(197,160,89,0.5), 0 2px 0 rgba(0,0,0,0.8)' }}>LOCKTOBER</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '5px', marginTop: 8, position: 'relative' }}>WITH QUEEN KARIN</div>
+                        <div style={{ marginTop: 16, position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ height: 1, width: 40, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.4))' }} />
+                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '3px' }}>DAY <span style={{ fontSize: '1.1rem', color: '#c5a059', fontWeight: 800 }}>{daysIn + 1}</span> / 31</div>
+                            <div style={{ height: 1, width: 40, background: 'linear-gradient(90deg, rgba(197,160,89,0.4), transparent)' }} />
+                        </div>
+                    </div>
+                )}
+
                 {/* ── HALO HERO SECTION ── */}
                 {(() => {
                     const hasChastityTask = daysIn >= 1;
@@ -1457,9 +1480,10 @@ export default function VaultPage() {
                         gap: 0, overflow: 'hidden',
                         transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
                     }}>
-                        {/* Background: chastity photo (day 2+) or video thumbnail (day 1) */}
+                        {/* Background: chastity photo (day 2+) or video thumbnail (day 1) — hidden for Locktober */}
                         {(() => {
-                            const bgUrl = chastityPhotoUrl && (chastityStatus === 'pending' || chastityStatus === 'approved')
+                            const bgUrl = isLocktober ? null
+                                : chastityPhotoUrl && (chastityStatus === 'pending' || chastityStatus === 'approved')
                                 ? chastityPhotoUrl
                                 : daysIn === 0
                                     ? (vaultData?.session?.video_thumb_url || vaultData?.session?.video_proof_url || null)
@@ -1685,45 +1709,18 @@ export default function VaultPage() {
                     );
                 })()}
 
-                {/* ── LOCKTOBER BANNER ── */}
-                {isLocktober && (
-                    <div style={{ width: '100%', padding: '0 16px 14px' }}>
-                        <div style={{
-                            width: '100%', borderRadius: 14, padding: '18px 20px',
-                            background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(197,160,89,0.04))',
-                            border: '1px solid rgba(197,160,89,0.4)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            boxShadow: '0 0 40px rgba(197,160,89,0.08), inset 0 1px 0 rgba(197,160,89,0.12)',
-                            position: 'relative', overflow: 'hidden',
-                        }}>
-                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6), transparent)' }} />
-                            <div>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#c5a059', letterSpacing: '6px', fontWeight: 700, lineHeight: 1 }}>LOCKTOBER</div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginTop: 5 }}>2026 · QUEEN KARIN</div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: 800, lineHeight: 1 }}>
-                                    <span style={{ fontSize: '1.6rem', color: '#c5a059' }}>{daysIn + 1}</span>
-                                    <span style={{ fontSize: '0.7rem', color: 'rgba(197,160,89,0.4)', marginLeft: 4 }}>/31</span>
-                                </div>
-                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', marginTop: 4 }}>DAY</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* ── RELEASE COUNTDOWN — full-width hero panel ── */}
                 <div style={{
                     width: '100%', padding: '0 16px', marginBottom: 8,
                 }}>
                     <div style={{
                         width: '100%', borderRadius: 16, padding: '28px 20px 24px',
-                        background: 'rgba(139,0,0,0.04)',
-                        border: `1px solid ${R}0.12)`,
+                        background: isLocktober ? 'rgba(197,160,89,0.04)' : 'rgba(139,0,0,0.04)',
+                        border: `1px solid ${isLocktober ? 'rgba(197,160,89,0.15)' : `${R}0.12)`}`,
                         backdropFilter: 'blur(12px)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                     }}>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '6px', marginBottom: 4 }}>RELEASE IN</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: isLocktober ? 'rgba(197,160,89,0.45)' : 'rgba(255,255,255,0.25)', letterSpacing: '6px', marginBottom: 4 }}>RELEASE IN</div>
                         {penaltyHours > 0 && (
                             <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', color: 'rgba(255,40,40,0.5)', letterSpacing: '2px', marginBottom: 8 }}>
                                 +{penaltyHours}h ADDED
@@ -1839,15 +1836,19 @@ export default function VaultPage() {
                         </div>
                     ) : (
                         /* ── Active orders list ── */
-                        <div style={{
-                            width: '100%', borderRadius: 16, padding: '24px 20px 16px',
-                            background: 'rgba(139,0,0,0.04)',
-                            border: `1px solid ${R}0.12)`,
-                            backdropFilter: 'blur(12px)',
-                        }}>
+                        <div
+                            onClick={() => setTab('challenge')}
+                            style={{
+                                width: '100%', borderRadius: 16, padding: '24px 20px 16px',
+                                background: isLocktober ? 'rgba(197,160,89,0.04)' : 'rgba(139,0,0,0.04)',
+                                border: `1px solid ${isLocktober ? 'rgba(197,160,89,0.18)' : `${R}0.12)`}`,
+                                backdropFilter: 'blur(12px)',
+                                cursor: 'pointer',
+                            }}
+                        >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
-                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.75rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '1px' }}>DAY {daysIn + 1}</div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: isLocktober ? 'rgba(197,160,89,0.8)' : 'rgba(255,255,255,0.55)', letterSpacing: '4px', fontWeight: 600 }}>TODAY&apos;S ORDERS</div>
+                                <div style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.65rem', color: isLocktober ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.25)', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: 6 }}>DAY {daysIn + 1}<span style={{ opacity: 0.5 }}>›</span></div>
                             </div>
                             {attnSkippedToday && (
                                 <div style={{ textAlign: 'center', padding: '10px 0 14px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', color: 'rgba(255,40,40,0.55)', letterSpacing: '3px' }}>
