@@ -392,6 +392,7 @@ export default function VaultPage() {
     const chatOk = chatGateDone;
     const daysIn = vaultData?.daysIn ?? 0;
     const lockDays = vaultData?.session?.lock_days ?? 0;
+    const isLocktober = vaultData?.session?.tier === 'locktober' || lockDays === 31;
     const dailyRecords = vaultData?.dailyRecords || [];
     const adjustments = vaultData?.adjustments || [];
     // Use programTasks (direct from vault_member_program) as source of truth, fallback to vault_daily orders
@@ -1684,6 +1685,33 @@ export default function VaultPage() {
                     );
                 })()}
 
+                {/* ── LOCKTOBER BANNER ── */}
+                {isLocktober && (
+                    <div style={{ width: '100%', padding: '0 16px 14px' }}>
+                        <div style={{
+                            width: '100%', borderRadius: 14, padding: '18px 20px',
+                            background: 'linear-gradient(135deg, rgba(197,160,89,0.1), rgba(197,160,89,0.04))',
+                            border: '1px solid rgba(197,160,89,0.4)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            boxShadow: '0 0 40px rgba(197,160,89,0.08), inset 0 1px 0 rgba(197,160,89,0.12)',
+                            position: 'relative', overflow: 'hidden',
+                        }}>
+                            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.6), transparent)' }} />
+                            <div>
+                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#c5a059', letterSpacing: '6px', fontWeight: 700, lineHeight: 1 }}>LOCKTOBER</div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '3px', marginTop: 5 }}>2026 · QUEEN KARIN</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontWeight: 800, lineHeight: 1 }}>
+                                    <span style={{ fontSize: '1.6rem', color: '#c5a059' }}>{daysIn + 1}</span>
+                                    <span style={{ fontSize: '0.7rem', color: 'rgba(197,160,89,0.4)', marginLeft: 4 }}>/31</span>
+                                </div>
+                                <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '3px', marginTop: 4 }}>DAY</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* ── RELEASE COUNTDOWN — full-width hero panel ── */}
                 <div style={{
                     width: '100%', padding: '0 16px', marginBottom: 8,
@@ -1826,12 +1854,12 @@ export default function VaultPage() {
                                     &#10005; PERFECTION BROKEN — ORDER SKIPPED
                                 </div>
                             )}
-                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').length === 0 && (
+                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && (isLocktober ? true : o.type !== 'kneel')).length === 0 && (
                                 <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>
                                     {vaultData?.today ? 'NO ADDITIONAL TASKS' : 'LOADING...'}
                                 </div>
                             )}
-                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && o.type !== 'kneel').map((o: any, i: number, arr: any[]) => {
+                            {todayOrders.filter((o: any) => o.type !== 'chastity_check' && (isLocktober ? true : o.type !== 'kneel')).map((o: any, i: number, arr: any[]) => {
                                 const completed = o.done >= o.target;
                                 const subs = vaultData?.submissions || [];
                                 const pending = !completed && (taskSubmitted[o.type] || o.submitted === 'pending' || subs.some((s: any) => s.order_type === o.type && s.status === 'pending'));
@@ -1859,7 +1887,15 @@ export default function VaultPage() {
                                             color: completed ? 'rgba(80,200,120,0.55)' : pending ? 'rgba(197,160,89,0.6)' : 'rgba(255,255,255,0.55)',
                                             textDecoration: completed ? 'line-through' : 'none',
                                             letterSpacing: '0.5px',
-                                        }}>{o.label || (({ kneel: `Kneel ${o.target} times`, chastity_check: 'Chastity Check', spin: 'Spin the Wheel', spin_wheel: 'Spin the Wheel', trial: 'Daily Trial', tribute: `Tribute ${o.target} Coins`, coinflip: 'Coin Flip', card_pick: 'Card Draw', dice_roll: 'Dice Roll', russian_roulette: 'Russian Roulette', truth_dare: 'Truth or Dare', greed_game: 'Greed Game' } as Record<string, string>)[o.type] || o.type.replace(/_/g, ' '))}</span>
+                                            display: 'flex', alignItems: 'center', gap: 8,
+                                        }}>
+                                            {o.type === 'video_task' && (
+                                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke={completed ? 'rgba(80,200,120,0.55)' : 'rgba(197,160,89,0.7)'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                                                </svg>
+                                            )}
+                                            {o.label || (({ kneel: `Kneel ${o.target} times`, chastity_check: 'Chastity Check', spin: 'Spin the Wheel', spin_wheel: 'Spin the Wheel', trial: 'Daily Trial', tribute: `Tribute ${o.target} Coins`, coinflip: 'Coin Flip', card_pick: 'Card Draw', dice_roll: 'Dice Roll', russian_roulette: 'Russian Roulette', truth_dare: 'Truth or Dare', greed_game: 'Greed Game' } as Record<string, string>)[o.type] || o.type.replace(/_/g, ' '))}
+                                        </span>
                                         {pending ? (
                                             <span style={{ fontFamily: 'Orbitron, monospace', fontSize: '0.6rem', color: 'rgba(197,160,89,0.45)', letterSpacing: '2px' }}>PENDING</span>
                                         ) : !completed && o.done > 0 ? (
