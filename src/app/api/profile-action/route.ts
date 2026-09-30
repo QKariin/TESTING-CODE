@@ -123,10 +123,18 @@ export async function POST(req: Request) {
 
                     if (payload.isRoutine) {
                         // Fetch streak data for richer Discord card
-                        const email = (profile?.member_id || memberId || '').toLowerCase();
-                        const { data: ur } = await supabaseAdmin.from('user_routines').select('current_streak, history').eq('member_id', email).maybeSingle();
-                        const streak = ur?.current_streak || 1;
-                        const totalDays = (ur?.history || []).filter((e: any) => e.status === 'approve' || e.status === 'approved').length + 1;
+                        // Isolated try/catch so a lookup failure never blocks the Discord notification
+                        let streak = 1;
+                        let totalDays = 1;
+                        try {
+                            const email = (profile?.member_id || memberId || '').toLowerCase();
+                            const { data: ur } = await supabaseAdmin.from('user_routines').select('current_streak, history').eq('member_id', email).maybeSingle();
+                            if (ur) {
+                                streak = ur.current_streak || 1;
+                                const hist = Array.isArray(ur.history) ? ur.history : [];
+                                totalDays = hist.filter((e: any) => e.status === 'approve' || e.status === 'approved').length + 1;
+                            }
+                        } catch (_) {}
                         const rank = profile?.hierarchy || '';
                         discordRoutineSubmitted(name, streak, totalDays, rank).catch(() => {});
                     }
