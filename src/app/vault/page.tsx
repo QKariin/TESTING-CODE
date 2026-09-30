@@ -1397,12 +1397,13 @@ export default function VaultPage() {
             ══════════════════════════════════════════════ */}
             <div style={{ display: tab === 'vault' ? 'flex' : 'none', flexDirection: 'column', alignItems: 'center', paddingBottom: 100, position: 'relative', zIndex: 1, minHeight: '100vh' }}>
 
-                {/* ── LOCKTOBER TOP BANNER ── */}
+                {/* ── LOCKTOBER TOP BANNER — sticky ── */}
                 {isLocktober && (
                     <div style={{
-                        width: '100%', position: 'relative', overflow: 'hidden',
-                        background: 'linear-gradient(180deg, rgba(10,6,2,1) 0%, rgba(20,12,4,0.95) 60%, rgba(10,6,2,0) 100%)',
-                        padding: '28px 24px 36px',
+                        width: '100%', position: 'sticky', top: 0, zIndex: 50, overflow: 'hidden',
+                        background: 'linear-gradient(180deg, rgba(8,4,1,0.98) 0%, rgba(14,9,2,0.97) 70%, rgba(8,4,1,0.95) 100%)',
+                        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                        padding: '20px 24px 24px',
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                     }}>
                         {/* shimmer line top */}
