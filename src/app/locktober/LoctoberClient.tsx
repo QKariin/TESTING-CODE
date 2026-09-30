@@ -62,15 +62,10 @@ export default function LoctoberClient() {
     }, [userEmail]);
 
     useEffect(() => {
-        const getTarget = () => {
-            const now = new Date();
-            let d = (8 - now.getDay()) % 7;
-            if (d === 0) d = 7;
-            const t = new Date(now); t.setDate(now.getDate() + d); t.setHours(0, 0, 0, 0);
-            return t.getTime();
-        };
+        // October 1st 2026 at midnight EET (UTC+3)
+        const TARGET = new Date('2026-10-01T00:00:00+03:00').getTime();
         const tick = () => {
-            const diff = Math.max(0, getTarget() - Date.now());
+            const diff = Math.max(0, TARGET - Date.now());
             setCountdown({ d: Math.floor(diff / 86400000), h: Math.floor(diff / 3600000) % 24, m: Math.floor(diff / 60000) % 60, s: Math.floor(diff / 1000) % 60 });
         };
         tick(); const iv = setInterval(tick, 1000); return () => clearInterval(iv);
@@ -207,7 +202,7 @@ export default function LoctoberClient() {
 
                 {/* ── Countdown ── */}
                 <div style={{ animation: mounted ? 'locFadeIn 0.8s ease-out 0.55s both' : 'none', marginBottom: 28 }}>
-                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.4rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(139,0,0,0.7)', textTransform: 'uppercase', marginBottom: 12 }}>Price rises to &euro;{REGULAR} in</div>
+                    <div style={{ fontFamily: 'Cinzel,serif', fontSize: '0.4rem', fontWeight: 600, letterSpacing: 5, color: 'rgba(139,0,0,0.7)', textTransform: 'uppercase', marginBottom: 12 }}>The lock closes in</div>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(12px,4vw,24px)' }}>
                         {[{ v: pad(countdown.d), l: 'Days' }, { v: pad(countdown.h), l: 'Hrs' }, { v: pad(countdown.m), l: 'Min' }, { v: pad(countdown.s), l: 'Sec' }].map((u) => (
                             <div key={u.l} style={{ textAlign: 'center' }}>
