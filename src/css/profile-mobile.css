@@ -728,19 +728,20 @@ body.desktop-preview #mobBottomNav { display: none !important; }
     }
 
     #mobTaskText {
-        font-family: 'Cinzel', serif;
-        font-size: 0.82rem;
-        color: rgba(255, 255, 255, 0.75);
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.92);
         text-align: center;
-        line-height: 1.6;
-        padding: 18px 16px !important;
+        line-height: 1.7;
+        padding: 20px 18px !important;
         background: rgba(197, 160, 89, 0.03);
         border-radius: 2px;
         margin: 14px 0 18px !important;
         min-height: 60px !important;
         border: 1px solid rgba(197, 160, 89, 0.1);
-        border-left: 2px solid rgba(197, 160, 89, 0.3);
-        letter-spacing: 0.3px;
+        border-left: 2px solid rgba(197, 160, 89, 0.35);
+        letter-spacing: 0.2px;
     }
 
     .mob-horiz-scroll {

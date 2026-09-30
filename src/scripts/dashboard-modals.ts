@@ -190,16 +190,21 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const u = users.find(x => x.memberId === memberId);
     const memberDisplay = u ? u.name?.toUpperCase() : '';
     const avatarInitial = memberDisplay ? memberDisplay[0] : '?';
+    const avatarUrl = (u as any)?.avatar || '';
+    const memberRank = ((u as any)?.hierarchy || (u as any)?.rank || '').toUpperCase();
     const statusBadge = isHistory && status
         ? `<span style="font-family:Rajdhani,sans-serif;font-size:0.4rem;letter-spacing:2px;padding:3px 10px;border-radius:20px;border:1px solid ${status === 'approve' ? 'rgba(57,255,20,0.4)' : 'rgba(200,30,30,0.5)'};color:${status === 'approve' ? '#39ff14' : '#e03030'};background:${status === 'approve' ? 'rgba(57,255,20,0.07)' : 'rgba(200,30,30,0.08)'};">${status === 'approve' ? 'APPROVED' : 'REJECTED'}</span>`
         : '';
     if (headerEl) {
+        const avatarBg = avatarUrl ? `url('${avatarUrl}') center/cover #0d0b0a` : '#0d0b0a';
+        const avatarContent = avatarUrl ? '' : `<span style="font-family:Cinzel,serif;font-size:1.2rem;color:rgba(197,160,89,0.6);">${avatarInitial}</span>`;
         headerEl.innerHTML = `
-            <div style="display:flex;align-items:center;gap:12px;">
-                <div style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(197,160,89,0.18);display:flex;align-items:center;justify-content:center;font-family:Cinzel,serif;font-size:0.9rem;color:rgba(197,160,89,0.5);flex-shrink:0;">${avatarInitial}</div>
+            <div style="font-family:Orbitron,monospace;font-size:0.52rem;color:rgba(197,160,89,0.45);letter-spacing:5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">SUBJECT${statusBadge ? `&nbsp;&nbsp;${statusBadge}` : ''}</div>
+            <div style="display:flex;align-items:center;gap:16px;">
+                <div style="width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(197,160,89,0.4);flex-shrink:0;background:${avatarBg};display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(197,160,89,0.12);">${avatarContent}</div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-family:Cinzel,serif;font-size:1.1rem;color:rgba(242,230,205,0.92);font-weight:600;letter-spacing:3px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${memberDisplay}</div>
-                    <div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:4px;margin-top:3px;display:flex;align-items:center;gap:8px;">SUBJECT${statusBadge ? `&nbsp;·&nbsp;${statusBadge}` : ''}</div>
+                    <div style="font-family:Cinzel,serif;font-size:1.4rem;color:#fff;font-weight:700;letter-spacing:3px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${memberDisplay}</div>
+                    ${memberRank ? `<div style="font-family:Orbitron,monospace;font-size:0.5rem;color:rgba(197,160,89,0.5);letter-spacing:2px;margin-top:6px;">${memberRank}</div>` : ''}
                 </div>
             </div>`;
     }
@@ -209,11 +214,11 @@ export function openModal(taskId: string | null, memberId: string | null, mediaU
     const _seed = _d.getFullYear() * 10000 + (_d.getMonth() + 1) * 100 + _d.getDate();
     const _dailyCode = String((_seed * 7 + 1337) % 9000 + 1000);
 
-    textEl.innerHTML = `<div style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.25);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px;">Task</div>`
-        + `<div style="font-family:Rajdhani,sans-serif;font-size:1.05rem;color:rgba(238,224,196,0.88);line-height:1.72;margin-bottom:16px;">${clean(taskText || 'No description provided.')}</div>`
-        + `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05);">
-            <span style="font-family:Rajdhani,sans-serif;font-size:0.6rem;color:rgba(197,160,89,0.28);letter-spacing:4px;text-transform:uppercase;">Code</span>
-            <span style="font-family:Cinzel,serif;font-size:1rem;font-weight:700;color:rgba(197,160,89,0.65);letter-spacing:10px;">${_dailyCode}</span>
+    textEl.innerHTML = `<div style="font-family:Orbitron,monospace;font-size:0.52rem;color:rgba(197,160,89,0.45);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;">TASK DIRECTIVE</div>`
+        + `<div style="font-family:Rajdhani,sans-serif;font-size:1.18rem;color:rgba(255,255,255,0.92);line-height:1.75;margin-bottom:18px;">${clean(taskText || 'No description provided.')}</div>`
+        + `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span style="font-family:Orbitron,monospace;font-size:0.52rem;color:rgba(197,160,89,0.4);letter-spacing:4px;text-transform:uppercase;">DAILY CODE</span>
+            <span style="font-family:Cinzel,serif;font-size:1.1rem;font-weight:700;color:rgba(197,160,89,0.75);letter-spacing:10px;">${_dailyCode}</span>
         </div>`;
 
     // Clear note from previous session
