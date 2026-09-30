@@ -949,20 +949,20 @@
 }
 
 .reward-tier-btn.selected {
-    border-color: rgba(197,160,89,0.35);
-    background: rgba(197,160,89,0.06);
+    border-color: rgba(197,160,89,0.4);
+    background: rgba(6, 4, 8, 0.95);
     box-shadow: none;
 }
 
 .reward-tier-btn.selected::before {
-    background: linear-gradient(90deg, transparent, #c5a059, transparent);
+    background: linear-gradient(90deg, transparent, rgba(197,160,89,0.6), transparent);
 }
 
 .rt-pts {
     font-family: 'Cinzel', serif;
     font-weight: 700;
     font-size: 2rem;
-    color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.15);
     line-height: 1;
     transition: all 0.2s;
 }
@@ -970,20 +970,20 @@
 .rt-lbl {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
-    font-size: 0.34rem;
-    color: rgba(255,255,255,0.18);
-    letter-spacing: 4px;
+    font-size: 0.65rem;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 3px;
     text-transform: uppercase;
     transition: all 0.2s;
 }
 
 .reward-tier-btn.selected .rt-pts {
-    color: #c5a059;
-    text-shadow: 0 0 30px rgba(197,160,89,0.6), 0 0 60px rgba(197,160,89,0.2);
+    color: rgba(197,160,89,0.9);
+    text-shadow: none;
 }
 
 .reward-tier-btn.selected .rt-lbl {
-    color: rgba(197,160,89,0.65);
+    color: rgba(197,160,89,0.55);
 }
 
 /* ── LUXURY REVIEW PANEL ─────────────────────────────────────────────── */
