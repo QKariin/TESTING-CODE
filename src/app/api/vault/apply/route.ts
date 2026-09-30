@@ -275,6 +275,9 @@ export async function GET(req: Request) {
             } catch (_) {}
         }
 
+        const { data: lkSettings } = await getAdmin().from('vault_config').select('value').eq('key', 'locktober_settings').maybeSingle();
+        const locktoberInviteVideo = (() => { try { const v = lkSettings?.value; const obj = typeof v === 'string' ? JSON.parse(v) : v; return obj?.inviteVideoUrl || ''; } catch { return ''; } })();
+
         return NextResponse.json({
             active: true,
             status: session.status,
@@ -283,6 +286,7 @@ export async function GET(req: Request) {
             tier: session.tier,
             scheduledStart: session.scheduled_start || null,
             coinsPaid: session.coins_paid || 0,
+            locktoberInviteVideo,
         });
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });

@@ -65,6 +65,7 @@ const LOCKTOBER_PHASES = [
 ];
 
 const CONFIG_SECTIONS = [
+    { key: 'locktober_settings', title: 'LOCKTOBER SETUP', desc: 'Invitation video & settings' },
     { key: 'spin_wheel', title: 'SPIN WHEEL', desc: 'What they land on' },
     { key: 'card_deck', title: 'TASK CARDS', desc: 'Random task draws' },
     { key: 'lines_texts', title: 'WRITING LINES', desc: 'Repeated text' },
@@ -1149,6 +1150,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
 
 /* ═══════════════ CONFIG VIEW ═══════════════ */
 function ConfigView({ configData, setConfigData, configSection, setConfigSection, onSave, saving }: any) {
+    const [lkVidUploading, setLkVidUploading] = useState(false);
     const section = CONFIG_SECTIONS.find(s => s.key===configSection)!;
     const data = configData[configSection] || [];
     const update = (idx: number, field: string, val: any) => { const n=[...data]; if(field==='_s') n[idx]=val; else n[idx]={...n[idx],[field]:val}; setConfigData({...configData,[configSection]:n}); };
@@ -1169,6 +1171,48 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                 ))}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }} className="kscr">
+                {configSection === 'locktober_settings' ? (() => {
+                    const lk = (configData.locktober_settings as any) || {};
+                    const setLk = (v: any) => setConfigData({ ...configData, locktober_settings: v });
+                    return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 600 }}>
+                            <div>
+                                <div style={{ fontFamily: FC, fontSize: '.6rem', color: GOLD, letterSpacing: 5, marginBottom: 4 }}>LOCKTOBER SETUP</div>
+                                <div style={{ fontFamily: F, fontSize: '.4rem', color: TEXT_DIM }}>Upload the invitation video shown to subs before they lock in for Locktober</div>
+                            </div>
+                            <div>
+                                <div style={{ fontFamily: FC, fontSize: '.4rem', color: TEXT_DIM, letterSpacing: 3, marginBottom: 10 }}>INVITATION VIDEO</div>
+                                {lk.inviteVideoUrl && (
+                                    <video src={lk.inviteVideoUrl} controls playsInline style={{ width: '100%', maxHeight: 280, borderRadius: 10, background: '#000', marginBottom: 10, border: '1px solid rgba(197,160,89,0.2)' }} />
+                                )}
+                                <label style={{ cursor: lkVidUploading ? 'default' : 'pointer', display: 'block' }}>
+                                    <div style={{ padding: '14px 20px', background: 'rgba(197,160,89,0.07)', border: `1px solid ${lkVidUploading ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.35)'}`, borderRadius: 10, color: lkVidUploading ? 'rgba(197,160,89,0.35)' : GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 3, textAlign: 'center' as const }}>
+                                        {lkVidUploading ? 'UPLOADING...' : lk.inviteVideoUrl ? 'REPLACE VIDEO' : '+ UPLOAD INVITATION VIDEO'}
+                                    </div>
+                                    <input type="file" accept="video/*" style={{ display: 'none' }} disabled={lkVidUploading} onChange={async (e) => {
+                                        const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                        setLkVidUploading(true);
+                                        try {
+                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+                                            const path = `locktober/invite-${crypto.randomUUID()}.${ext}`;
+                                            const signRes = await fetch('/api/upload/signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bucket: 'media', path }) });
+                                            if (!signRes.ok) { alert('Upload failed'); return; }
+                                            const { signedUrl, publicUrl } = await signRes.json();
+                                            const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'video/mp4' }, body: file });
+                                            if (!putRes.ok) { alert('Upload failed'); return; }
+                                            const updated = { ...lk, inviteVideoUrl: publicUrl };
+                                            setLk(updated);
+                                            await onSave('locktober_settings', updated);
+                                        } catch { alert('Upload failed'); } finally { setLkVidUploading(false); }
+                                    }} />
+                                </label>
+                                {lk.inviteVideoUrl && (
+                                    <button onClick={() => { const updated = { ...lk, inviteVideoUrl: '' }; setLk(updated); onSave('locktober_settings', updated); }} style={{ marginTop: 8, background: 'none', border: 'none', color: 'rgba(255,60,60,.4)', fontFamily: F, fontSize: '.4rem', letterSpacing: 2, cursor: 'pointer' }}>REMOVE VIDEO</button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })() : (<>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>
                         <div style={{ fontFamily: FC, fontSize: '.6rem', color: GOLD, letterSpacing: 5 }}>{section?.title}</div>
@@ -1225,6 +1269,7 @@ function ConfigView({ configData, setConfigData, configSection, setConfigSection
                         return null;
                     })}
                 </div>
+                </>)}
             </div>
         </div>
     );

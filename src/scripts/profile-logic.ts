@@ -5896,8 +5896,8 @@ const VAULT_ONBOARD_LIMIT_DESCS: Record<string, string> = {
     "Self-harm": "Nothing that causes real physical injury",
 };
 
-// URL of Queen Karin's Locktober invitation video — update this when the video is ready
-const LOCKTOBER_INVITE_VIDEO_URL = '';
+// URL of Queen Karin's Locktober invitation video — set via dashboard Config > Locktober Setup
+let LOCKTOBER_INVITE_VIDEO_URL = '';
 
 function _showVaultOnboarding(data: { sessionId: string; lockDays: number }) {
     document.getElementById('_vaultVideoOverlay')?.remove();
@@ -6484,6 +6484,7 @@ export async function checkVaultLockStatus() {
             const res = await fetch('/api/vault/apply');
             data = await res.json();
         }
+        if (data.locktoberInviteVideo) LOCKTOBER_INVITE_VIDEO_URL = data.locktoberInviteVideo;
         _updateVaultLockButton(data);
 
         // Force video proof overlay if awaiting — user cannot use the app until submitted
