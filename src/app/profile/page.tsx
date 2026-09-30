@@ -1178,6 +1178,7 @@ export default function ProfilePage() {
                             participantStatus={participantStatus}
                             participationMap={participationMap}
                             memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                            hasLocktoberTicket={!!(profile?.parameters?.locktober_ticket)}
                             onClose={() => setDesktopChallengeOpen(false)}
                             onOpenPanel={(cId: string) => { setDesktopChallengeOpen(false); setChallengePanelId(cId); setChallengePanelOpen(true); }}
                             onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); checkChallengeRef.current?.(); }}
@@ -2435,6 +2436,7 @@ export default function ProfilePage() {
                         participantStatus={participantStatus}
                         participationMap={participationMap}
                         memberEmail={profile?.memberId || profile?.member_id || profile?.email || ''}
+                        hasLocktoberTicket={!!(profile?.parameters?.locktober_ticket)}
                         onClose={() => (window as any).closeMobChallenges?.()}
                         onOpenPanel={(cId: string) => { (window as any).closeMobChallenges?.(); setChallengePanelId(cId); setChallengePanelOpen(true); }}
                         onJoined={() => { setIsParticipant(true); setParticipantStatus('active'); setChallengeCounts(prev => ({ ...prev, yours: prev.yours + 1 })); checkChallengeRef.current?.(); }}
@@ -3279,7 +3281,7 @@ function ChallengeUploadPanel({ challengeId, memberEmail, onClose, onJoined, emb
 }
 
 // ─── DESKTOP CHALLENGE MODAL ─────────────────────────────────────────────────
-function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, participationMap, memberEmail, onClose, onOpenPanel, onJoined, embedded }: {
+function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, participantStatus, participationMap, memberEmail, onClose, onOpenPanel, onJoined, embedded, hasLocktoberTicket }: {
     challenges: any[];
     activeChallenge: { id: string; name: string; theme: string; status: string } | null;
     isParticipant: boolean;
@@ -3290,6 +3292,7 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
     onOpenPanel: (challengeId: string) => void;
     onJoined: () => void;
     embedded?: boolean;
+    hasLocktoberTicket?: boolean;
 }) {
     const [joining, setJoining] = useState<string | null>(null);
     const [joinError, setJoinError] = useState('');
@@ -3412,17 +3415,17 @@ function DesktopChallengeModal({ challenges, activeChallenge, isParticipant, par
                 <div style={{ marginBottom: 14 }}>
                     <div style={{
                         position: 'relative', borderRadius: 14, overflow: 'hidden',
-                        border: profile?.parameters?.locktober_ticket ? '1px solid rgba(197,160,89,0.5)' : '1px solid rgba(197,160,89,0.2)',
+                        border: hasLocktoberTicket ? '1px solid rgba(197,160,89,0.5)' : '1px solid rgba(197,160,89,0.2)',
                         minHeight: 180,
                         background: 'linear-gradient(160deg, rgba(12,8,4,0.98) 0%, rgba(20,12,4,0.95) 100%)',
                     }}>
                         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(197,160,89,0.08) 0%, transparent 70%)' }} />
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: profile?.parameters?.locktober_ticket ? 'linear-gradient(90deg, transparent, #c5a059, #e040fb, #c5a059, transparent)' : 'linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent)' }} />
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: hasLocktoberTicket ? 'linear-gradient(90deg, transparent, #c5a059, #e040fb, #c5a059, transparent)' : 'linear-gradient(90deg, transparent, rgba(197,160,89,0.3), transparent)' }} />
                         <div style={{ position: 'relative', padding: '28px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', minHeight: 180 }}>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '6px', textTransform: 'uppercase', marginBottom: 4 }}>October 2026</div>
                             <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1.15rem', color: '#c5a059', fontWeight: 700, letterSpacing: '2px', textAlign: 'center', marginBottom: 6 }}>LOCKTOBER</div>
                             <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.76rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45, textAlign: 'center', marginBottom: 14 }}>31 days locked under Her control.</div>
-                            {profile?.parameters?.locktober_ticket ? (
+                            {hasLocktoberTicket ? (
                                 <button onClick={() => (window as any).openVaultLockRequest?.()} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                     margin: '0 auto', padding: '10px 28px', borderRadius: 10,

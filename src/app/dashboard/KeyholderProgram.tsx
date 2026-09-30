@@ -264,7 +264,7 @@ function ProgramView({ days, sel, setSel, updateTask, addTask, removeTask, moveT
                             <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: sel ? 'repeat(auto-fill,minmax(90px,1fr))' : 'repeat(auto-fill,minmax(160px,1fr))', gap: sel ? 8 : 12 }}>
-                            {phase.days.map(d => {
+                            {phase.days.map((d: number) => {
                                 const tasks = days[String(d)] || [];
                                 const isA = sel===d;
                                 return (
@@ -1345,7 +1345,7 @@ function MemberView({ email, setEmail, program, sel, setSel, info, locked, onLoa
                                                 <div style={{ flex: 1, height: 1, background: 'rgba(197,160,89,.12)' }} />
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: sel?'1fr 1fr':'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
-                                                {phase.days.map(d => {
+                                                {phase.days.map((d: number) => {
                                                     const tasks = program[String(d)]||[];
                                                     const isA = sel===d;
                                                     const isC = info?.daysIn===d;
