@@ -345,6 +345,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                 {/* TASK CARDS GRID */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 18 }}>
                     {tasks.map((task: any, idx: number) => {
+                        if (task.type === 'chastity_check') return null; // already shown in permanent strip above
                         const mechMeta = MECH_LIST.find(m => m.id === task.type);
                         const oldMeta = TASK_META[task.type];
                         const icon = mechMeta?.icon || oldMeta?.icon || '\u2022';
