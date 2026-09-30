@@ -2471,7 +2471,7 @@ export default function VaultPage() {
 
                                                             {/* ── GENERIC TASK SUBMISSION (all non-handled types) ── */}
                                                             {!['spin','trial','tribute','silence'].includes(o.type) && (() => {
-                                                                const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance'].includes(o.type);
+                                                                const isPhotoTask = ['cold_shower','body_writing','exercise','photo_proof','ambush_snap','timed_photo','multi_video','endurance','video_task'].includes(o.type);
                                                                 const isTextTask = ['journal','confession','worship','gratitude','essay','lines','writing'].includes(o.type);
                                                                 const isInteractive = ['dice_roll','coinflip','card_pick','russian_roulette','spin_wheel','truth_dare','greed_game','simon_says'].includes(o.type);
                                                                 const isSelfReport = ['edge','corner_time','denial','kneel'].includes(o.type);
@@ -2514,6 +2514,12 @@ export default function VaultPage() {
 
                                                                 return (
                                                                     <div>
+                                                                        {/* Queen's instruction video (video_task) */}
+                                                                        {o.config?.videoUrl && (
+                                                                            <div style={{ marginBottom: 16, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(197,160,89,0.2)', background: '#000' }}>
+                                                                                <video src={o.config.videoUrl} controls playsInline style={{ width: '100%', display: 'block', maxHeight: 280 }} />
+                                                                            </div>
+                                                                        )}
                                                                         {/* Task description — priority: config fields > meta desc > fallback */}
                                                                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.95rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.8, marginBottom: 22, padding: '14px 16px', background: 'rgba(0,0,0,0.25)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
                                                                             {o.config?.instruction || o.config?.prompt || o.config?.question

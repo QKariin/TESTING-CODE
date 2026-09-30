@@ -307,6 +307,7 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
     // Mechanism-first add flow
     const [addMech, setAddMech] = useState<string|null>(null);
     const [addConfig, setAddConfig] = useState<any>({});
+    const [vidUploading, setVidUploading] = useState(false);
 
     return (
         <div className="kslide" style={{ width: '68%', borderLeft: `1px solid rgba(197,160,89,.18)`, display: 'flex', flexDirection: 'column', background: 'rgba(10,10,16,0.92)', overflow: 'hidden', position: 'relative' }}>
@@ -649,6 +650,36 @@ function TaskPanel({ dayNum, tasks, onClose, updateTask, addTask, removeTask, mo
                                     <div><div style={lbl}>PROMPT</div><textarea value={ec.prompt || ''} onChange={e => setEc({ ...ec, prompt: e.target.value })} rows={3} style={ta as any} /></div>
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>MIN WORDS</span><input type="number" value={ec.minWords || 50} onChange={e => setEc({ ...ec, minWords: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
                                 </>)}
+                                {mechId === 'video_task' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        <div><div style={lbl}>WRITTEN PROMPT (shown below video)</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={3} style={ta as any} /></div>
+                                        <div>
+                                            <div style={lbl}>YOUR VIDEO INSTRUCTION</div>
+                                            {ec.videoUrl && (
+                                                <video src={ec.videoUrl} controls playsInline style={{ width: '100%', borderRadius: 8, marginBottom: 8, maxHeight: 180, background: '#000' }} />
+                                            )}
+                                            <label style={{ cursor: vidUploading ? 'default' : 'pointer', display: 'block' }}>
+                                                <div style={{ padding: '10px 16px', background: 'rgba(197,160,89,0.07)', border: `1px solid ${vidUploading ? 'rgba(197,160,89,0.15)' : 'rgba(197,160,89,0.35)'}`, borderRadius: 8, color: vidUploading ? 'rgba(197,160,89,0.35)' : GOLD, fontFamily: FC, fontSize: '.45rem', letterSpacing: 3, textAlign: 'center' as const }}>
+                                                    {vidUploading ? 'UPLOADING...' : ec.videoUrl ? 'REPLACE VIDEO' : '+ UPLOAD YOUR VIDEO'}
+                                                </div>
+                                                <input type="file" accept="video/*" style={{ display: 'none' }} disabled={vidUploading} onChange={async (e) => {
+                                                    const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                                    setVidUploading(true);
+                                                    try {
+                                                        const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+                                                        const path = `task-videos/${crypto.randomUUID()}.${ext}`;
+                                                        const signRes = await fetch('/api/upload/signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bucket: 'media', path }) });
+                                                        if (!signRes.ok) { alert('Upload failed'); return; }
+                                                        const { signedUrl, publicUrl } = await signRes.json();
+                                                        const putRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': file.type || 'video/mp4' }, body: file });
+                                                        if (!putRes.ok) { alert('Upload failed'); return; }
+                                                        setEc({ ...ec, videoUrl: publicUrl });
+                                                    } catch { alert('Upload failed'); } finally { setVidUploading(false); }
+                                                }} />
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
                                 {mechId === 'multi_video' && (<>
                                     <div><div style={lbl}>INSTRUCTION</div><textarea value={ec.instruction || ''} onChange={e => setEc({ ...ec, instruction: e.target.value })} rows={2} style={ta as any} /></div>
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span style={lbl}>RECORDINGS</span><input type="number" value={ec.target || 1} onChange={e => setEc({ ...ec, target: +e.target.value })} style={{ ...inp, width: 70 }} /></div>
