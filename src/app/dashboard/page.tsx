@@ -2306,8 +2306,26 @@ export default function DashboardPage() {
                                             {todayChastityPhoto && (
                                                 <>
                                                     <a href={todayChastityPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(139,0,0,0.15)', marginBottom: chastityStatus === 'pending' ? 8 : 0 }}>
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={todayChastityPhoto} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                        {(() => {
+                                                            const isVid = /\.(mp4|mov|webm|ogg)(\?|$)/i.test(todayChastityPhoto);
+                                                            const thumb = chastityCheckRow?.thumbnail_url || null;
+                                                            if (!isVid) return <img src={todayChastityPhoto} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />;  // eslint-disable-line @next/next/no-img-element
+                                                            if (thumb) return (
+                                                                <div style={{ position: 'relative' }}>
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img src={thumb} alt="Chastity check" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
+                                                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
+                                                                        <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="rgba(0,0,0,0.55)"/><polygon points="14,11 27,18 14,25" fill="rgba(255,255,255,0.85)"/></svg>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                            return (
+                                                                <div style={{ width: '100%', height: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(139,0,0,0.05)', gap: 6 }}>
+                                                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                                                                    <span style={{ fontFamily: "'Orbitron',sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.2)', letterSpacing: 2 }}>VIDEO SUBMITTED</span>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </a>
                                                     {chastityStatus === 'pending' && (
                                                         <div style={{ display: 'flex', gap: 8 }}>
@@ -2484,7 +2502,7 @@ export default function DashboardPage() {
                                         {s?.video_proof_url && (
                                             <div style={{ margin: '0 4px 12px' }}>
                                                 <div style={{ fontFamily: "'Cinzel',serif", fontSize: '0.45rem', color: 'rgba(180,40,40,0.5)', letterSpacing: 3, marginBottom: 8 }}>VIDEO PROOF {s.video_reviewed && <span style={{ color: 'rgba(100,180,100,0.6)' }}>- REVIEWED</span>}</div>
-                                                <video src={`${s.video_proof_url}#t=0.1`} controls playsInline preload="metadata" muted style={{ width: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid rgba(139,0,0,0.15)', background: '#000' }} />
+                                                <video src={`${s.video_proof_url}#t=0.1`} controls playsInline preload="none" muted style={{ width: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid rgba(139,0,0,0.15)', background: '#000' }} poster={s.video_thumb_url || undefined} />
                                             </div>
                                         )}
 
