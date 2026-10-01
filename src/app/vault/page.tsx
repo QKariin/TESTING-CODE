@@ -1460,6 +1460,105 @@ export default function VaultPage() {
                         : chastityStatus === 'pending' ? 'rgba(197,160,89,0.65)'
                         : '#c03030';
 
+                    // ── LOCKTOBER: replace halo with 31-day calendar ──
+                    if (isLocktober) {
+                        const ltOffset = 4; // Oct 1 2026 = Thursday
+                        return (
+                            <div style={{ width: '100%', padding: '24px 16px 0' }}>
+                                <div style={{
+                                    display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
+                                    gap: 6, width: '100%', marginBottom: 24,
+                                }}>
+                                    {['S','M','T','W','T','F','S'].map((d, i) => (
+                                        <div key={`hd${i}`} style={{
+                                            textAlign: 'center', fontFamily: 'Orbitron, sans-serif',
+                                            fontSize: '0.45rem', color: 'rgba(197,160,89,0.3)',
+                                            letterSpacing: '1px', paddingBottom: 6,
+                                        }}>{d}</div>
+                                    ))}
+                                    {Array.from({ length: ltOffset }).map((_, i) => (
+                                        <div key={`le${i}`} />
+                                    ))}
+                                    {Array.from({ length: 31 }).map((_, i) => {
+                                        const dayNum = i + 1;
+                                        const isToday = i === daysIn;
+                                        const isPast = i < daysIn;
+                                        const obedient = isPast ? (dailyRecords[i]?.perfect ?? undefined) : undefined;
+                                        const dayLog = dailyRecords[i] ? _toDayLog(dailyRecords[i]) : null;
+                                        const lf = isToday ? 'rgba(197,160,89,0.75)'
+                                            : obedient === true ? 'rgba(139,0,0,0.85)'
+                                            : obedient === false ? 'rgba(255,40,40,0.12)'
+                                            : isPast ? 'rgba(197,160,89,0.18)'
+                                            : 'rgba(255,255,255,0.04)';
+                                        const ls = isToday ? '#c5a059'
+                                            : obedient === true ? 'rgba(180,60,60,0.7)'
+                                            : obedient === false ? 'rgba(255,40,40,0.3)'
+                                            : isPast ? 'rgba(197,160,89,0.4)'
+                                            : 'rgba(255,255,255,0.1)';
+                                        return (
+                                            <div key={i}
+                                                onClick={dayLog ? () => setSelectedDay(dayLog) : undefined}
+                                                style={{
+                                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                                                    cursor: dayLog ? 'pointer' : 'default',
+                                                    filter: isToday ? 'drop-shadow(0 0 5px rgba(197,160,89,0.5))' : 'none',
+                                                    animation: isToday ? 'vPulse 2s ease-in-out infinite' : 'none',
+                                                    padding: '4px 2px',
+                                                }}
+                                            >
+                                                {obedient === false ? (
+                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                                        <rect x="3" y="11" width="18" height="11" rx="2" fill={lf} stroke={ls} strokeWidth="1.5" />
+                                                        <path d="M7 11V7a5 5 0 0 1 9.9-1" fill="none" stroke={ls} strokeWidth="1.5" strokeLinecap="round" />
+                                                        <circle cx="12" cy="16" r="1.5" fill={ls} />
+                                                    </svg>
+                                                ) : (
+                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                                        <rect x="3" y="11" width="18" height="11" rx="2" fill={lf} stroke={ls} strokeWidth="1.5" />
+                                                        <path d="M7 11V7a5 5 0 0 1 10 0v4" fill="none" stroke={ls} strokeWidth="1.5" />
+                                                        <circle cx="12" cy="16" r="1.5" fill={ls} />
+                                                    </svg>
+                                                )}
+                                                <span style={{
+                                                    fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem',
+                                                    color: isToday ? 'rgba(197,160,89,0.9)'
+                                                        : isPast ? 'rgba(197,160,89,0.4)'
+                                                        : 'rgba(255,255,255,0.12)',
+                                                    letterSpacing: '0.5px',
+                                                }}>{dayNum}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div style={{
+                                    width: '100%',
+                                    background: 'rgba(18,12,14,0.92)',
+                                    border: '1px solid rgba(197,160,89,0.15)',
+                                    borderRadius: 12, padding: '16px 10px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+                                    marginBottom: 30,
+                                }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                            <span id="vaultMerit" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.score ?? 0}</span>
+                                            <svg width="24" height="24" viewBox="0 0 512 512" fill="#8b0000" style={{ opacity: 0.8 }}><path d="M256 0c17.7 0 32.5 11.5 37.6 28.5l25.6 85.3 89.6-16.4c16.2-3 32.8 5.7 39.5 20.9s1.3 33-12.7 44.5l-69.8 57.6 44.8 80.1c8.4 15 3.9 34.3-10.3 43.6s-32.5 6.4-44.5-6.7L256 270 156.2 337.4c-12 13.1-30.3 16-44.5 6.7s-18.7-28.6-10.3-43.6l44.8-80.1-69.8-57.6c-14-11.5-19.4-30.6-12.7-44.5s23.3-23.9 39.5-20.9l89.6 16.4 25.6-85.3C223.5 11.5 238.3 0 256 0zm0 432c-15.1 0-29.3 6.9-38.6 18.6l-50 62.5c-11.1 13.9-6.9 34.4 7 45.5s34.4 6.9 45.5-7l36.1-45.1 36.1 45.1c11.1 13.9 31.6 18.1 45.5 7s18.1-31.6 7-45.5l-50-62.5c-9.3-11.7-23.5-18.6-38.6-18.6z" /></svg>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(180,40,40,0.65)', letterSpacing: '2px' }}>MERIT</span>
+                                    </div>
+                                    <div style={{ width: 1, height: 50, background: 'rgba(139,0,0,0.15)' }} />
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: '45%' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                            <span id="vaultCoins" style={{ fontFamily: 'Orbitron, sans-serif', fontSize: 'clamp(1.2rem, 5vw, 1.5rem)', color: '#fff', fontWeight: 800, lineHeight: 1 }}>{profile?.wallet ?? 0}</span>
+                                            <svg width="24" height="24" viewBox="0 0 512 512" fill="#a01020"><path d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 210.6 384 227.2 384 245.6c0 11.4-5.5 22.1-15.2 31.4c-21.2 20.4-66.2 34.1-118.4 34.9c-10.2 .2-20.7 .3-31.3 .3c-62.2 0-117.4-12.3-152.5-31.4C42.7 261.4 28 244.8 28 226.4c0-11.4 5.5-22.1 15.2-31.4c21.2-20.4 66.2-34.1 117.5-33.9z" /></svg>
+                                        </div>
+                                        <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', color: 'rgba(180,40,40,0.65)', letterSpacing: '2px' }}>COINS</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
                     return (
                 <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 20px 0' }}>
 
