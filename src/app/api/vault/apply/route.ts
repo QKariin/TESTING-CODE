@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { DbService } from '@/lib/supabase-service';
-import { discordVaultLock } from '@/lib/discord';
+import { discordVaultLock, discordLocktoberJoin } from '@/lib/discord';
 import { generateDefaultProgram } from '@/lib/vault-program-defaults';
 import { generateLocktoberProgram } from '@/lib/locktober-program-defaults';
 
@@ -220,13 +220,22 @@ export async function POST(req: Request) {
         // Notify Queen
         _notifyQueen(profile.name || memberId, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
 
-        // Global chat card + Discord (DISABLED FOR TESTING)
-        // const memberName = profile.name || memberId.split('@')[0];
-        // const rawPic = profile.avatar_url || '';
-        // const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
-        // const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
-        // try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
-        // discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
+        // Global chat card + Discord
+        const memberName = profile.name || memberId.split('@')[0];
+        const rawPic = profile.avatar_url || '';
+        const memberPhoto = (rawPic && rawPic.length > 5) ? rawPic : null;
+
+        if (tier.days === 31) {
+            // Locktober: gold card to global chat + private chat + Discord
+            const locktoberCard = JSON.stringify({ name: memberName, photo: memberPhoto });
+            try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `LOCKTOBER_JOIN_CARD::${locktoberCard}` }); } catch (_) {}
+            try { await DbService.sendMessage(memberId, `LOCKTOBER_JOIN_CARD::${locktoberCard}`, 'system'); } catch (_) {}
+            discordLocktoberJoin(memberName).catch(() => {});
+        } else {
+            const cardData = { name: memberName, photo: memberPhoto, days: tier.days, type: isInstant ? 'instant' : 'request' };
+            try { await getAdmin().from('global_messages').insert({ sender_email: 'system', sender_name: 'SYSTEM', sender_avatar: null, message: `VAULT_LOCK_CARD::${JSON.stringify(cardData)}` }); } catch (_) {}
+            discordVaultLock(memberName, tier.days, isInstant ? 'instant' : 'request').catch(() => {});
+        }
 
         return NextResponse.json({
             success: true,

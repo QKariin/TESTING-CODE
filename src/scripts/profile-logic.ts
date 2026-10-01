@@ -4005,7 +4005,7 @@ function isSystemMessage(msg: any) {
     if (!msg) return false;
     const content = (msg.content || msg.message || '');
     // Card messages are NOT system messages — they render as rich cards in regular chat
-    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('LOCK_EXTENDED_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::')) return false;
+    if (content.startsWith('INVENTORY_CARD::') || content.startsWith('VAULT_UNLOCK_CARD::') || content.startsWith('VAULT_LOCK_CARD::') || content.startsWith('LOCK_EXTENDED_CARD::') || content.startsWith('LEADERBOARD_REWARD_CARD::') || content.startsWith('PROMOTION_CARD::') || content.startsWith('WELCOME_CARD::') || content.startsWith('TASK_REVIEW_CARD::') || content.startsWith('ROUTINE_CHANGE::') || content.startsWith('TASK_FEEDBACK::') || content.startsWith('WISHLIST::') || content.startsWith('LOCKTOBER_JOIN_CARD::')) return false;
     if (msg.type === 'system') return true; // Explicit type check
     const sender = (msg.sender_email || msg.sender || '').toLowerCase();
     const upper = content.toUpperCase();
@@ -4397,6 +4397,38 @@ function renderChatMessage(msg: any, prevTs?: number): string {
             return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
         } catch (_) {
             return `<div class="cb-row cb-row-queen">${queenAvatar}<div class="cb-wrap-queen"><div class="cb-queen">Vault Locked</div>${timeStr ? `<div class="chat-ts chat-ts-left">${timeStr}</div>` : ''}</div></div>`;
+        }
+    }
+
+    // LOCKTOBER JOIN CARD (desktop global chat)
+    if (content.startsWith('LOCKTOBER_JOIN_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCKTOBER_JOIN_CARD::', ''));
+            const ini = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,rgba(197,160,89,0.12),transparent 70%);"><div style="width:54px;height:54px;border-radius:50%;border:1px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            const cardHtml = `
+            <div style="width:min(85%,300px);margin:0 auto;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c0906 0%,#140f05 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.08);">
+                <div style="position:relative;width:100%;height:120px;background:#0a0703;overflow:hidden;">
+                    ${photoBlock}${photoFallback}
+                    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,#0c0906 100%);"></div>
+                    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.92);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                        <span style="font-family:'Cinzel',serif;font-size:0.4rem;color:#c5a059;letter-spacing:5px;">LOCKTOBER 2026</span>
+                    </div>
+                </div>
+                <div style="padding:12px 16px 16px;text-align:center;">
+                    <div style="margin-bottom:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                    <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);letter-spacing:2px;font-weight:600;margin-bottom:6px;">${d.name||''}</div>
+                    <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 8px;"></div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE CAGE</div>
+                    <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.07);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:4px 14px;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;letter-spacing:2px;">31 DAYS · OCT 1–31</span>
+                    </div>
+                </div>
+            </div>`;
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;">${cardHtml}${timeStr ? `<div class="chat-ts" style="text-align:center;margin-top:4px">${timeStr}</div>` : ''}</div>`;
+        } catch (_) {
+            return `<div class="cb-row" style="justify-content:center;padding:8px 0;"><div style="font-family:'Cinzel',serif;font-size:0.65rem;color:rgba(197,160,89,0.5);">Locktober joined</div></div>`;
         }
     }
 
@@ -7922,6 +7954,39 @@ function _buildMobGlBubble(msg: any): string {
         } catch { /* fall through */ }
     }
 
+    // LOCKTOBER JOIN CARD (mobile private chat)
+    if (content.startsWith('LOCKTOBER_JOIN_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCKTOBER_JOIN_CARD::', ''));
+            const ini = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,rgba(197,160,89,0.12),transparent 70%);"><div style="width:56px;height:56px;border-radius:50%;border:1px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:320px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c0906 0%,#140f05 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.08);">
+                        <div style="position:relative;width:100%;height:130px;background:#0a0703;overflow:hidden;">
+                            ${photoBlock}${photoFallback}
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,#0c0906 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.92);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                                <span style="font-family:'Cinzel',serif;font-size:0.4rem;color:#c5a059;letter-spacing:5px;">LOCKTOBER 2026</span>
+                            </div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="margin-bottom:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);letter-spacing:2px;font-weight:600;margin-bottom:6px;">${d.name||''}</div>
+                            <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 8px;"></div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE CAGE</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.07);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:4px 14px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;letter-spacing:2px;">31 DAYS · OCT 1–31</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.38rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
     // LOCK EXTENDED CARD (mobile/system chat view)
     if (content.startsWith('LOCK_EXTENDED_CARD::')) {
         try {
@@ -8109,6 +8174,39 @@ function _buildMobGlBubble(msg: any): string {
                             <div style="width:40%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.5),transparent);margin:0 auto 8px;"></div>
                             <div style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:rgba(197,160,89,0.65);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE COURT</div>
                             <div style="display:inline-flex;align-items:center;gap:4px;background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.25);border-radius:20px;padding:3px 12px;"><svg width="12" height="9" viewBox="0 0 26 20" fill="#c5a059"><path d="M2 18 L5 8 L10 13 L13 3 L16 13 L21 8 L24 18 Z"/><rect x="2" y="17" width="22" height="2" rx="1"/></svg><span style="font-family:'Orbitron',sans-serif;font-size:0.4rem;color:#c5a059;letter-spacing:2px;">${(d.rank || 'HALL BOY').toUpperCase()}</span></div>
+                        </div>
+                    </div>
+                    <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>
+                </div>
+            </div>`;
+        } catch { /* fall through */ }
+    }
+
+    // LOCKTOBER JOIN CARD (mobile global chat)
+    if (content.startsWith('LOCKTOBER_JOIN_CARD::')) {
+        try {
+            const d = JSON.parse(content.replace('LOCKTOBER_JOIN_CARD::', ''));
+            const ini = (d.name || 'S')[0].toUpperCase();
+            const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+            const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,rgba(197,160,89,0.12),transparent 70%);"><div style="width:54px;height:54px;border-radius:50%;border:1px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.3rem;color:#c5a059;">${ini}</div></div>`;
+            return `<div style="display:flex;justify-content:center;padding:8px 0;margin-bottom:6px;">
+                <div style="width:85%;max-width:320px;min-width:200px;">
+                    <div style="width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c0906 0%,#140f05 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.08);">
+                        <div style="position:relative;width:100%;height:120px;background:#0a0703;overflow:hidden;">
+                            ${photoBlock}${photoFallback}
+                            <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,#0c0906 100%);"></div>
+                            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.92);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:4px 14px;white-space:nowrap;">
+                                <span style="font-family:'Cinzel',serif;font-size:0.4rem;color:#c5a059;letter-spacing:5px;">LOCKTOBER 2026</span>
+                            </div>
+                        </div>
+                        <div style="padding:12px 16px 16px;text-align:center;">
+                            <div style="margin-bottom:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                            <div style="font-family:'Cinzel',serif;font-size:0.85rem;color:rgba(255,255,255,0.85);letter-spacing:2px;font-weight:600;margin-bottom:6px;">${d.name||''}</div>
+                            <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 8px;"></div>
+                            <div style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:rgba(197,160,89,0.55);letter-spacing:3px;margin-bottom:10px;">HAS ENTERED THE CAGE</div>
+                            <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(197,160,89,0.07);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:4px 14px;">
+                                <span style="font-family:'Orbitron',sans-serif;font-size:0.38rem;color:#c5a059;letter-spacing:2px;">31 DAYS · OCT 1–31</span>
+                            </div>
                         </div>
                     </div>
                     <div style="font-family:'Orbitron';font-size:0.36rem;color:rgba(255,255,255,0.2);text-align:center;margin-top:4px;letter-spacing:1px;">${time}</div>

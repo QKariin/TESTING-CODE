@@ -33,7 +33,7 @@ export async function renderChat(messages: any[]) {
     const _isSystem = (m: any) => {
         const s = (m.sender_email || m.sender || "").toLowerCase();
         const txt = (m.content || m.message || "");
-        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::') || txt.startsWith('VAULT_UNLOCK_CARD::') || txt.startsWith('VAULT_LOCK_CARD::') || txt.startsWith('LEADERBOARD_REWARD_CARD::')) return false;
+        if (txt.startsWith('WISHLIST::') || txt.startsWith('TASK_FEEDBACK::') || txt.startsWith('PROMOTION_CARD::') || txt.startsWith('WELCOME_CARD::') || txt.startsWith('ROUTINE_CHANGE::') || txt.startsWith('TASK_REVIEW_CARD::') || txt.startsWith('INVENTORY_CARD::') || txt.startsWith('VAULT_UNLOCK_CARD::') || txt.startsWith('VAULT_LOCK_CARD::') || txt.startsWith('LEADERBOARD_REWARD_CARD::') || txt.startsWith('LOCKTOBER_JOIN_CARD::')) return false;
         if (s === 'system' || m.type === 'system' || m.metadata?.isSystem === true) return true;
         const up = txt.toUpperCase();
         return up.includes("TASK VERIFIED") || up.includes("TASK REJECTED") ||
@@ -320,6 +320,37 @@ export async function renderChat(messages: any[]) {
                         </div>
                     </div>`;
                 } catch { contentHtml = `<div class="msg m-queen">Vault Locked</div>`; }
+            }
+
+            // LOCKTOBER JOIN CARD (dashboard chat)
+            else if (originalMsg.startsWith('LOCKTOBER_JOIN_CARD::')) {
+                try {
+                    const d = JSON.parse(originalMsg.replace('LOCKTOBER_JOIN_CARD::', ''));
+                    const ini = (d.name || 'S')[0].toUpperCase();
+                    const photoBlock = d.photo ? `<img src="${d.photo}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : '';
+                    const photoFallback = `<div style="${d.photo ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,rgba(197,160,89,0.12),transparent 70%);"><div style="width:50px;height:50px;border-radius:50%;border:1px solid rgba(197,160,89,0.5);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.2rem;color:#c5a059;">${ini}</div></div>`;
+                    contentHtml = `
+                    <div style="width:min(55%,280px);margin:0 auto;">
+                        <div style="border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#0c0906 0%,#140f05 60%,#0a0703 100%);border:1px solid rgba(197,160,89,0.45);box-shadow:0 12px 40px rgba(0,0,0,0.8),0 0 30px rgba(197,160,89,0.08);">
+                            <div style="position:relative;width:100%;height:110px;background:#0a0703;overflow:hidden;">
+                                ${photoBlock}${photoFallback}
+                                <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 30%,#0c0906 100%);"></div>
+                                <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(10,7,2,0.92);border:1px solid rgba(197,160,89,0.5);border-radius:20px;padding:3px 12px;white-space:nowrap;">
+                                    <span style="font-family:'Cinzel',serif;font-size:0.38rem;color:#c5a059;letter-spacing:5px;">LOCKTOBER 2026</span>
+                                </div>
+                            </div>
+                            <div style="padding:10px 14px 14px;text-align:center;">
+                                <div style="margin-bottom:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(197,160,89,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                                <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:rgba(255,255,255,0.85);letter-spacing:2px;font-weight:600;margin-bottom:5px;">${d.name||''}</div>
+                                <div style="width:50%;height:1px;background:linear-gradient(to right,transparent,rgba(197,160,89,0.4),transparent);margin:0 auto 6px;"></div>
+                                <div style="font-family:'Orbitron',sans-serif;font-size:0.35rem;color:rgba(197,160,89,0.55);letter-spacing:3px;margin-bottom:8px;">HAS ENTERED THE CAGE</div>
+                                <div style="display:inline-flex;align-items:center;background:rgba(197,160,89,0.07);border:1px solid rgba(197,160,89,0.2);border-radius:20px;padding:3px 12px;">
+                                    <span style="font-family:'Orbitron',sans-serif;font-size:0.35rem;color:#c5a059;letter-spacing:2px;">31 DAYS · OCT 1–31</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } catch { contentHtml = `<div class="msg m-queen">Locktober Joined</div>`; }
             }
 
             // B. PROMOTION CARD

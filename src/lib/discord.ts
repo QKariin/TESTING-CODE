@@ -272,6 +272,19 @@ export function discordProgramLock(name: string, days: number, type: 'instant' |
     });
 }
 
+export function discordLocktoberJoin(name: string) {
+    return sendDiscordEmbed({
+        title: '🔐 LOCKTOBER 2026',
+        description: `**${name}** has locked for Locktober\n\n*31 days under Queen Karin's control — October 1–31*`,
+        color: 0xc5a059,
+        fields: [
+            { name: 'Duration', value: '31 days', inline: true },
+            { name: 'Program', value: 'Locktober 2026', inline: true },
+        ],
+        image: { url: cardUrl('locktober', 'LOCKTOBER 2026', `${name} has entered the cage`, 'October 1 – 31 · 31 Days Locked', '🔐') },
+    });
+}
+
 export function discordWishlistPurchase(senderName: string, itemTitle: string, cost: number, itemImage?: string | null) {
     return sendDiscordEmbed({
         title: 'WISHLIST TRIBUTE',
