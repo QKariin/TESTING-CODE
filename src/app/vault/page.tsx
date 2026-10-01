@@ -2398,7 +2398,7 @@ export default function VaultPage() {
                                                 } else {
                                                     vladReact('Member flipped TAILS. Denied. 8 hour cooldown. Better luck next time.');
                                                     setTimeout(() => {
-                                                        const cooldownUntil = Date.now() + 8 * 3600 * 1000;
+                                                        const cooldownUntil = Date.now() + 1 * 3600 * 1000;
                                                         setChatGateCooldownUntil(cooldownUntil);
                                                         setChatGateFlipState('idle');
                                                     }, 2500);
