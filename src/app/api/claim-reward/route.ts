@@ -31,9 +31,12 @@ export async function POST(req: Request) {
         if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
         // Verify reward is actually pending (prevents direct API abuse)
-        // Only kneel rewards (source === 'kneel' or no source) require the check
-        if (source !== 'install') {
-            const params = profile.parameters || {};
+        const params = profile.parameters || {};
+        if (source === 'install') {
+            if (params.install_reward_claimed) {
+                return NextResponse.json({ error: 'Install reward already claimed' }, { status: 403 });
+            }
+        } else {
             if (!params.reward_pending) {
                 return NextResponse.json({ error: 'No reward pending' }, { status: 403 });
             }
@@ -50,10 +53,14 @@ export async function POST(req: Request) {
             updateData = { score: (profile.score || 0) + POINT_REWARD };
         }
 
-        // Clear reward_pending flag so it can't be claimed again
+        // Clear reward flag so it can't be claimed again
         try {
             const params = profile.parameters || {};
-            delete params.reward_pending;
+            if (source === 'install') {
+                params.install_reward_claimed = true;
+            } else {
+                delete params.reward_pending;
+            }
             await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
         } catch (_) {}
 
