@@ -1403,21 +1403,30 @@ export default function VaultPage() {
                         width: '100%', position: 'sticky', top: 0, zIndex: 50, overflow: 'hidden',
                         background: 'linear-gradient(180deg, rgba(8,4,1,0.98) 0%, rgba(14,9,2,0.97) 70%, rgba(8,4,1,0.95) 100%)',
                         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-                        padding: '20px 24px 24px',
+                        padding: '10px 24px 14px',
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
                     }}>
                         {/* shimmer line top */}
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, rgba(197,160,89,0.9) 30%, #fff8e7 50%, rgba(197,160,89,0.9) 70%, transparent 100%)' }} />
                         {/* ambient glow */}
                         <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', width: 300, height: 140, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(197,160,89,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(197,160,89,0.5)', letterSpacing: '8px', marginBottom: 6, position: 'relative' }}>OCTOBER 2026</div>
-                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '2.2rem', color: '#c5a059', letterSpacing: '10px', fontWeight: 700, lineHeight: 1, position: 'relative', textShadow: '0 0 40px rgba(197,160,89,0.5), 0 2px 0 rgba(0,0,0,0.8)' }}>LOCKTOBER</div>
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '5px', marginTop: 8, position: 'relative' }}>WITH QUEEN KARIN</div>
-                        <div style={{ marginTop: 16, position: 'relative', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ height: 1, width: 40, background: 'linear-gradient(90deg, transparent, rgba(197,160,89,0.4))' }} />
-                            <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.7rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '3px' }}>DAY <span style={{ fontSize: '1.1rem', color: '#c5a059', fontWeight: 800 }}>{daysIn + 1}</span> / 31</div>
-                            <div style={{ height: 1, width: 40, background: 'linear-gradient(90deg, rgba(197,160,89,0.4), transparent)' }} />
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '6px', marginBottom: 3, position: 'relative' }}>{(profile?.name || '').toUpperCase()}</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: '#c5a059', letterSpacing: '10px', fontWeight: 700, lineHeight: 1, position: 'relative', textShadow: '0 0 40px rgba(197,160,89,0.5), 0 2px 0 rgba(0,0,0,0.8)' }}>LOCKTOBER</div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '5px', marginTop: 4, position: 'relative' }}>WITH QUEEN KARIN</div>
+                        <div style={{ marginTop: 10, position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 800, lineHeight: 1, letterSpacing: 2 }}>{String(remaining.d).padStart(2,'0')}<span style={{ fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', marginLeft: 2 }}>D</span></div>
+                            </div>
+                            <div style={{ color: 'rgba(197,160,89,0.25)', fontSize: '1rem' }}>·</div>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 800, lineHeight: 1, letterSpacing: 2 }}>{String(remaining.h).padStart(2,'0')}<span style={{ fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', marginLeft: 2 }}>H</span></div>
+                            </div>
+                            <div style={{ color: 'rgba(197,160,89,0.25)', fontSize: '1rem' }}>·</div>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '1.4rem', color: '#c5a059', fontWeight: 800, lineHeight: 1, letterSpacing: 2 }}>{String(remaining.m).padStart(2,'0')}<span style={{ fontSize: '0.55rem', color: 'rgba(197,160,89,0.5)', marginLeft: 2 }}>M</span></div>
+                            </div>
                         </div>
+                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '5px', marginTop: 4, position: 'relative' }}>RELEASE IN</div>
                     </div>
                 )}
 
@@ -1710,8 +1719,8 @@ export default function VaultPage() {
                     );
                 })()}
 
-                {/* ── RELEASE COUNTDOWN — full-width hero panel ── */}
-                <div style={{
+                {/* ── RELEASE COUNTDOWN — full-width hero panel (hidden for Locktober — shown in banner) ── */}
+                {!isLocktober && <div style={{
                     width: '100%', padding: '0 16px', marginBottom: 8,
                 }}>
                     <div style={{
@@ -1760,7 +1769,7 @@ export default function VaultPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>}
 
                 {/* ── KNEEL BAR ── */}
                 <div style={{ width: '100%', padding: '32px 20px 16px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
