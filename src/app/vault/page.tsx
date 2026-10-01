@@ -3261,11 +3261,29 @@ export default function VaultPage() {
                                                                                 setTaskUploading(true);
                                                                                 try {
                                                                                     const ext = file.name.split('.').pop()?.toLowerCase() || (isVideoTask ? 'mp4' : 'jpg');
-                                                                                    const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
-                                                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                                                    const data = await res.json();
-                                                                                    if (data.url) await submitTask({ photoUrl: data.url });
-                                                                                } catch {} finally { setTaskUploading(false); }
+                                                                                    let fileUrl: string | null = null;
+
+                                                                                    if (isVideoTask) {
+                                                                                        // Videos: upload directly to Supabase to bypass Vercel 4.5MB body limit
+                                                                                        const path = `vault/tasks/${mid}/${crypto.randomUUID()}.${ext}`;
+                                                                                        const sigRes = await fetch('/api/upload/signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bucket: 'media', path }) });
+                                                                                        const sigData = await sigRes.json();
+                                                                                        if (!sigData.signedUrl) throw new Error(sigData.error || 'Failed to get upload URL');
+                                                                                        const putRes = await fetch(sigData.signedUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'video/mp4' } });
+                                                                                        if (!putRes.ok) throw new Error(`Upload failed: ${putRes.status}`);
+                                                                                        fileUrl = sigData.publicUrl;
+                                                                                    } else {
+                                                                                        const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                                                        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                                        const data = await res.json();
+                                                                                        fileUrl = data.url || null;
+                                                                                    }
+
+                                                                                    if (fileUrl) await submitTask({ photoUrl: fileUrl });
+                                                                                    else alert('Upload failed — please try again');
+                                                                                } catch (err: any) {
+                                                                                    alert('Upload failed: ' + (err?.message || 'unknown error'));
+                                                                                } finally { setTaskUploading(false); }
                                                                             };
                                                                             return (
                                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
