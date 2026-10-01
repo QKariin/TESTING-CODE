@@ -70,12 +70,25 @@ export async function POST(req: Request) {
 
             if (profileErr || !profile) {
                 // PROFILE AUTO-CREATION: Ensure every chat sender has a profile.
-                if (!isUUID && senderEmail) {
+                let emailForCreate = senderEmail;
+
+                // If UUID sender, resolve email from auth
+                if (isUUID && !emailForCreate) {
+                    const { data: { user: authUser } } = await supabase.auth.getUser();
+                    if (authUser?.id === rawSender) {
+                        emailForCreate = authUser.email?.toLowerCase() || null;
+                        if (!emailForCreate && authUser.app_metadata?.provider) {
+                            emailForCreate = `${authUser.app_metadata.provider}_${authUser.id}@${authUser.app_metadata.provider}.com`;
+                        }
+                    }
+                }
+
+                if (emailForCreate) {
                     const { data: newProfile, error: createErr } = await adminClient
                         .from('profiles')
                         .insert({
-                            member_id: senderEmail,
-                            name: senderEmail.split('@')[0],
+                            member_id: emailForCreate,
+                            name: emailForCreate.split('@')[0],
                             score: 0,
                             wallet: 0,
                             hierarchy: 'Hall Boy'
@@ -85,19 +98,14 @@ export async function POST(req: Request) {
 
                     if (!createErr && newProfile) {
                         profile = newProfile;
+                        senderEmail = emailForCreate;
                         isQueen = false;
                     }
                 }
             }
 
             if (!profile) {
-                const { data: { user: authUser } } = await supabase.auth.getUser();
-                if (authUser?.id === rawSender || authUser?.email?.toLowerCase() === senderEmail) {
-                    profile = { ID: authUser!.id, hierarchy: 'Queen', wallet: 999999, member_id: senderEmail };
-                    isQueen = true;
-                } else {
-                    return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
-                }
+                return NextResponse.json({ success: false, error: "Sender profile not found." }, { status: 404 });
             } else {
                 isQueen = rankMeetsRequirement(profile.hierarchy, "Secretary");
             }
