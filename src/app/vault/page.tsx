@@ -1410,7 +1410,7 @@ export default function VaultPage() {
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent 0%, rgba(197,160,89,0.9) 30%, #fff8e7 50%, rgba(197,160,89,0.9) 70%, transparent 100%)' }} />
                         {/* ambient glow */}
                         <div style={{ position: 'absolute', top: -40, left: '50%', transform: 'translateX(-50%)', width: 300, height: 140, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(197,160,89,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
-                        <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '6px', marginBottom: 3, position: 'relative' }}>{(profile?.name || '').toUpperCase()}</div>
+                        <div style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: 'rgba(197,160,89,0.7)', letterSpacing: '6px', marginBottom: 3, position: 'relative', fontWeight: 600 }}>{(profile?.name || '').toUpperCase()}</div>
                         <div style={{ fontFamily: 'Cinzel, serif', fontSize: '2rem', color: '#c5a059', letterSpacing: '10px', fontWeight: 700, lineHeight: 1, position: 'relative', textShadow: '0 0 40px rgba(197,160,89,0.5), 0 2px 0 rgba(0,0,0,0.8)' }}>LOCKTOBER</div>
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '5px', marginTop: 4, position: 'relative' }}>WITH QUEEN KARIN</div>
                         <div style={{ marginTop: 10, position: 'relative', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -1534,7 +1534,7 @@ export default function VaultPage() {
                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                             marginBottom: 5, position: 'relative', zIndex: 1,
                         }}>
-                            {profile?.name || ''}
+                            {isLocktober ? '' : (profile?.name || '')}
                         </div>
 
                         {/* Rank / Status */}
