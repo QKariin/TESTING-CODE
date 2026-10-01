@@ -75,7 +75,7 @@ export async function POST(req: Request) {
                 // If UUID sender, resolve email from auth
                 if (isUUID && !emailForCreate) {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
-                    if (authUser?.id === rawSender) {
+                    if (authUser && authUser.id === rawSender) {
                         emailForCreate = authUser.email?.toLowerCase() || null;
                         if (!emailForCreate && authUser.app_metadata?.provider) {
                             emailForCreate = `${authUser.app_metadata.provider}_${authUser.id}@${authUser.app_metadata.provider}.com`;
@@ -119,9 +119,29 @@ export async function POST(req: Request) {
         // For queen sending: resolve conversationId to target member's email
         let conversationEmail = conversationId;
         if (conversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId)) {
-            // conversationId is UUID — resolve to email
+            // conversationId is UUID — resolve to email via profile
             const { data: convProfile } = await adminClient.from('profiles').select('member_id').eq('ID', conversationId).maybeSingle();
-            if (convProfile?.member_id) conversationEmail = convProfile.member_id.toLowerCase();
+            if (convProfile?.member_id) {
+                conversationEmail = convProfile.member_id.toLowerCase();
+            } else {
+                // No profile — look up auth user to get their email, auto-create profile
+                const { data: { user: convAuthUser } } = await adminClient.auth.admin.getUserById(conversationId);
+                if (convAuthUser) {
+                    let convEmail = convAuthUser.email?.toLowerCase();
+                    if (!convEmail && convAuthUser.app_metadata?.provider) {
+                        convEmail = `${convAuthUser.app_metadata.provider}_${convAuthUser.id}@${convAuthUser.app_metadata.provider}.com`;
+                    }
+                    if (convEmail) {
+                        // Auto-create profile so chat can proceed
+                        const { data: newConvProfile } = await adminClient.from('profiles').insert({
+                            member_id: convEmail,
+                            name: convEmail.split('@')[0],
+                            score: 0, wallet: 0, hierarchy: 'Hall Boy'
+                        }).select().single();
+                        if (newConvProfile) conversationEmail = convEmail;
+                    }
+                }
+            }
         }
 
         const chatMemberId = senderEmail || rawSender;
