@@ -3253,28 +3253,53 @@ export default function VaultPage() {
                                                                             </>
                                                                         )}
 
-                                                                        {/* Photo upload for proof tasks */}
-                                                                        {isPhotoTask && (
-                                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                                                                <label style={{ cursor: 'pointer' }}>
-                                                                                    <div style={{ padding: '18px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '3px', color: taskUploading ? 'rgba(255,255,255,0.15)' : '#c5a059', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid #c5a059', borderRadius: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 15px rgba(197,160,89,0.2)' }}>
-                                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                                                                                        {taskUploading ? 'UPLOADING...' : 'UPLOAD PROOF'}
-                                                                                    </div>
-                                                                                    <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={async (e) => {
-                                                                                        const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
-                                                                                        setTaskUploading(true);
-                                                                                        try {
-                                                                                            const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-                                                                                            const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
-                                                                                            const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                                                                                            const data = await res.json();
-                                                                                            if (data.url) await submitTask({ photoUrl: data.url });
-                                                                                        } catch {} finally { setTaskUploading(false); }
-                                                                                    }} />
-                                                                                </label>
-                                                                            </div>
-                                                                        )}
+                                                                        {/* Photo/video upload for proof tasks */}
+                                                                        {isPhotoTask && (() => {
+                                                                            const isVideoTask = o.type === 'video_task' || o.type === 'multi_video';
+                                                                            const doUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+                                                                                const file = e.target.files?.[0]; if (!file) return; e.target.value = '';
+                                                                                setTaskUploading(true);
+                                                                                try {
+                                                                                    const ext = file.name.split('.').pop()?.toLowerCase() || (isVideoTask ? 'mp4' : 'jpg');
+                                                                                    const fd = new FormData(); fd.append('file', file); fd.append('folder', `vault/tasks/${mid}`); fd.append('ext', ext === 'heic' ? 'jpg' : ext);
+                                                                                    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                                                                                    const data = await res.json();
+                                                                                    if (data.url) await submitTask({ photoUrl: data.url });
+                                                                                } catch {} finally { setTaskUploading(false); }
+                                                                            };
+                                                                            return (
+                                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                                                    {isVideoTask ? (
+                                                                                        <>
+                                                                                            {/* Record video now */}
+                                                                                            <label style={{ cursor: taskUploading ? 'default' : 'pointer' }}>
+                                                                                                <div style={{ padding: '16px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '3px', color: taskUploading ? 'rgba(255,255,255,0.15)' : '#c5a059', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid #c5a059', borderRadius: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 15px rgba(197,160,89,0.2)' }}>
+                                                                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg>
+                                                                                                    {taskUploading ? 'UPLOADING...' : 'RECORD VIDEO'}
+                                                                                                </div>
+                                                                                                <input type="file" accept="video/*" capture="environment" style={{ display: 'none' }} onChange={doUpload} />
+                                                                                            </label>
+                                                                                            {/* Upload from gallery */}
+                                                                                            <label style={{ cursor: taskUploading ? 'default' : 'pointer' }}>
+                                                                                                <div style={{ padding: '14px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '3px', color: taskUploading ? 'rgba(255,255,255,0.08)' : 'rgba(197,160,89,0.55)', background: 'transparent', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                                                                                    UPLOAD FROM GALLERY
+                                                                                                </div>
+                                                                                                <input type="file" accept="video/*" style={{ display: 'none' }} onChange={doUpload} />
+                                                                                            </label>
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        <label style={{ cursor: 'pointer' }}>
+                                                                                            <div style={{ padding: '18px 20px', fontFamily: 'Orbitron, sans-serif', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '3px', color: taskUploading ? 'rgba(255,255,255,0.15)' : '#c5a059', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', border: '1px solid #c5a059', borderRadius: 10, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 15px rgba(197,160,89,0.2)' }}>
+                                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                                                                                                {taskUploading ? 'UPLOADING...' : 'UPLOAD PROOF'}
+                                                                                            </div>
+                                                                                            <input type="file" accept="image/*,video/*" capture="environment" style={{ display: 'none' }} onChange={doUpload} />
+                                                                                        </label>
+                                                                                    )}
+                                                                                </div>
+                                                                            );
+                                                                        })()}
 
                                                                         {/* Self-report button */}
                                                                         {isSelfReport && (
