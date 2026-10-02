@@ -822,7 +822,8 @@ export default function VaultPage() {
                                         else if (s === 'rejected') setChastityStatus('rejected');
                                         const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
                                         if (mid) {
-                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(tz)}`).then(r => r.json()).then(vd2 => {
                                                 if (vd2.active) setVaultData(vd2);
                                             }).catch(() => {});
                                         }
@@ -830,7 +831,8 @@ export default function VaultPage() {
                                     .on('broadcast', { event: 'task_reviewed' }, (msg: any) => {
                                         const mid = _cachedProfile?.member_id || _cachedProfile?.memberId || '';
                                         if (mid) {
-                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                                            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(tz)}`).then(r => r.json()).then(vd2 => {
                                                 if (vd2.active) setVaultData(vd2);
                                             }).catch(() => {});
                                         }
@@ -3422,7 +3424,7 @@ export default function VaultPage() {
                         if (!resp.ok) alert('Submit failed: ' + (result.error || 'unknown error'));
                         setFollowUp(null); setFollowUpText(''); clearGambleResults();
                         if (mid) {
-                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => {
+                            fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => {
                                 if (vd2.active) setVaultData(vd2);
                             }).catch(() => {});
                         }
@@ -3558,7 +3560,7 @@ export default function VaultPage() {
                                             if (data.success) {
                                                 setProfile((p: any) => ({ ...p, wallet: (p?.wallet || 0) - 300 }));
                                                 setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false);
-                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
+                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
                                             }
                                         } catch {}
                                     }} style={{
@@ -3578,7 +3580,7 @@ export default function VaultPage() {
                                             if (data.success) {
                                                 setProfile((p: any) => ({ ...p, skippass: Math.max(0, (p?.skippass || 0) - 1) }));
                                                 setFollowUp(null); setFollowUpText(''); setFollowUpSkipping(false);
-                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
+                                                if (mid) { fetch(`/api/vault/session?memberId=${encodeURIComponent(mid)}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)}`).then(r => r.json()).then(vd2 => { if (vd2.active) setVaultData(vd2); }); }
                                             }
                                         } catch {}
                                     }} style={{
