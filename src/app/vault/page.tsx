@@ -971,7 +971,8 @@ export default function VaultPage() {
     const chastityGateAutoOpened = useRef(false);
     useEffect(() => {
         if (chastityGateAutoOpened.current) return;
-        if (!chastityWindow.open) return;
+        // Locktober: no time window — gate fires any time of day
+        if (!chastityWindow.open && !isLocktober) return;
         if (chastityStatus === 'approved' || chastityStatus === 'pending') return;
         // Check localStorage: already submitted today — never re-show
         try {
@@ -983,7 +984,7 @@ export default function VaultPage() {
         if (!vaultData?.session?.id) return;
         chastityGateAutoOpened.current = true;
         setShowChastityGate(true);
-    }, [chastityWindow, vaultData, chastityStatus]);
+    }, [chastityWindow, vaultData, chastityStatus, isLocktober]);
 
     // Close gate if already submitted (handles reload — lazy init can't read empty cache)
     // Skip if gateSuccess is true — submission flow manages its own close timer
@@ -1433,10 +1434,10 @@ export default function VaultPage() {
                 {/* ── HALO HERO SECTION ── */}
                 {(() => {
                     const hasChastityTask = daysIn >= 1;
-                    const cWindowOpen = chastityWindow.open;
-                    const cBeforeWindow = chastityWindow.before;
+                    const cWindowOpen = isLocktober ? true : chastityWindow.open;
+                    const cBeforeWindow = isLocktober ? false : chastityWindow.before;
                     const cMissed = !cWindowOpen && !cBeforeWindow && chastityStatus === 'none' && hasChastityTask;
-                    const cMinsLeft = cWindowOpen ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
+                    const cMinsLeft = (!isLocktober && cWindowOpen) ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
                     const cCanUpload = hasChastityTask && (cWindowOpen || chastityStatus === 'rejected') && chastityStatus !== 'pending' && chastityStatus !== 'approved';
 
                     // Color scheme based on chastity status
