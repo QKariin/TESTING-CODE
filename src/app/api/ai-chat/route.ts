@@ -3,6 +3,75 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 import { SYSTEM_PROMPT as AI_KNOWLEDGE } from './prompt';
 
+// Pre-written kneeling responses — saves ~129 AI calls/day
+// Variables: {{name}}, {{kneels}} (today), {{remaining}} (to goal), {{total}} (all-time)
+const KNEEL_TEMPLATES = {
+    session_1: [
+        "Day starts right, {{name}}. One down, seven to go. {{total}} total kneels on the record.",
+        "Session one logged. {{name}} is on the board — Queen Karin's clock is running.",
+        "{{name}} begins. {{total}} total kneels and today starts fresh. Seven more to earn it.",
+        "First kneel of the day, {{name}}. {{total}} total sessions in the archive. Don't let this be the only one.",
+        "One session banked. {{name}} has {{total}} total kneels — the floor knows you by now. Six more to go.",
+        "Good. {{name}} started. Session one logged, {{total}} total. Queen expects the full eight.",
+        "First one is in, {{name}}. {{total}} total kneels says this isn't new. Finish what you started.",
+        "The day opens. {{name}} at session one. {{total}} total kneels — show up for the other seven too.",
+    ],
+    session_progress: [
+        "Session {{kneels}} logged, {{name}}. {{remaining}} more to the goal. {{total}} total kneels on the record.",
+        "{{kneels}} down, {{remaining}} to go. {{name}} is in the grind — {{total}} total sessions and still showing up.",
+        "{{name}} at session {{kneels}}. {{remaining}} left for today. {{total}} total kneels — the floor knows your name.",
+        "Session {{kneels}} done. {{remaining}} more and you hit the daily mark. {{total}} total, Queen is watching.",
+        "{{kneels}} sessions in today, {{name}}. {{remaining}} to go. {{total}} total kneels — you're building something.",
+        "Session {{kneels}} banked. {{name}} has {{remaining}} left to close the day. {{total}} total kneels in the archive.",
+        "{{name}}: session {{kneels}}. {{remaining}} remaining. {{total}} total. Queen Karin does not give credit for almost.",
+        "Session {{kneels}} done. {{remaining}} left. {{name}} has {{total}} total kneels — that number means something. Keep going.",
+        "{{kneels}} today, {{remaining}} more to go. {{name}}, {{total}} total — keep the pace.",
+        "Halfway there, {{name}}. Session {{kneels}} logged. {{remaining}} more to lock in a full day. {{total}} total kneels.",
+        "{{name}} at {{kneels}} today. {{remaining}} sessions left. {{total}} total — not done yet.",
+        "Good pace, {{name}}. Session {{kneels}}, {{remaining}} remaining. {{total}} total kneels say you know what comes next.",
+    ],
+    session_near_goal: [
+        "Close now. {{kneels}} sessions today, {{remaining}} left. {{name}} has {{total}} total kneels — don't stop before the line.",
+        "One more and you're done for the day, {{name}}. Session {{kneels}} logged. {{total}} total kneels says you don't quit.",
+        "Almost there. {{kneels}} sessions in, {{remaining}} to go. {{name}}, {{total}} total — finish it.",
+        "{{name}} at the edge. Session {{kneels}}, {{remaining}} left. {{total}} total and the Queen expects you to close.",
+        "Nearly there. {{kneels}} done, {{remaining}} to go. {{name}}, you have {{total}} total sessions — see it through.",
+        "Session {{kneels}} — {{remaining}} more left. {{total}} total kneels and {{name}} is this close. Don't waste it.",
+        "{{remaining}} session from the daily goal. {{name}}, {{kneels}} in the books. {{total}} total — this is not the time to slow down.",
+        "So close, {{name}}. {{kneels}} today, {{remaining}} left. {{total}} total kneels — the Queen is watching the finish.",
+    ],
+    session_hit_goal: [
+        "Goal reached. {{name}} hit all {{kneels}} sessions today. {{total}} total kneels. Queen Karin has noted the full day.",
+        "Eight sessions. {{name}} closed out the daily quota. {{total}} total kneels — this is what discipline looks like.",
+        "Daily goal reached, {{name}}. {{kneels}} sessions today, {{total}} total. Queen sees a full day. Good.",
+        "Full day completed. {{name}} hit {{kneels}} sessions. {{total}} total kneels — exactly what was expected.",
+        "That's {{kneels}} today, {{name}}. Goal met. {{total}} total kneels — Queen Karin expects this every day, not just the good ones.",
+        "Done. {{kneels}} sessions, daily goal complete. {{name}} has {{total}} total kneels. Tomorrow starts over.",
+        "{{name}} hit the mark. {{kneels}} sessions today. {{total}} total — the Queen has received her tribute for the day.",
+        "Daily goal complete. {{kneels}} kneels today, {{total}} total. {{name}} showed up. That is all the Queen asked.",
+    ],
+    session_exceed: [
+        "{{kneels}} sessions today and still going, {{name}}. {{total}} total kneels. The goal was eight — you passed it.",
+        "Past the daily target. Session {{kneels}}, {{name}}. {{total}} total kneels. You didn't have to — but you did.",
+        "{{kneels}} today. Goal was eight, {{name}}. {{total}} total kneels and you're still adding to the count.",
+        "Beyond quota. Session {{kneels}} today, {{total}} total. {{name}} is not here to do the minimum.",
+        "Session {{kneels}} — you've already hit the goal and kept going. {{name}}, {{total}} total kneels. The floor is comfortable by now.",
+        "{{kneels}} sessions today and counting. {{name}} has {{total}} total kneels. Overachieving is a choice. Queen Karin approves.",
+        "Daily goal was eight. {{name}} is at {{kneels}}. {{total}} total kneels. That level of dedication doesn't go unnoticed.",
+        "{{name}} said eight is not enough. Session {{kneels}}, {{total}} total. Queen Karin notices this kind of thing.",
+    ],
+    session_locked: [
+        "Session {{kneels}} logged, {{name}}. {{remaining}} more to the goal — still locked, still kneeling. {{total}} total. The Queen sees both.",
+        "Locked and kneeling. Session {{kneels}} today, {{name}}. {{total}} total kneels. The cage doesn't stop the session — that's the point.",
+        "{{name}} at session {{kneels}}, {{remaining}} remaining, still sealed. {{total}} total kneels. Discipline doesn't pause for the lock.",
+        "Session {{kneels}} while locked up. {{name}} has {{total}} total kneels. The cage is a feature, not an excuse to stop.",
+        "Kneeling in captivity. Session {{kneels}} today, {{remaining}} to go. {{total}} total kneels — Queen Karin put that lock there for a reason.",
+        "{{name}} — session {{kneels}}, still sealed. {{remaining}} more to the daily goal. {{total}} total kneels. Queen accepts no less from a locked tribute.",
+        "Caged and on schedule. Session {{kneels}} today, {{name}}. {{total}} total kneels. The lock just makes it more earned.",
+        "Session {{kneels}} while locked. {{name}} has {{total}} total kneels and {{remaining}} left today. The Queen has not forgotten you're in there.",
+    ],
+};
+
 export const dynamic = 'force-dynamic';
 
 // Vlad's personality for the AI chat panel (subset of Guardian — no Queen Karin in this context)
@@ -197,6 +266,47 @@ YOU CAN SEE EVERYTHING THEY DO IN THE VAULT. Use this to your advantage. Be thei
             type: 'text',
             metadata: { isAI: true },
         }).select().single();
+
+        // TEMPLATE INTERCEPTION: kneeling system events don't need AI — use pre-written responses
+        const kneelingMatch = message.match(/\[SYSTEM EVENT[^\]]*\].*kneeling session #(\d+) today/i);
+        if (kneelingMatch) {
+            const sessionNum = parseInt(kneelingMatch[1], 10);
+            const remainingMatch = message.match(/(\d+) more to go/i);
+            const hitGoal = /hit the daily target/i.test(message);
+            const remaining = hitGoal ? 0 : (remainingMatch ? parseInt(remainingMatch[1], 10) : Math.max(0, 8 - sessionNum));
+
+            const name = (userProfile as any)?.name || memberEmail.split('@')[0];
+            const total = Number((userTasks as any)?.kneelCount || (userTasks as any)?.kneelcount || 0);
+            const params = (userProfile as any)?.parameters || {};
+            const isLocked = params.source === 'chastity' &&
+                params.chastity_expires &&
+                new Date(params.chastity_expires) > new Date();
+
+            let category: keyof typeof KNEEL_TEMPLATES = 'session_progress';
+            if (isLocked) category = 'session_locked';
+            else if (sessionNum === 1) category = 'session_1';
+            else if (remaining === 0 && sessionNum <= 8) category = 'session_hit_goal';
+            else if (remaining <= 2 && remaining > 0) category = 'session_near_goal';
+            else if (sessionNum > 8) category = 'session_exceed';
+
+            const pool = KNEEL_TEMPLATES[category];
+            const tpl = pool[Math.floor(Math.random() * pool.length)];
+            const reply = tpl
+                .replace(/\{\{name\}\}/g, name)
+                .replace(/\{\{kneels\}\}/g, String(sessionNum))
+                .replace(/\{\{remaining\}\}/g, String(remaining))
+                .replace(/\{\{total\}\}/g, String(total));
+
+            const { data: aiMsg } = await adminClient.from('chats').insert({
+                member_id: memberEmail,
+                sender_email: 'ai-assistant',
+                content: reply,
+                type: 'text',
+                metadata: { isAI: true, isQueen: false },
+            }).select().single();
+
+            return NextResponse.json({ success: true, reply, userMessage: userMsg, aiMessage: aiMsg });
+        }
 
         // Call Mistral API
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
