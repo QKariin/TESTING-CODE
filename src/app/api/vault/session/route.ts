@@ -132,6 +132,25 @@ export async function GET(req: NextRequest) {
         }
     }
 
+    // Auto-correct today's record if its day_number duplicates a previous day (existing bad data)
+    if (todayRecord && session) {
+        const prevRecords = (dailyRecords || []).filter((r: any) => r.date !== today);
+        const prevMaxDayNum = prevRecords.reduce((max: number, r: any) => Math.max(max, r.day_number || 0), 0);
+        if (todayRecord.day_number <= prevMaxDayNum) {
+            const correctedDayNum = Math.max(getSessionDay(session, tz), prevMaxDayNum + 1);
+            console.log(`[vault/session] Correcting today day_number ${todayRecord.day_number} → ${correctedDayNum} (prev max: ${prevMaxDayNum})`);
+            const correctedOrders = await _getOrdersForDay(session.id, correctedDayNum);
+            await supabaseAdmin.from('vault_daily').update({
+                day_number: correctedDayNum,
+                orders: JSON.stringify(correctedOrders),
+                orders_total: correctedOrders.length,
+                orders_completed: 0,
+                perfect: false,
+            }).eq('id', todayRecord.id);
+            todayRecord = { ...todayRecord, day_number: correctedDayNum, orders: JSON.stringify(correctedOrders), orders_total: correctedOrders.length, orders_completed: 0, perfect: false };
+        }
+    }
+
     // Sync today's orders with the current program (handles program edits after daily row was created)
     if (todayRecord && session) {
         const currentOrders: any[] = typeof todayRecord.orders === 'string' ? JSON.parse(todayRecord.orders) : (todayRecord.orders || []);
