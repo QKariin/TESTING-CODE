@@ -106,7 +106,11 @@ export async function GET(req: NextRequest) {
     let todayRecord = (dailyRecords || []).find((d: any) => d.date === today);
 
     if (!todayRecord && session) {
-        const daysIn2 = getSessionDay(session, tz);
+        // Never reuse a day_number that already exists in a previous record.
+        // current_day may still be 3 at midnight when Day 4 starts (chastity not submitted yet),
+        // which would cause Day 4's vault_daily to get day_number=3 and repeat yesterday's tasks.
+        const prevMaxDayNum = (dailyRecords || []).reduce((max: number, r: any) => Math.max(max, r.day_number || 0), 0);
+        const daysIn2 = Math.max(getSessionDay(session, tz), prevMaxDayNum + 1);
         const orders = await _getOrdersForDay(session.id, daysIn2);
         const { data: inserted, error: insertErr } = await supabaseAdmin.from('vault_daily').insert({
             session_id: session.id,
@@ -1150,7 +1154,6 @@ export async function POST(req: NextRequest) {
     // ── ENSURE TODAY ── create today's daily record if missing, or reset if pre-seeded
     if (action === 'ensure_today') {
         const today = tzToday(tz);
-        const daysIn = getSessionDay(session, tz);
 
         const { data: existing } = await supabaseAdmin
             .from('vault_daily')
@@ -1158,6 +1161,13 @@ export async function POST(req: NextRequest) {
             .eq('session_id', session.id)
             .eq('date', today)
             .maybeSingle();
+
+        // Compute daysIn after checking for existing record — same logic as GET:
+        // never reuse a day_number from a previous date
+        const { data: allDailyForSession } = await supabaseAdmin
+            .from('vault_daily').select('day_number').eq('session_id', session.id).neq('date', today);
+        const prevMaxDayNum = (allDailyForSession || []).reduce((max: number, r: any) => Math.max(max, r.day_number || 0), 0);
+        const daysIn = Math.max(getSessionDay(session, tz), prevMaxDayNum + 1);
 
         if (!existing) {
             // Check if yesterday's chastity check was submitted
