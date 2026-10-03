@@ -34,13 +34,9 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: fetchErr.message }, { status: 500 });
     }
 
-    if (!stale || stale.length === 0) {
-        return NextResponse.json({ success: true, approved: 0 });
-    }
-
     const now = new Date().toISOString();
 
-    for (const ur of stale) {
+    for (const ur of (stale || [])) {
         const history: any[] = ur.history || [];
 
         // Find the pending entry and approve it
