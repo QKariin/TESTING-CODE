@@ -14,6 +14,7 @@ import { GlobalContent } from './GlobalContent';
 import { KeyholderProgramContent } from './KeyholderProgram';
 import { BasicProgramProgramContent } from './BasicProgram';
 import BlogEditor from './BlogEditor';
+import MorningBriefing from './MorningBriefing';
 
 // Scripts
 import { initDashboard, showHome, renderMainDashboard } from '@/scripts/dashboard-main';
@@ -787,6 +788,7 @@ export default function DashboardPage() {
     }, [showPaymentLogs]);
     const [keyholderMember, setKeyholderMember] = useState('');
     const [showBasicProgram, setShowBasicProgram] = useState(false);
+    const [showMorning, setShowMorning] = useState(false);
     const [basicProgramMember, setBasicProgramMember] = useState('');
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
@@ -1600,6 +1602,13 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {/* MORNING BRIEFING PANEL */}
+                {showMorning && !isMobile && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#04040e', overflowY: 'auto', padding: '24px 28px' }}>
+                        <MorningBriefing onClose={() => setShowMorning(false)} />
+                    </div>
+                )}
+
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
                     <div className="v-header">
@@ -1670,7 +1679,8 @@ export default function DashboardPage() {
                     <div className="v-grid-main">
                         {/* HERO CARD */}
                         <div className="v-hero-card glass-card span-2"
-                            style={{ backgroundImage: `linear-gradient(rgba(15, 12, 5, 0.2), rgba(5, 5, 10, 0.9)), url('/hero-bg.png')`, border: '1px solid rgba(197, 160, 89, 0.2)' }}>
+                            onClick={() => setShowMorning(true)}
+                            style={{ backgroundImage: `linear-gradient(rgba(15, 12, 5, 0.2), rgba(5, 5, 10, 0.9)), url('/hero-bg.png')`, border: '1px solid rgba(197, 160, 89, 0.2)', cursor: 'pointer' }}>
                             <div className="vh-content">
                                 <div className="vh-title">Welcome back,<br />Queen Karin</div>
                                 <div className="vh-sub" style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -1678,13 +1688,13 @@ export default function DashboardPage() {
                                     <div style={{ color: '#aaa', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
                                         <span>Logged in as: <b>{userEmail || '...'}</b></span>
                                         <button
-                                            onClick={handleLogout}
+                                            onClick={e => { e.stopPropagation(); handleLogout(); }}
                                             style={{ background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)', color: '#ff4444', fontSize: '0.6rem', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif" }}
                                         >LOGOUT</button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="vh-footer">Tap to record →</div>
+                            <div className="vh-footer">Open morning briefing ↗</div>
                         </div>
 
                         {isDashboardRoute ? (
