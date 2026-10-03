@@ -15,6 +15,7 @@ interface MorningData {
     queueCount: number;
     newApps: number;
     recentTributes: { amount: number; name: string; type: string; timestamp: string }[];
+    chartData: { label: string; value: number }[];
     plan: MorningPlan;
     briefing: string;
 }
@@ -27,59 +28,112 @@ const DEFAULT_PLAN: MorningPlan = {
 };
 
 function fmt(n: number) {
-    if (n === 0) return '—';
+    if (!n) return '€0';
     return `€${Math.round(n).toLocaleString('en')}`;
 }
 
-function typeLabel(type: string) {
-    if (type === 'ENTRANCE') return 'ENTRANCE';
-    if (type.includes('CRYPTO')) return 'CRYPTO';
-    if (type.includes('PAYPAL')) return 'PAYPAL';
+function timeAgo(ts: string) {
+    const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 60) return 'just now';
+    if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+    if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+    return `${Math.floor(s / 86400)}d ago`;
+}
+
+function typeLabel(t: string) {
+    if (t === 'ENTRANCE') return 'ENTRANCE';
+    if (t.includes('CRYPTO')) return 'CRYPTO';
+    if (t.includes('PAYPAL')) return 'PAYPAL';
     return 'TRIBUTE';
 }
 
-function Divider({ label }: { label: string }) {
+function Panel({ title, children, style }: { title: string; children: React.ReactNode; style?: React.CSSProperties }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, margin: '36px 0 28px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, rgba(197,160,89,0.2))' }} />
-            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '5px' }}>{label}</span>
-            <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to left, transparent, rgba(197,160,89,0.2))' }} />
-        </div>
-    );
-}
-
-function BigStat({ value, label, gold }: { value: string; label: string; gold?: boolean }) {
-    return (
-        <div style={{ textAlign: 'center', padding: '0 8px' }}>
+        <div style={{
+            background: 'rgba(255,255,255,0.018)',
+            border: '1px solid rgba(197,160,89,0.1)',
+            borderRadius: 12,
+            overflow: 'hidden',
+            ...style,
+        }}>
             <div style={{
-                fontFamily: "'Cinzel', serif",
-                fontSize: '1.9rem',
-                fontWeight: 700,
-                color: gold && value !== '—' ? '#c5a059' : value === '—' ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.85)',
-                lineHeight: 1,
-                letterSpacing: '1px',
+                padding: '14px 20px 12px',
+                borderBottom: '1px solid rgba(197,160,89,0.07)',
+                fontFamily: "'Rajdhani', sans-serif",
+                fontSize: '0.32rem',
+                color: 'rgba(197,160,89,0.45)',
+                letterSpacing: '5px',
             }}>
-                {value}
+                {title}
             </div>
-            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '4px', marginTop: 10 }}>
-                {label}
+            <div style={{ padding: '18px 20px 20px' }}>
+                {children}
             </div>
         </div>
     );
 }
 
-const fieldStyle: React.CSSProperties = {
+function RevenueChart({ data }: { data: { label: string; value: number }[] }) {
+    if (!data?.length) return null;
+    const maxVal = Math.max(...data.map(d => d.value), 1);
+    const W = 480, H = 130;
+    const barW = 38, gap = 22;
+    const totalW = data.length * (barW + gap) - gap;
+    const startX = (W - totalW) / 2;
+    const padTop = 22, padBot = 22;
+
+    return (
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', overflow: 'visible' }}>
+            <defs>
+                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(197,160,89,0.9)" />
+                    <stop offset="100%" stopColor="rgba(197,160,89,0.25)" />
+                </linearGradient>
+                <linearGradient id="barDim" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(197,160,89,0.25)" />
+                    <stop offset="100%" stopColor="rgba(197,160,89,0.06)" />
+                </linearGradient>
+            </defs>
+            {data.map((d, i) => {
+                const x = startX + i * (barW + gap);
+                const barH = Math.max(3, ((d.value || 0) / maxVal) * (H - padTop - padBot));
+                const y = H - padBot - barH;
+                const isToday = i === data.length - 1;
+                return (
+                    <g key={i}>
+                        <rect x={x} y={y} width={barW} height={barH} rx={4}
+                            fill={isToday ? 'url(#barGrad)' : 'url(#barDim)'}
+                        />
+                        {d.value > 0 && (
+                            <text x={x + barW / 2} y={y - 5} textAnchor="middle"
+                                fontFamily="Rajdhani" fontSize="7.5"
+                                fill={isToday ? 'rgba(197,160,89,0.9)' : 'rgba(197,160,89,0.5)'}>
+                                {d.value >= 1000 ? `€${(d.value / 1000).toFixed(1)}k` : `€${Math.round(d.value)}`}
+                            </text>
+                        )}
+                        <text x={x + barW / 2} y={H - 5} textAnchor="middle"
+                            fontFamily="Rajdhani" fontSize="8"
+                            fill={isToday ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.18)'}>
+                            {d.label}
+                        </text>
+                    </g>
+                );
+            })}
+        </svg>
+    );
+}
+
+const inputStyle: React.CSSProperties = {
     background: 'transparent',
     border: 'none',
     borderBottom: '1px solid rgba(197,160,89,0.12)',
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.75)',
     fontFamily: "'Rajdhani', sans-serif",
     fontSize: '0.88rem',
-    padding: '10px 0',
+    padding: '9px 0',
     outline: 'none',
     width: '100%',
     letterSpacing: '0.5px',
-    transition: 'border-color 0.2s',
 };
 
 export default function MorningBriefing({ onClose }: { onClose: () => void }) {
@@ -97,9 +151,7 @@ export default function MorningBriefing({ onClose }: { onClose: () => void }) {
             .then(r => r.json())
             .then((d: MorningData) => {
                 setData(d);
-                if (d.plan) {
-                    setPlan({ ...DEFAULT_PLAN, ...d.plan, tasks: d.plan.tasks?.length ? d.plan.tasks : ['', '', ''] });
-                }
+                if (d.plan) setPlan({ ...DEFAULT_PLAN, ...d.plan, tasks: d.plan.tasks?.length ? d.plan.tasks : ['', '', ''] });
             })
             .catch(() => {})
             .finally(() => setLoading(false));
@@ -119,221 +171,234 @@ export default function MorningBriefing({ onClose }: { onClose: () => void }) {
     const update = (p: MorningPlan) => { setPlan(p); savePlan(p); };
 
     return (
-        <div style={{ padding: '36px 32px 80px', minHeight: '100%', boxSizing: 'border-box' }}>
+        <div style={{ minHeight: '100%', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
-                .mb-input:focus { border-bottom-color: rgba(197,160,89,0.5) !important; }
-                .mb-back:hover { border-color: rgba(197,160,89,0.35) !important; color: #c5a059 !important; }
+                @keyframes pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+                .mb-in:focus { border-bottom-color: rgba(197,160,89,0.45) !important; color: rgba(255,255,255,0.95) !important; }
+                .mb-back:hover { border-color: rgba(197,160,89,0.3) !important; color: rgba(197,160,89,0.8) !important; }
             `}</style>
 
-            {/* Top bar */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 48 }}>
+            {/* ── HEADER ── */}
+            <div style={{ padding: '28px 28px 24px', borderBottom: '1px solid rgba(197,160,89,0.07)', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                 <div>
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '5px', marginBottom: 14 }}>
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '5px', marginBottom: 10 }}>
                         {dateStr}
                     </div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: '1.7rem', fontWeight: 700, color: '#fff', letterSpacing: '3px', lineHeight: 1.15 }}>
-                        GOOD MORNING,<br />
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: '1.55rem', fontWeight: 700, color: '#fff', letterSpacing: '2px', lineHeight: 1.2 }}>
+                        GOOD MORNING,{' '}
                         <span style={{ color: '#c5a059' }}>QUEEN KARIN</span>
                     </div>
                 </div>
                 <button
                     className="mb-back"
                     onClick={onClose}
-                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.25)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '3px', padding: '9px 18px', cursor: 'pointer', transition: 'all 0.2s', marginTop: 4 }}
+                    style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '3px', padding: '8px 16px', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0, marginBottom: 4 }}
                 >
                     ← BACK
                 </button>
             </div>
 
+            {/* ── AI BRIEFING ── */}
+            {!loading && data?.briefing && (
+                <div style={{ padding: '20px 28px', borderBottom: '1px solid rgba(197,160,89,0.07)', background: 'rgba(197,160,89,0.025)' }}>
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                        <div style={{ width: 2, background: 'linear-gradient(to bottom, rgba(197,160,89,0.6), rgba(197,160,89,0.1))', borderRadius: 2, flexShrink: 0, alignSelf: 'stretch', minHeight: 40 }} />
+                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.95, letterSpacing: '0.2px' }}>
+                            {data.briefing}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {loading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80, gap: 20 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.6)', animation: 'spin 0.9s linear infinite' }} />
-                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(255,255,255,0.12)', letterSpacing: '5px' }}>PREPARING YOUR BRIEFING</div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 0', gap: 20 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.15)', borderTopColor: 'rgba(197,160,89,0.7)', animation: 'spin 0.85s linear infinite' }} />
+                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '5px', animation: 'pulse 2s ease-in-out infinite' }}>PREPARING YOUR BRIEFING</div>
                 </div>
             ) : (
-                <>
-                    {/* AI Briefing */}
-                    {data?.briefing && (
-                        <div style={{ borderLeft: '2px solid rgba(197,160,89,0.25)', paddingLeft: 24, marginBottom: 52, maxWidth: 680 }}>
-                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', lineHeight: 2, letterSpacing: '0.3px' }}>
-                                {data.briefing}
+                <div style={{ padding: '24px 28px 60px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+                    {/* ── LEFT COLUMN ── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                        {/* Revenue Chart Panel */}
+                        <Panel title="REVENUE — LAST 7 DAYS">
+                            <RevenueChart data={data?.chartData || []} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(197,160,89,0.07)' }}>
+                                {[
+                                    { label: 'TODAY', value: data?.revenue.today || 0 },
+                                    { label: 'THIS WEEK', value: data?.revenue.week || 0 },
+                                    { label: 'THIS MONTH', value: data?.revenue.month || 0 },
+                                ].map(({ label, value }) => (
+                                    <div key={label} style={{ textAlign: 'center' }}>
+                                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '1.3rem', fontWeight: 700, color: value > 0 ? '#c5a059' : 'rgba(255,255,255,0.1)', lineHeight: 1 }}>
+                                            {fmt(value)}
+                                        </div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px', marginTop: 7 }}>
+                                            {label}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
-                    )}
+                        </Panel>
 
-                    {/* Two-column layout */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', columnGap: 0 }}>
-
-                        {/* ── LEFT: EMPIRE ── */}
-                        <div style={{ paddingRight: 48 }}>
-
-                            <Divider label="REVENUE" />
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 48 }}>
-                                <BigStat value={fmt(data?.revenue.today || 0)} label="TODAY" gold />
-                                <BigStat value={fmt(data?.revenue.week || 0)} label="THIS WEEK" gold />
-                                <BigStat value={fmt(data?.revenue.month || 0)} label="THIS MONTH" gold />
-                            </div>
-
-                            <Divider label="YOUR EMPIRE" />
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 48 }}>
-                                <BigStat value={String(data?.activeMembers || 0)} label="ACTIVE MEMBERS" />
-                                <BigStat value={String(data?.queueCount || 0)} label="REVIEW QUEUE" />
-                                <BigStat value={String(data?.newApps || 0)} label="APPLICATIONS" />
-                            </div>
-
-                            <Divider label="TRIBUTES" />
-
+                        {/* Tribute Log Panel */}
+                        <Panel title="TRIBUTE ACTIVITY" style={{ flex: 1 }}>
                             {!data?.recentTributes.length ? (
-                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '3px', textAlign: 'center', padding: '24px 0' }}>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.08)', letterSpacing: '3px', textAlign: 'center', padding: '28px 0' }}>
                                     NO RECENT TRIBUTES
                                 </div>
                             ) : (
                                 <div>
+                                    {/* Table header */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '0 16px', padding: '0 0 10px', borderBottom: '1px solid rgba(197,160,89,0.07)', marginBottom: 4 }}>
+                                        {['NAME', 'TYPE', 'AMOUNT', 'WHEN'].map(h => (
+                                            <div key={h} style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(255,255,255,0.15)', letterSpacing: '3px' }}>{h}</div>
+                                        ))}
+                                    </div>
                                     {data.recentTributes.map((t, i) => (
-                                        <div key={i} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)', letterSpacing: '0.5px' }}>
+                                        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '0 16px', padding: '11px 0', borderBottom: '1px solid rgba(255,255,255,0.03)', alignItems: 'center' }}>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {t.name}
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, flexShrink: 0 }}>
-                                                <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '3px' }}>
-                                                    {typeLabel(t.type)}
-                                                </span>
-                                                <span style={{ fontFamily: "'Cinzel', serif", fontSize: '0.88rem', color: '#c5a059', fontWeight: 700 }}>
-                                                    {fmt(t.amount)}
-                                                </span>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '2px', whiteSpace: 'nowrap' }}>
+                                                {typeLabel(t.type)}
+                                            </div>
+                                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.82rem', color: '#c5a059', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'right' }}>
+                                                {fmt(t.amount)}
+                                            </div>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px', whiteSpace: 'nowrap', textAlign: 'right' }}>
+                                                {timeAgo(t.timestamp)}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
-                        </div>
-
-                        {/* Vertical divider */}
-                        <div style={{ background: 'linear-gradient(to bottom, transparent, rgba(197,160,89,0.15) 30%, rgba(197,160,89,0.15) 70%, transparent)' }} />
-
-                        {/* ── RIGHT: TODAY ── */}
-                        <div style={{ paddingLeft: 48 }}>
-
-                            <Divider label="TODAY" />
-
-                            {/* Meals */}
-                            <div style={{ marginBottom: 40 }}>
-                                {(['breakfast', 'lunch', 'dinner'] as const).map(meal => (
-                                    <div key={meal} style={{ marginBottom: 24 }}>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 4 }}>
-                                            {meal.toUpperCase()}
-                                        </div>
-                                        <input
-                                            className="mb-input"
-                                            style={fieldStyle}
-                                            placeholder={`What are you eating?`}
-                                            value={plan.meals[meal]}
-                                            onChange={e => update({ ...plan, meals: { ...plan.meals, [meal]: e.target.value } })}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <Divider label="GYM" />
-
-                            {/* Gym toggle */}
-                            <div style={{ marginBottom: 40 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: plan.gym.enabled ? 20 : 0 }}>
-                                    {['YES', 'NO'].map(opt => {
-                                        const active = opt === 'YES' ? plan.gym.enabled : !plan.gym.enabled;
-                                        return (
-                                            <button
-                                                key={opt}
-                                                onClick={() => update({ ...plan, gym: { ...plan.gym, enabled: opt === 'YES' } })}
-                                                style={{
-                                                    background: 'transparent',
-                                                    border: 'none',
-                                                    fontFamily: "'Cinzel', serif",
-                                                    fontSize: '0.9rem',
-                                                    fontWeight: 700,
-                                                    letterSpacing: '3px',
-                                                    color: active ? '#c5a059' : 'rgba(255,255,255,0.12)',
-                                                    cursor: 'pointer',
-                                                    padding: 0,
-                                                    transition: 'color 0.2s',
-                                                }}
-                                            >
-                                                {opt}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                {plan.gym.enabled && (
-                                    <div>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(197,160,89,0.35)', letterSpacing: '4px', marginBottom: 4 }}>
-                                            WORKOUT
-                                        </div>
-                                        <input
-                                            className="mb-input"
-                                            style={fieldStyle}
-                                            placeholder="Leg day, pull day, cardio..."
-                                            value={plan.gym.workout}
-                                            onChange={e => update({ ...plan, gym: { ...plan.gym, workout: e.target.value } })}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            <Divider label="TASKS" />
-
-                            {/* Tasks */}
-                            <div style={{ marginBottom: 40 }}>
-                                {plan.tasks.map((task, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 4 }}>
-                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(197,160,89,0.3)', flexShrink: 0 }} />
-                                        <input
-                                            className="mb-input"
-                                            style={{ ...fieldStyle, flex: 1 }}
-                                            placeholder="Task..."
-                                            value={task}
-                                            onChange={e => {
-                                                const tasks = [...plan.tasks];
-                                                tasks[i] = e.target.value;
-                                                update({ ...plan, tasks });
-                                            }}
-                                        />
-                                        {plan.tasks.length > 1 && (
-                                            <button
-                                                onClick={() => update({ ...plan, tasks: plan.tasks.filter((_, j) => j !== i) })}
-                                                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '1rem', padding: '0 2px', flexShrink: 0, lineHeight: 1, transition: 'color 0.2s' }}
-                                                onMouseEnter={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.4)'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.1)'; }}
-                                            >
-                                                &#215;
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                                <button
-                                    onClick={() => update({ ...plan, tasks: [...plan.tasks, ''] })}
-                                    style={{ background: 'transparent', border: 'none', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '3px', cursor: 'pointer', padding: '14px 0 0', transition: 'color 0.2s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.7)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.3)'; }}
-                                >
-                                    + ADD TASK
-                                </button>
-                            </div>
-
-                            <Divider label="NOTES" />
-
-                            <textarea
-                                className="mb-input"
-                                style={{ ...fieldStyle, resize: 'none', minHeight: 100, lineHeight: 1.8, borderBottom: '1px solid rgba(197,160,89,0.12)' }}
-                                placeholder="Anything on your mind today..."
-                                value={plan.notes}
-                                onChange={e => update({ ...plan, notes: e.target.value })}
-                            />
-                        </div>
+                        </Panel>
                     </div>
-                </>
+
+                    {/* ── RIGHT COLUMN ── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                        {/* Empire Status Panel */}
+                        <Panel title="EMPIRE STATUS">
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
+                                {[
+                                    { value: data?.activeMembers ?? 0, label: 'ACTIVE MEMBERS', accent: false },
+                                    { value: data?.queueCount ?? 0, label: 'REVIEW QUEUE', accent: (data?.queueCount || 0) > 0 },
+                                    { value: data?.newApps ?? 0, label: 'APPLICATIONS', accent: (data?.newApps || 0) > 0 },
+                                ].map(({ value, label, accent }) => (
+                                    <div key={label} style={{ textAlign: 'center', padding: '4px 0' }}>
+                                        <div style={{ fontFamily: "'Cinzel', serif", fontSize: '2rem', fontWeight: 700, color: accent ? '#c5a059' : 'rgba(255,255,255,0.8)', lineHeight: 1 }}>
+                                            {value}
+                                        </div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px', marginTop: 8 }}>
+                                            {label}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Panel>
+
+                        {/* Today Plan Panel */}
+                        <Panel title="TODAY" style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+
+                                {/* Meals */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '4px', marginBottom: 12 }}>
+                                        MEALS
+                                    </div>
+                                    {(['breakfast', 'lunch', 'dinner'] as const).map(meal => (
+                                        <div key={meal} style={{ display: 'grid', gridTemplateColumns: '90px 1fr', alignItems: 'center', marginBottom: 4 }}>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.32rem', color: 'rgba(255,255,255,0.22)', letterSpacing: '2px' }}>
+                                                {meal.toUpperCase()}
+                                            </div>
+                                            <input
+                                                className="mb-in"
+                                                style={inputStyle}
+                                                placeholder="—"
+                                                value={plan.meals[meal]}
+                                                onChange={e => update({ ...plan, meals: { ...plan.meals, [meal]: e.target.value } })}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ height: 1, background: 'rgba(197,160,89,0.07)', margin: '4px 0 20px' }} />
+
+                                {/* Gym */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '4px', marginBottom: 12 }}>
+                                        GYM
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: plan.gym.enabled ? 12 : 0 }}>
+                                        {['YES', 'NO'].map(opt => {
+                                            const active = opt === 'YES' ? plan.gym.enabled : !plan.gym.enabled;
+                                            return (
+                                                <button key={opt} onClick={() => update({ ...plan, gym: { ...plan.gym, enabled: opt === 'YES' } })}
+                                                    style={{ background: 'transparent', border: 'none', fontFamily: "'Cinzel', serif", fontSize: '0.88rem', fontWeight: 700, letterSpacing: '2px', color: active ? '#c5a059' : 'rgba(255,255,255,0.1)', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}>
+                                                    {opt}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {plan.gym.enabled && (
+                                        <input className="mb-in" style={inputStyle} placeholder="Leg day, cardio, push..." value={plan.gym.workout}
+                                            onChange={e => update({ ...plan, gym: { ...plan.gym, workout: e.target.value } })} />
+                                    )}
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ height: 1, background: 'rgba(197,160,89,0.07)', margin: '4px 0 20px' }} />
+
+                                {/* Tasks */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '4px' }}>TASKS</div>
+                                        <button onClick={() => update({ ...plan, tasks: [...plan.tasks, ''] })}
+                                            style={{ background: 'transparent', border: 'none', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '2px', cursor: 'pointer', padding: 0 }}
+                                            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.8)'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.3)'; }}>
+                                            + ADD
+                                        </button>
+                                    </div>
+                                    {plan.tasks.map((task, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 2 }}>
+                                            <div style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(197,160,89,0.35)', flexShrink: 0 }} />
+                                            <input className="mb-in" style={{ ...inputStyle, flex: 1 }} placeholder="Task..." value={task}
+                                                onChange={e => { const tasks = [...plan.tasks]; tasks[i] = e.target.value; update({ ...plan, tasks }); }} />
+                                            {plan.tasks.length > 1 && (
+                                                <button onClick={() => update({ ...plan, tasks: plan.tasks.filter((_, j) => j !== i) })}
+                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '0.9rem', padding: '0 2px', flexShrink: 0, transition: 'color 0.2s' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.color = 'rgba(197,160,89,0.5)'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.1)'; }}>
+                                                    &#215;
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Divider */}
+                                <div style={{ height: 1, background: 'rgba(197,160,89,0.07)', margin: '4px 0 20px' }} />
+
+                                {/* Notes */}
+                                <div>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '4px', marginBottom: 12 }}>NOTES</div>
+                                    <textarea className="mb-in"
+                                        style={{ ...inputStyle, resize: 'none', minHeight: 80, lineHeight: 1.7, borderBottom: '1px solid rgba(197,160,89,0.12)', display: 'block' }}
+                                        placeholder="Anything on your mind today..."
+                                        value={plan.notes}
+                                        onChange={e => update({ ...plan, notes: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </Panel>
+                    </div>
+                </div>
             )}
         </div>
     );

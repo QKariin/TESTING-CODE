@@ -87,6 +87,20 @@ export async function GET() {
         if (d >= dayStart) today += tx.amount;
     }
 
+    // 7-day chart data
+    const now = new Date();
+    const chartData: { label: string; value: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const ds = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const de = new Date(ds.getTime() + 86400000);
+        const total = allTx
+            .filter(tx => { const t = new Date(tx.timestamp); return t >= ds && t < de; })
+            .reduce((s, tx) => s + tx.amount, 0);
+        chartData.push({ label: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(), value: total });
+    }
+
     const activeMembers = profiles.length;
     const queueCount = queueRes.data?.length || 0;
     const newApps = pendingAppsRes.count || 0;
@@ -115,7 +129,8 @@ export async function GET() {
         activeMembers,
         queueCount,
         newApps,
-        recentTributes: allTx.slice(0, 8),
+        recentTributes: allTx.slice(0, 12),
+        chartData,
         plan,
         briefing,
     });
