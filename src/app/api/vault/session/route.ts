@@ -196,7 +196,9 @@ export async function GET(req: NextRequest) {
     const todaySpin = (spins || []).find((s: any) => s.date === today);
 
     // 9. Calculate days in (0-indexed for API consumers; display as daysIn+1 = current day number)
-    const daysIn = getSessionDay(session, tz) - 1;
+    // Use today's vault_daily day_number so the displayed day matches today's task set.
+    // (current_day advances on chastity submission BEFORE all tasks are done, causing a mismatch)
+    const daysIn = todayRecord ? todayRecord.day_number - 1 : getSessionDay(session, tz) - 1;
 
     // 10. Calculate total penalty hours
     const totalPenaltyHours = (adjustments || []).reduce((sum: number, a: any) => sum + a.hours, 0);
