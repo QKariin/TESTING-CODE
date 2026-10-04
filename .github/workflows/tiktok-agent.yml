@@ -15,7 +15,16 @@ jobs:
         run: pip install -q --break-system-packages yt-dlp requests
 
       - name: Write TikTok cookies
-        run: echo "${{ secrets.TIKTOK_COOKIES }}" | base64 -d > /tmp/cookies.txt
+        run: |
+          if [ -z "${{ secrets.TIKTOK_COOKIES }}" ]; then
+            echo "ERROR: TIKTOK_COOKIES secret is empty"
+            exit 1
+          fi
+          echo "${{ secrets.TIKTOK_COOKIES }}" | base64 -d > /tmp/cookies.txt || {
+            echo "ERROR: base64 decode failed - secret is not valid base64"
+            exit 1
+          }
+          echo "Cookies written: $(wc -l < /tmp/cookies.txt) lines"
 
       - name: Download and upload to app
         env:
