@@ -98,6 +98,7 @@ jobs:
           result = subprocess.run([
               'yt-dlp',
               '--cookies', '/tmp/cookies.txt',
+              '--extractor-args', 'tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com',
               '--playlist-end', '5',
               '--no-download',
               '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s|||%(description)s',
@@ -166,6 +167,7 @@ jobs:
               dl = subprocess.run([
                   'yt-dlp',
                   '--cookies', '/tmp/cookies.txt',
+                  '--extractor-args', 'tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com',
                   '-o', f'/tmp/{vid_id}.%(ext)s',
                   '--merge-output-format', 'mp4',
                   '--no-playlist',
