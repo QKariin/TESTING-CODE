@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     try {
         const { data, error } = await supabaseAdmin
             .from('payment_logs')

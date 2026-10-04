@@ -15,7 +15,27 @@ jobs:
         run: pip install -q --break-system-packages yt-dlp requests
 
       - name: Write TikTok cookies
-        run: echo "${{ secrets.TIKTOK_COOKIES }}" | base64 -d > /tmp/cookies.txt
+        run: |
+          python3 - << 'EOF'
+          import json, os
+          raw = os.environ.get('TIKTOK_COOKIES', '')
+          cookies = json.loads(raw)
+          lines = ['# Netscape HTTP Cookie File']
+          for c in cookies:
+              domain = c.get('domain', '')
+              inc_sub = 'FALSE' if c.get('hostOnly', False) else 'TRUE'
+              path = c.get('path', '/')
+              secure = 'TRUE' if c.get('secure', False) else 'FALSE'
+              expiry = str(int(c.get('expirationDate', 0)))
+              name = c.get('name', '')
+              value = c.get('value', '')
+              lines.append(f'{domain}\t{inc_sub}\t{path}\t{secure}\t{expiry}\t{name}\t{value}')
+          with open('/tmp/cookies.txt', 'w') as f:
+              f.write('\n'.join(lines) + '\n')
+          print(f'Wrote {len(cookies)} cookies to /tmp/cookies.txt')
+          EOF
+        env:
+          TIKTOK_COOKIES: ${{ secrets.TIKTOK_COOKIES }}
 
       - name: Download and upload to app
         env:

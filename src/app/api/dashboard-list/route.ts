@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,8 @@ export const dynamic = 'force-dynamic';
  * For chatters: memberId is masked to hide emails.
  */
 export async function GET() {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     try {
         const [{ data: profiles, error }, { data: taskRows }, { data: vaultSessions }] = await Promise.all([
             supabaseAdmin

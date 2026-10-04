@@ -1,7 +1,10 @@
+import { getCaller, isCEO } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     try {
         const { memberId } = await req.json();
         if (!memberId) return NextResponse.json({ success: false, error: 'Missing memberId' }, { status: 400 });

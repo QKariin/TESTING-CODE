@@ -36,14 +36,16 @@ export async function POST(req: Request) {
         if (!session) return NextResponse.json({ error: 'No awaiting session found' }, { status: 404 });
 
         const now = new Date().toISOString();
-        const expiresAt = new Date(Date.now() + session.lock_days * 86400000).toISOString();
+        // Locktober: lock started when they applied (created_at), not when they submitted proof
+        const startedAt = session.tier === 'locktober' && session.created_at ? session.created_at : now;
+        const expiresAt = new Date(new Date(startedAt).getTime() + session.lock_days * 86400000).toISOString();
 
-        // Activate the lock — started_at = now (video submission time)
+        // Activate the lock — started_at = proof time (or session creation for Locktober)
         const { error } = await supabaseAdmin
             .from('vault_sessions')
             .update({
                 status: 'active',
-                started_at: now,
+                started_at: startedAt,
                 expires_at: expiresAt,
                 video_proof_url: videoUrl,
                 video_thumb_url: thumbUrl || null,

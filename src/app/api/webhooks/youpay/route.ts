@@ -32,11 +32,11 @@ export async function POST(req: Request) {
         console.log('[youpay webhook] headers:', JSON.stringify(allHeaders));
         console.log('[youpay webhook] body:', rawBody);
 
-        // Verify signature if secret is configured
+        // Verify signature - required when secret is configured
         const secret = process.env.YOUPAY_WEBHOOK_SECRET;
-        if (secret && signature) {
-            if (!verifySignature(rawBody, signature)) {
-                console.warn('[youpay webhook] invalid signature');
+        if (secret) {
+            if (!signature || !verifySignature(rawBody, signature)) {
+                console.warn('[youpay webhook] invalid or missing signature');
                 return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
             }
         }

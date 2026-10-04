@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getCaller, isCEO } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/admin-chat - insert a message from admin into the messages table
 export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     try {
         const { memberId, message } = await req.json();
 
@@ -39,6 +42,8 @@ export async function POST(req: Request) {
 
 // GET /api/admin-chat?memberId=xxx - fetch messages for a user
 export async function GET(req: Request) {
+    const caller = await getCaller();
+    if (!caller || !isCEO(caller.email)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     try {
         const { searchParams } = new URL(req.url);
         const memberId = searchParams.get('memberId');
