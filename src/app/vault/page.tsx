@@ -1439,6 +1439,7 @@ export default function VaultPage() {
                     const cWindowOpen = chastityWindow.open;
                     const cBeforeWindow = chastityWindow.before;
                     const cMissed = !cWindowOpen && !cBeforeWindow && chastityStatus === 'none' && hasChastityTask;
+                    const cMinsLeft = (!isLocktober && cWindowOpen) ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
                     const cCanUpload = hasChastityTask && (cWindowOpen || chastityStatus === 'rejected') && chastityStatus !== 'pending' && chastityStatus !== 'approved';
 
                     // Color scheme based on chastity status
@@ -1673,7 +1674,7 @@ export default function VaultPage() {
                                     : chastityStatus === 'rejected' ? '✕ REJECTED'
                                     : cMissed ? '✕ MISSED'
                                     : cBeforeWindow ? 'CHECK OPENS 6 AM'
-                                    : cWindowOpen ? 'SUBMIT CHECK'
+                                    : cWindowOpen ? `CHECK · ${cMinsLeft}MIN LEFT`
                                     : ''}
                             </div>
                         )}
