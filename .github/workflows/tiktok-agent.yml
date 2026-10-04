@@ -1,0 +1,167 @@
+name: TikTok Agent
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 9 AM Athens time (UTC+3) every day
+  workflow_dispatch:        # Manual trigger from GitHub Actions tab
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Install yt-dlp
+        run: pip install -q yt-dlp requests
+
+      - name: Write TikTok cookies
+        run: echo "${{ secrets.TIKTOK_COOKIES }}" > /tmp/cookies.txt
+
+      - name: Download and upload to app
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TIKTOK_USERNAME: tinuka25
+        run: |
+          python3 << 'PYEOF'
+          import subprocess, os, json, requests, datetime, sys, glob
+
+          SUPABASE_URL = os.environ['SUPABASE_URL']
+          SERVICE_KEY  = os.environ['SUPABASE_SERVICE_ROLE_KEY']
+          BOT_TOKEN    = os.environ['TELEGRAM_BOT_TOKEN']
+          CHAT_ID      = os.environ['TELEGRAM_CHAT_ID']
+          USERNAME     = os.environ['TIKTOK_USERNAME']
+
+          today = datetime.date.today().isoformat()
+          headers = {
+              'Authorization': f'Bearer {SERVICE_KEY}',
+              'apikey': SERVICE_KEY,
+              'Content-Type': 'application/json',
+          }
+
+          def tg(text):
+              requests.post(
+                  f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
+                  json={'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML', 'disable_web_page_preview': True},
+                  timeout=10
+              )
+
+          # Check which TikTok IDs are already saved for today
+          r = requests.get(
+              f'{SUPABASE_URL}/rest/v1/stories?date=eq.{today}&source=eq.tiktok&select=source_id',
+              headers=headers, timeout=10
+          )
+          existing_ids = {row['source_id'] for row in r.json() if row.get('source_id')}
+          print(f'Already saved today: {existing_ids}')
+
+          # Fetch latest videos from TikTok profile
+          result = subprocess.run([
+              'yt-dlp',
+              '--cookies', '/tmp/cookies.txt',
+              '--playlist-end', '5',
+              '--no-download',
+              '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s',
+              f'https://www.tiktok.com/@{USERNAME}',
+          ], capture_output=True, text=True, timeout=120)
+
+          lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
+          print(f'Found {len(lines)} videos from TikTok')
+
+          # Filter to today's new videos
+          new_videos = []
+          for line in lines:
+              parts = line.split('|||')
+              if len(parts) < 4:
+                  continue
+              vid_id, upload_date, ext, title = parts[0], parts[1], parts[2], parts[3]
+              if upload_date != today.replace('-', '') and upload_date != today:
+                  print(f'Skipping {vid_id} — upload date {upload_date} not today')
+                  continue
+              if vid_id in existing_ids:
+                  print(f'Skipping {vid_id} — already saved')
+                  continue
+              new_videos.append({'id': vid_id, 'ext': ext, 'title': title})
+
+          if not new_videos:
+              print('No new videos for today.')
+              tg(f'TikTok check: no new videos today ({today}).')
+              sys.exit(0)
+
+          print(f'{len(new_videos)} new videos to download')
+          uploaded = 0
+
+          for idx, video in enumerate(new_videos):
+              vid_id = video['id']
+              title  = video['title']
+              url    = f'https://www.tiktok.com/@{USERNAME}/video/{vid_id}'
+              outpath = f'/tmp/{vid_id}.%(ext)s'
+
+              print(f'Downloading {vid_id}...')
+              dl = subprocess.run([
+                  'yt-dlp',
+                  '--cookies', '/tmp/cookies.txt',
+                  '-o', outpath,
+                  '--merge-output-format', 'mp4',
+                  '--no-playlist',
+                  url,
+              ], capture_output=True, text=True, timeout=300)
+
+              files = glob.glob(f'/tmp/{vid_id}.*')
+              if not files:
+                  print(f'Download failed for {vid_id}: {dl.stderr[-500:]}')
+                  continue
+
+              filepath = files[0]
+              storage_path = f'tiktok_stories/{today}_{vid_id}.mp4'
+
+              print(f'Uploading {filepath} → {storage_path}')
+              with open(filepath, 'rb') as f:
+                  up = requests.post(
+                      f'{SUPABASE_URL}/storage/v1/object/media/{storage_path}',
+                      headers={
+                          'Authorization': f'Bearer {SERVICE_KEY}',
+                          'Content-Type': 'video/mp4',
+                      },
+                      data=f,
+                      timeout=300
+                  )
+              if not up.ok:
+                  print(f'Upload failed: {up.text}')
+                  continue
+
+              public_url = f'{SUPABASE_URL}/storage/v1/object/public/media/{storage_path}'
+
+              # Save to stories table
+              ins = requests.post(
+                  f'{SUPABASE_URL}/rest/v1/stories',
+                  headers={**headers, 'Prefer': 'return=minimal'},
+                  json={
+                      'date': today,
+                      'media_url': public_url,
+                      'media_type': 'video',
+                      'order_index': idx,
+                      'caption': title[:200] if title else '',
+                      'source': 'tiktok',
+                      'source_id': vid_id,
+                      'tagged_members': [],
+                  },
+                  timeout=10
+              )
+              if ins.ok:
+                  uploaded += 1
+                  print(f'Saved story {vid_id}')
+              else:
+                  print(f'DB insert failed: {ins.text}')
+
+          if uploaded > 0:
+              tg(
+                  f'<b>{uploaded} new TikTok {"video" if uploaded == 1 else "videos"} downloaded!</b>\n'
+                  f'Date: {today}\n\n'
+                  f'Tag someone? /tag [name]\nOr /skip'
+              )
+          else:
+              tg(f'TikTok check: found {len(new_videos)} new videos but upload failed. Check Actions log.')
+
+          PYEOF
