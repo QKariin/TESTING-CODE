@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: pip install -q --break-system-packages yt-dlp requests
+        run: pip install -q --break-system-packages yt-dlp requests pycryptodomex websockets
 
       - name: Write TikTok cookies
         run: |
