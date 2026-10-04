@@ -15,7 +15,7 @@ jobs:
         run: pip install -q --break-system-packages yt-dlp requests
 
       - name: Write TikTok cookies
-        run: echo "${{ secrets.TIKTOK_COOKIES }}" > /tmp/cookies.txt
+        run: echo "${{ secrets.TIKTOK_COOKIES }}" | base64 -d > /tmp/cookies.txt
 
       - name: Download and upload to app
         env:
