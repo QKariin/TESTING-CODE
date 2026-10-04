@@ -76,13 +76,13 @@ jobs:
                       return p['member_id']
               return None
 
-          # Check which TikTok IDs are already saved
+          # Check which TikTok IDs are already saved (all time, not just today)
           r = requests.get(
-              f'{SUPABASE_URL}/rest/v1/stories?date=eq.{today}&source=eq.tiktok&select=source_id',
+              f'{SUPABASE_URL}/rest/v1/stories?source=eq.tiktok&select=source_id&limit=500',
               headers=headers, timeout=10
           )
           existing_ids = {row['source_id'] for row in (r.json() if r.ok else []) if row.get('source_id')}
-          print(f'Already saved today: {existing_ids}')
+          print(f'Already saved (all time): {len(existing_ids)} videos')
 
           # Fetch latest videos + descriptions from TikTok
           result = subprocess.run([
@@ -109,7 +109,10 @@ jobs:
               title       = parts[3]
               description = parts[4] if len(parts) > 4 else ''
 
-              if upload_date != today.replace('-', '') and upload_date != today:
+              # Skip only if we definitively know it's from a past date
+              # (upload_date can be 'NA' or empty for brand-new uploads not yet indexed)
+              upload_yyyymmdd = upload_date.replace('-', '') if upload_date and upload_date not in ('NA', 'None', '') else ''
+              if upload_yyyymmdd and upload_yyyymmdd != today.replace('-', ''):
                   print(f'Skipping {vid_id} — date {upload_date} not today')
                   continue
               if vid_id in existing_ids:
