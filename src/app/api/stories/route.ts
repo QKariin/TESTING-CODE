@@ -5,44 +5,78 @@ import { getCaller } from '@/lib/api-auth';
 export const dynamic = 'force-dynamic';
 
 // GET /api/stories?date=YYYY-MM-DD
-// Returns: available, count, hasAccess, stories (if access), gateItems
+// - Only returns stories visible to the calling member:
+//   * Not expired (within 24h of created_at) OR date = today
+//   * tagged_members is empty (public) OR member is in tagged_members (personalized)
 export async function GET(req: Request) {
     const url = new URL(req.url);
     const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
 
     const caller = await getCaller();
-    const memberEmail = caller?.email || '';
+    const memberEmail = (caller?.email || '').toLowerCase();
 
-    const [{ data: stories }, { data: gateItems }] = await Promise.all([
-        supabaseAdmin
-            .from('stories')
-            .select('id, media_url, media_type, order_index, caption, tagged_members')
-            .eq('date', date)
-            .order('order_index', { ascending: true }),
-        supabaseAdmin
-            .from('Wishlist')
-            .select('ID, Title, Price, Image')
-            .eq('stories_gate', true),
-    ]);
+    const now = new Date().toISOString();
 
-    const count = (stories || []).length;
+    // Get all stories for this date that haven't expired
+    const { data: allStories } = await supabaseAdmin
+        .from('stories')
+        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at')
+        .eq('date', date)
+        .eq('archived', false)
+        .or(`expires_at.is.null,expires_at.gt.${now}`)
+        .order('order_index', { ascending: true });
+
+    // Filter to stories this member can see:
+    // - tagged_members is empty/null = everyone can see it
+    // - tagged_members contains this member = personalized for them
+    const visibleStories = (allStories || []).filter((s: any) => {
+        const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
+        return tagged.length === 0 || (memberEmail && tagged.includes(memberEmail));
+    });
+
+    const count = visibleStories.length;
+
+    // Gate items (coffee/flowers)
+    const { data: gateItems } = await supabaseAdmin
+        .from('Wishlist')
+        .select('ID, Title, Price, Image')
+        .eq('stories_gate', true);
 
     let hasAccess = false;
     if (memberEmail && count > 0) {
         const { data: access } = await supabaseAdmin
             .from('story_access')
             .select('id')
-            .eq('member_email', memberEmail.toLowerCase())
+            .eq('member_email', memberEmail)
             .eq('date', date)
             .maybeSingle();
         hasAccess = !!access;
     }
 
+    // Strip internal fields before returning
+    const safeStories = visibleStories.map(({ expires_at, created_at, ...s }: any) => s);
+
     return NextResponse.json({
         available: count > 0,
         count,
         hasAccess,
-        stories: hasAccess ? (stories || []) : [],
+        stories: hasAccess ? safeStories : [],
         gateItems: (gateItems || []).filter((i: any) => !i.purchased),
     });
+}
+
+// POST /api/stories/archive — archive expired stories (called by cron or manually)
+export async function POST(req: Request) {
+    const caller = await getCaller();
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const now = new Date().toISOString();
+    const { error, count } = await supabaseAdmin
+        .from('stories')
+        .update({ archived: true })
+        .eq('archived', false)
+        .lt('expires_at', now);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true, archived: count });
 }

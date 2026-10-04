@@ -3,7 +3,7 @@ name: TikTok Agent
 on:
   schedule:
     - cron: '0 6 * * *'   # 9 AM Athens time (UTC+3) every day
-  workflow_dispatch:        # Manual trigger from GitHub Actions tab
+  workflow_dispatch:        # Manual trigger from GitHub Actions tab / dashboard button
 
 jobs:
   download:
@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Install yt-dlp
+      - name: Install dependencies
         run: pip install -q yt-dlp requests
 
       - name: Write TikTok cookies
@@ -26,7 +26,7 @@ jobs:
           TIKTOK_USERNAME: tinuka25
         run: |
           python3 << 'PYEOF'
-          import subprocess, os, json, requests, datetime, sys, glob
+          import subprocess, os, re, requests, datetime, sys, glob
 
           SUPABASE_URL = os.environ['SUPABASE_URL']
           SERVICE_KEY  = os.environ['SUPABASE_SERVICE_ROLE_KEY']
@@ -35,6 +35,8 @@ jobs:
           USERNAME     = os.environ['TIKTOK_USERNAME']
 
           today = datetime.date.today().isoformat()
+          expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=24)).isoformat() + 'Z'
+
           headers = {
               'Authorization': f'Bearer {SERVICE_KEY}',
               'apikey': SERVICE_KEY,
@@ -42,67 +44,99 @@ jobs:
           }
 
           def tg(text):
-              requests.post(
-                  f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
-                  json={'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML', 'disable_web_page_preview': True},
-                  timeout=10
-              )
+              try:
+                  requests.post(
+                      f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage',
+                      json={'chat_id': CHAT_ID, 'text': text, 'parse_mode': 'HTML', 'disable_web_page_preview': True},
+                      timeout=10
+                  )
+              except: pass
 
-          # Check which TikTok IDs are already saved for today
+          def find_member_in_text(text):
+              """Search DB for a member whose name or email prefix appears in the text."""
+              if not text: return None
+              r = requests.get(
+                  f'{SUPABASE_URL}/rest/v1/profiles?select=member_id,name&limit=100',
+                  headers=headers, timeout=10
+              )
+              if not r.ok: return None
+              profiles = r.json()
+              text_lower = text.lower()
+              for p in profiles:
+                  name = (p.get('name') or '').strip()
+                  email_prefix = (p.get('member_id') or '').split('@')[0]
+                  if name and len(name) > 2 and name.lower() in text_lower:
+                      return p['member_id']
+                  if email_prefix and len(email_prefix) > 3 and email_prefix.lower() in text_lower:
+                      return p['member_id']
+              return None
+
+          # Check which TikTok IDs are already saved
           r = requests.get(
               f'{SUPABASE_URL}/rest/v1/stories?date=eq.{today}&source=eq.tiktok&select=source_id',
               headers=headers, timeout=10
           )
-          existing_ids = {row['source_id'] for row in r.json() if row.get('source_id')}
+          existing_ids = {row['source_id'] for row in (r.json() if r.ok else []) if row.get('source_id')}
           print(f'Already saved today: {existing_ids}')
 
-          # Fetch latest videos from TikTok profile
+          # Fetch latest videos + descriptions from TikTok
           result = subprocess.run([
               'yt-dlp',
               '--cookies', '/tmp/cookies.txt',
               '--playlist-end', '5',
               '--no-download',
-              '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s',
+              '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s|||%(description)s',
               f'https://www.tiktok.com/@{USERNAME}',
           ], capture_output=True, text=True, timeout=120)
 
           lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
           print(f'Found {len(lines)} videos from TikTok')
 
-          # Filter to today's new videos
           new_videos = []
           for line in lines:
-              parts = line.split('|||')
-              if len(parts) < 4:
-                  continue
-              vid_id, upload_date, ext, title = parts[0], parts[1], parts[2], parts[3]
+              parts = line.split('|||', 4)
+              if len(parts) < 4: continue
+              vid_id      = parts[0]
+              upload_date = parts[1]
+              ext         = parts[2]
+              title       = parts[3]
+              description = parts[4] if len(parts) > 4 else ''
+
               if upload_date != today.replace('-', '') and upload_date != today:
-                  print(f'Skipping {vid_id} — upload date {upload_date} not today')
+                  print(f'Skipping {vid_id} — date {upload_date} not today')
                   continue
               if vid_id in existing_ids:
                   print(f'Skipping {vid_id} — already saved')
                   continue
-              new_videos.append({'id': vid_id, 'ext': ext, 'title': title})
+              new_videos.append({'id': vid_id, 'ext': ext, 'title': title, 'description': description})
 
           if not new_videos:
-              print('No new videos for today.')
-              tg(f'TikTok check: no new videos today ({today}).')
+              tg(f'TikTok check complete: no new videos today ({today}).')
               sys.exit(0)
 
-          print(f'{len(new_videos)} new videos to download')
+          print(f'{len(new_videos)} new videos to process')
           uploaded = 0
+          tagged_summary = []
 
           for idx, video in enumerate(new_videos):
-              vid_id = video['id']
-              title  = video['title']
-              url    = f'https://www.tiktok.com/@{USERNAME}/video/{vid_id}'
-              outpath = f'/tmp/{vid_id}.%(ext)s'
+              vid_id      = video['id']
+              title       = video['title']
+              description = video['description']
+              full_text   = f'{title} {description}'
+              url         = f'https://www.tiktok.com/@{USERNAME}/video/{vid_id}'
 
+              # Auto-detect tagged member from description
+              tagged_email = find_member_in_text(full_text)
+              tagged_members = [tagged_email] if tagged_email else []
+              if tagged_email:
+                  print(f'Auto-tagged {tagged_email} based on description')
+
+              # Download video
               print(f'Downloading {vid_id}...')
               dl = subprocess.run([
                   'yt-dlp',
                   '--cookies', '/tmp/cookies.txt',
-                  '-o', outpath,
+                  '-o', f'/tmp/{vid_id}.%(ext)s',
                   '--merge-output-format', 'mp4',
                   '--no-playlist',
                   url,
@@ -110,22 +144,19 @@ jobs:
 
               files = glob.glob(f'/tmp/{vid_id}.*')
               if not files:
-                  print(f'Download failed for {vid_id}: {dl.stderr[-500:]}')
+                  print(f'Download failed: {dl.stderr[-300:]}')
                   continue
 
               filepath = files[0]
               storage_path = f'tiktok_stories/{today}_{vid_id}.mp4'
 
-              print(f'Uploading {filepath} → {storage_path}')
+              # Upload to Supabase storage
+              print(f'Uploading → {storage_path}')
               with open(filepath, 'rb') as f:
                   up = requests.post(
                       f'{SUPABASE_URL}/storage/v1/object/media/{storage_path}',
-                      headers={
-                          'Authorization': f'Bearer {SERVICE_KEY}',
-                          'Content-Type': 'video/mp4',
-                      },
-                      data=f,
-                      timeout=300
+                      headers={'Authorization': f'Bearer {SERVICE_KEY}', 'Content-Type': 'video/mp4'},
+                      data=f, timeout=300
                   )
               if not up.ok:
                   print(f'Upload failed: {up.text}')
@@ -145,23 +176,34 @@ jobs:
                       'caption': title[:200] if title else '',
                       'source': 'tiktok',
                       'source_id': vid_id,
-                      'tagged_members': [],
+                      'tagged_members': tagged_members,
+                      'expires_at': expires_at,
+                      'archived': False,
                   },
                   timeout=10
               )
+
               if ins.ok:
                   uploaded += 1
-                  print(f'Saved story {vid_id}')
+                  if tagged_email:
+                      tagged_summary.append(tagged_email.split('@')[0])
+                  print(f'Saved {vid_id}' + (f' → personalized for {tagged_email}' if tagged_email else ' → public'))
               else:
                   print(f'DB insert failed: {ins.text}')
 
+          # Telegram summary
           if uploaded > 0:
-              tg(
-                  f'<b>{uploaded} new TikTok {"video" if uploaded == 1 else "videos"} downloaded!</b>\n'
-                  f'Date: {today}\n\n'
-                  f'Tag someone? /tag [name]\nOr /skip'
-              )
+              msg = f'<b>{uploaded} new {"story" if uploaded == 1 else "stories"} live!</b>\nDate: {today} · expires in 24h\n\n'
+              if tagged_summary:
+                  msg += f'Auto-tagged: <b>{", ".join(tagged_summary)}</b>\n'
+                  untagged = uploaded - len(tagged_summary)
+                  if untagged > 0:
+                      msg += f'{untagged} public (no name found in description)\n'
+                  msg += '\nTag more? /tag [name] · /stories for status'
+              else:
+                  msg += 'No names detected in descriptions — all public.\nTag someone? /tag [name] or /skip'
+              tg(msg)
           else:
-              tg(f'TikTok check: found {len(new_videos)} new videos but upload failed. Check Actions log.')
+              tg(f'TikTok: found {len(new_videos)} new videos but all uploads failed. Check Actions log.')
 
           PYEOF
