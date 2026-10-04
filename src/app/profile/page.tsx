@@ -164,6 +164,15 @@ export default function ProfilePage() {
     );
     const [isStandalone, setIsStandalone] = useState(false);
     const [showInstallGuide, setShowInstallGuide] = useState(false);
+    const [storiesAvail, setStoriesAvail] = useState(false);
+    const [storiesCount, setStoriesCount] = useState(0);
+    const [storiesAccess, setStoriesAccess] = useState(false);
+    const [storiesData, setStoriesData] = useState<any[]>([]);
+    const [storiesGateItems, setStoriesGateItems] = useState<any[]>([]);
+    const [showStories, setShowStories] = useState(false);
+    const [storiesViewed, setStoriesViewed] = useState(false);
+    const [storiesIdx, setStoriesIdx] = useState(0);
+    const [storiesBuying, setStoriesBuying] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
     // Vault freedom hour — monitor remaining freedom time and redirect when expired
@@ -267,6 +276,21 @@ export default function ProfilePage() {
         const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); (window as any)._deferredInstallPrompt = e; };
         window.addEventListener('beforeinstallprompt', handler as any);
         return () => window.removeEventListener('beforeinstallprompt', handler as any);
+    }, []);
+
+    // ─── STORIES STATUS ──────────────────────────────────────────────────
+    useEffect(() => {
+        const today = new Date().toISOString().split('T')[0];
+        fetch(`/api/stories?date=${today}`)
+            .then(r => r.json())
+            .then(d => {
+                setStoriesAvail(d.available || false);
+                setStoriesCount(d.count || 0);
+                setStoriesAccess(d.hasAccess || false);
+                setStoriesData(d.stories || []);
+                setStoriesGateItems(d.gateItems || []);
+            })
+            .catch(() => {});
     }, []);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
@@ -2456,8 +2480,17 @@ export default function ProfilePage() {
                     </span>
                     <span className="mob-nav-label">ARENA</span>
                 </button>
-                <button className="mob-nav-queen-btn" onClick={() => { (window as any).closeStandaloneTribute?.(); (window as any).closeExchequer?.(); (window as any).closeVaultLockOverlay?.(); (window as any).openMobChatOverlay(); }}>
-                    <div className="mob-nav-queen-ring">
+                <button className="mob-nav-queen-btn" onClick={() => {
+                    if (storiesAvail) {
+                        setShowStories(true);
+                    } else {
+                        (window as any).closeStandaloneTribute?.();
+                        (window as any).closeExchequer?.();
+                        (window as any).closeVaultLockOverlay?.();
+                        (window as any).openMobChatOverlay();
+                    }
+                }}>
+                    <div className={`mob-nav-queen-ring${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`}>
                         <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
                     </div>
                     <div id="mobMsgBadge">
@@ -2478,6 +2511,143 @@ export default function ProfilePage() {
             </nav>
 
         </div>
+
+        {/* ── STORIES OVERLAY ── */}
+        {showStories && (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9500, background: '#000', display: 'flex', flexDirection: 'column' }}>
+                {!storiesAccess ? (
+                    /* ── LOCKED: show gate items ── */
+                    <>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url('/queen-nav.png')`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(20px) brightness(0.25)' }} />
+                        <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 24px 100px' }}>
+                            <button onClick={() => setShowStories(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                            <img src="/queen-nav.png" style={{ width: 72, height: 72, borderRadius: '50%', border: '2px solid rgba(197,160,89,0.5)', marginBottom: 16, objectFit: 'cover' }} alt="" />
+                            <div style={{ fontFamily: 'Cinzel', fontSize: '1rem', color: '#c5a059', letterSpacing: 4, marginBottom: 6, textAlign: 'center' }}>QUEEN'S STORIES</div>
+                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 3, marginBottom: 36 }}>{storiesCount} {storiesCount === 1 ? 'STORY' : 'STORIES'} TODAY</div>
+                            {storiesGateItems.length > 0 ? (
+                                <>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 3, marginBottom: 16, textAlign: 'center' }}>SEND A GIFT TO UNLOCK</div>
+                                    <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
+                                        {storiesGateItems.map((item: any) => (
+                                            <button
+                                                key={item.ID}
+                                                disabled={storiesBuying}
+                                                onClick={async () => {
+                                                    if (!profile?.member_id) return;
+                                                    setStoriesBuying(true);
+                                                    try {
+                                                        const res = await fetch('/api/tributes/purchase', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                memberEmail: profile.member_id,
+                                                                tributeId: item.ID,
+                                                                tributeTitle: item.Title,
+                                                                tributeCost: parseInt(item.Price || 0),
+                                                                tributeImage: item.Image,
+                                                            }),
+                                                        });
+                                                        const d = await res.json();
+                                                        if (d.success) {
+                                                            const today = new Date().toISOString().split('T')[0];
+                                                            const sd = await fetch(`/api/stories?date=${today}`).then(r => r.json());
+                                                            setStoriesAccess(true);
+                                                            setStoriesData(sd.stories || []);
+                                                            setStoriesIdx(0);
+                                                        } else {
+                                                            alert(d.error === 'INSUFFICIENT_FUNDS' ? 'Not enough coins.' : (d.error || 'Purchase failed.'));
+                                                        }
+                                                    } catch { alert('Something went wrong.'); }
+                                                    finally { setStoriesBuying(false); }
+                                                }}
+                                                style={{ flex: 1, background: 'rgba(197,160,89,0.07)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 12, padding: '16px 8px', cursor: storiesBuying ? 'default' : 'pointer', color: '#fff', textAlign: 'center', opacity: storiesBuying ? 0.5 : 1, transition: 'opacity 0.2s' }}
+                                            >
+                                                {item.Image && <img src={item.Image} style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', display: 'block', margin: '0 auto 10px' }} alt="" />}
+                                                <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#c5a059', marginBottom: 4 }}>{item.Title}</div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(197,160,89,0.6)' }}>{parseInt(item.Price || 0).toLocaleString()} coins</div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>STORIES COMING SOON</div>
+                            )}
+                        </div>
+                    </>
+                ) : storiesData.length > 0 ? (
+                    /* ── VIEWER ── */
+                    <>
+                        {/* Progress bars */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '10px 10px 0', zIndex: 3 }}>
+                            {storiesData.map((_: any, i: number) => (
+                                <div key={i} style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 1, overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', background: '#fff', width: i < storiesIdx ? '100%' : i === storiesIdx ? '50%' : '0%' }} />
+                                </div>
+                            ))}
+                        </div>
+                        {/* Header */}
+                        <div style={{ position: 'absolute', top: 20, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px 0', zIndex: 3 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                                <img src="/queen-nav.png" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.5)', objectFit: 'cover' }} alt="" />
+                                <div>
+                                    <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#fff', letterSpacing: 2 }}>QUEEN KARIN</div>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>TODAY · {storiesIdx + 1}/{storiesData.length}</div>
+                                </div>
+                            </div>
+                            <button onClick={() => { setShowStories(false); setStoriesViewed(true); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
+                        </div>
+                        {/* Media - tap left/right to navigate */}
+                        <div style={{ position: 'absolute', inset: 0 }} onClick={e => {
+                            const x = (e as React.MouseEvent).clientX;
+                            const w = window.innerWidth;
+                            if (x < w / 3) setStoriesIdx(Math.max(0, storiesIdx - 1));
+                            else if (x > (w * 2) / 3) {
+                                if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
+                                else { setShowStories(false); setStoriesViewed(true); }
+                            }
+                        }}>
+                            {storiesData[storiesIdx]?.media_type === 'video' ? (
+                                <video
+                                    key={storiesData[storiesIdx].id}
+                                    src={storiesData[storiesIdx].media_url}
+                                    autoPlay
+                                    playsInline
+                                    muted={false}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onEnded={() => {
+                                        if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
+                                        else { setShowStories(false); setStoriesViewed(true); }
+                                    }}
+                                />
+                            ) : (
+                                <img src={storiesData[storiesIdx]?.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                            )}
+                        </div>
+                        {/* Caption */}
+                        {storiesData[storiesIdx]?.caption && (
+                            <div style={{ position: 'absolute', bottom: 90, left: 0, right: 0, padding: '0 18px', zIndex: 3 }}>
+                                <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', borderRadius: 8, padding: '10px 14px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: '#fff', lineHeight: 1.4 }}>
+                                    {storiesData[storiesIdx].caption}
+                                </div>
+                            </div>
+                        )}
+                        {/* Chat button */}
+                        <div style={{ position: 'absolute', bottom: 24, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>
+                            <button
+                                onClick={() => { setShowStories(false); setStoriesViewed(true); (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
+                                style={{ background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', padding: '12px 36px', borderRadius: 28, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', letterSpacing: 3, cursor: 'pointer' }}
+                            >OPEN CHAT</button>
+                        </div>
+                    </>
+                ) : (
+                    /* Access granted but no stories loaded yet */
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button onClick={() => setShowStories(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>NO STORIES TODAY</div>
+                    </div>
+                )}
+            </div>
+        )}
 
         {/* ── MOBILE CHALLENGES OVERLAY ── */}
 

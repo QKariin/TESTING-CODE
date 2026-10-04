@@ -1107,6 +1107,28 @@ body.desktop-preview #mobBottomNav { display: none !important; }
         position: relative;
     }
 
+    /* Stories available - rotating gradient ring */
+    .mob-nav-queen-ring.has-stories {
+        border: 3px solid transparent;
+        background:
+            linear-gradient(#050508, #050508) padding-box,
+            conic-gradient(from 0deg, #c5a059, #f5e09a, #ff9a44, #e05555, #c5a059) border-box;
+        animation: storiesRingRotate 3s linear infinite;
+    }
+
+    .mob-nav-queen-ring.has-stories.viewed {
+        background:
+            linear-gradient(#050508, #050508) padding-box,
+            conic-gradient(from 0deg, rgba(197,160,89,0.3), rgba(197,160,89,0.3)) border-box;
+        animation: none;
+    }
+
+    @keyframes storiesRingRotate {
+        from { filter: hue-rotate(0deg) brightness(1); }
+        50%  { filter: hue-rotate(20deg) brightness(1.15); }
+        to   { filter: hue-rotate(0deg) brightness(1); }
+    }
+
     /* New message - ring goes gold and ripples */
     .mob-nav-queen-ring.has-new-msg {
         border-color: rgba(197, 160, 89, 1);

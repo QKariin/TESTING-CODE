@@ -104,6 +104,24 @@ export async function POST(request: Request) {
             } catch {}
         }
 
+        // Grant story access if item has stories_gate flag
+        if (tributeId) {
+            try {
+                const { data: wishItem } = await supabase
+                    .from('Wishlist')
+                    .select('stories_gate')
+                    .eq('ID', tributeId)
+                    .maybeSingle();
+                if (wishItem?.stories_gate) {
+                    const today = new Date().toISOString().split('T')[0];
+                    await supabase.from('story_access').upsert(
+                        { member_email: realEmail.toLowerCase(), date: today, coins_spent: tributeCost },
+                        { onConflict: 'member_email,date' }
+                    );
+                }
+            } catch (_) {}
+        }
+
         // Discord notification
         const senderNameFinal = (profile as any).name || realEmail.split('@')[0];
         discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost, tributeImage).catch(() => {});
