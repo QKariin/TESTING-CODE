@@ -780,6 +780,12 @@ export default function DashboardPage() {
     const [paymentLogs, setPaymentLogs] = useState<any[]>([]);
     const [paymentLogsLoading, setPaymentLogsLoading] = useState(false);
     const [showBlog, setShowBlog] = useState(false);
+    const [showDailyVideo, setShowDailyVideo] = useState(false);
+    const [dailyVideoData, setDailyVideoData] = useState<any>(null);
+    const [dailyVideoUploading, setDailyVideoUploading] = useState(false);
+    const [dailyVideoMsg, setDailyVideoMsg] = useState('');
+    const [dailyVideoStatus, setDailyVideoStatus] = useState('');
+    const dailyVideoFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!showPaymentLogs) return;
@@ -798,12 +804,6 @@ export default function DashboardPage() {
     const [keyholderMember, setKeyholderMember] = useState('');
     const [showBasicProgram, setShowBasicProgram] = useState(false);
     const [showMorning, setShowMorning] = useState(false);
-    const [showDailyVideo, setShowDailyVideo] = useState(false);
-    const [dailyVideoData, setDailyVideoData] = useState<any>(null);
-    const [dailyVideoUploading, setDailyVideoUploading] = useState(false);
-    const [dailyVideoMsg, setDailyVideoMsg] = useState('');
-    const [dailyVideoStatus, setDailyVideoStatus] = useState('');
-    const dailyVideoFileRef = useRef<HTMLInputElement>(null);
     const [basicProgramMember, setBasicProgramMember] = useState('');
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
