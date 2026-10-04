@@ -1735,6 +1735,24 @@ export default function DashboardPage() {
                                     {dailyVideoStatus}
                                 </div>
                             )}
+
+                            <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', marginBottom: 12 }}>TIKTOK AGENT</div>
+                                <button
+                                    onClick={async () => {
+                                        setDailyVideoStatus('Running TikTok agent...');
+                                        try {
+                                            const res = await fetch('/api/tiktok-agent/trigger', { method: 'POST' });
+                                            const d = await res.json();
+                                            setDailyVideoStatus(d.success ? 'Agent started. Check Telegram in ~2 minutes.' : `Error: ${d.error}`);
+                                        } catch {
+                                            setDailyVideoStatus('Error: failed to trigger agent.');
+                                        }
+                                    }}
+                                    disabled={dailyVideoUploading}
+                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '10px 24px', borderRadius: 6, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '3px' }}
+                                >CHECK TIKTOK NOW</button>
+                            </div>
                         </div>
                     </div>
                 )}
