@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: pip install -q yt-dlp requests
+        run: pip install -q --break-system-packages yt-dlp requests
 
       - name: Write TikTok cookies
         run: echo "${{ secrets.TIKTOK_COOKIES }}" > /tmp/cookies.txt
@@ -28,11 +28,16 @@ jobs:
           python3 << 'PYEOF'
           import subprocess, os, re, requests, datetime, sys, glob
 
-          SUPABASE_URL = os.environ['SUPABASE_URL']
-          SERVICE_KEY  = os.environ['SUPABASE_SERVICE_ROLE_KEY']
-          BOT_TOKEN    = os.environ['TELEGRAM_BOT_TOKEN']
-          CHAT_ID      = os.environ['TELEGRAM_CHAT_ID']
-          USERNAME     = os.environ['TIKTOK_USERNAME']
+          SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+          SERVICE_KEY  = os.environ.get('SUPABASE_SERVICE_ROLE_KEY', '')
+          BOT_TOKEN    = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+          CHAT_ID      = os.environ.get('TELEGRAM_CHAT_ID', '')
+          USERNAME     = os.environ.get('TIKTOK_USERNAME', 'tinuka25')
+
+          missing = [k for k, v in {'SUPABASE_URL': SUPABASE_URL, 'SUPABASE_SERVICE_ROLE_KEY': SERVICE_KEY, 'TELEGRAM_BOT_TOKEN': BOT_TOKEN, 'TELEGRAM_CHAT_ID': CHAT_ID}.items() if not v]
+          if missing:
+              print(f'FATAL: missing secrets: {missing}')
+              sys.exit(1)
 
           today = datetime.date.today().isoformat()
           expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=24)).isoformat() + 'Z'
@@ -89,6 +94,8 @@ jobs:
               f'https://www.tiktok.com/@{USERNAME}',
           ], capture_output=True, text=True, timeout=120)
 
+          if result.returncode != 0:
+              print(f'yt-dlp metadata error (rc={result.returncode}): {result.stderr[-500:]}')
           lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
           print(f'Found {len(lines)} videos from TikTok')
 
