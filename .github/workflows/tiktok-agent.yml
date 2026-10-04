@@ -12,7 +12,11 @@ jobs:
 
     steps:
       - name: Install dependencies
-        run: pip install -q --break-system-packages "yt-dlp @ https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.tar.gz" requests pycryptodomex websockets
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp
+          chmod +x /usr/local/bin/yt-dlp
+          pip install -q --break-system-packages requests pycryptodomex websockets
 
       - name: Write TikTok cookies
         run: |
@@ -98,7 +102,8 @@ jobs:
           result = subprocess.run([
               'yt-dlp',
               '--cookies', '/tmp/cookies.txt',
-              '--extractor-args', 'tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com',
+              '--extractor-args', 'tiktok:app_name=musical_ly,app_version=34.1.2,manifest_app_version=2023405030,device_id=7488127649735099397',
+              '--add-header', 'User-Agent:com.zhiliaoapp.musically/2023405030 (Linux; U; Android 13; en_US; Pixel 7; Build/TQ3A.230901.001; Cronet/113.0.5672.135)',
               '--playlist-end', '5',
               '--no-download',
               '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s|||%(description)s',
@@ -167,7 +172,8 @@ jobs:
               dl = subprocess.run([
                   'yt-dlp',
                   '--cookies', '/tmp/cookies.txt',
-                  '--extractor-args', 'tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com',
+                  '--extractor-args', 'tiktok:app_name=musical_ly,app_version=34.1.2,manifest_app_version=2023405030,device_id=7488127649735099397',
+                  '--add-header', 'User-Agent:com.zhiliaoapp.musically/2023405030 (Linux; U; Android 13; en_US; Pixel 7; Build/TQ3A.230901.001; Cronet/113.0.5672.135)',
                   '-o', f'/tmp/{vid_id}.%(ext)s',
                   '--merge-output-format', 'mp4',
                   '--no-playlist',
