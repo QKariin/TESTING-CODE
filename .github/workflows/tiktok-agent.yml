@@ -95,7 +95,9 @@ jobs:
           ], capture_output=True, text=True, timeout=120)
 
           if result.returncode != 0:
-              print(f'yt-dlp metadata error (rc={result.returncode}): {result.stderr[-500:]}')
+              err_snippet = result.stderr[-400:] if result.stderr else '(no stderr)'
+              print(f'yt-dlp metadata error (rc={result.returncode}): {err_snippet}')
+              tg(f'⚠️ yt-dlp error (rc={result.returncode}):\n<code>{err_snippet[-300:]}</code>')
           lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
           print(f'Found {len(lines)} videos from TikTok')
 
@@ -121,7 +123,8 @@ jobs:
               new_videos.append({'id': vid_id, 'ext': ext, 'title': title, 'description': description})
 
           if not new_videos:
-              tg(f'TikTok check complete: no new videos today ({today}).')
+              already = len(existing_ids)
+              tg(f'TikTok: 0 new videos.\nyt-dlp found {len(lines)} total · {already} already saved · date: {today}')
               sys.exit(0)
 
           print(f'{len(new_videos)} new videos to process')
