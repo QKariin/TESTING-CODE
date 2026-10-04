@@ -33,6 +33,10 @@ jobs:
           with open('/tmp/cookies.txt', 'w') as f:
               f.write('\n'.join(lines) + '\n')
           print(f'Wrote {len(cookies)} cookies to /tmp/cookies.txt')
+          key_names = [c.get('name','') for c in cookies]
+          print(f'Cookie names: {key_names}')
+          has_session = any(n in ('sessionid', 'sid_guard', 'uid_tt') for n in key_names)
+          print(f'Has TikTok session cookie: {has_session}')
           EOF
         env:
           TIKTOK_COOKIES: ${{ secrets.TIKTOK_COOKIES }}
@@ -60,6 +64,7 @@ jobs:
               sys.exit(1)
 
           today = datetime.date.today().isoformat()
+          yesterday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
           expires_at = (datetime.datetime.utcnow() + datetime.timedelta(hours=24)).isoformat() + 'Z'
 
           headers = {
@@ -118,10 +123,12 @@ jobs:
               err_snippet = result.stderr[-400:] if result.stderr else '(no stderr)'
               print(f'yt-dlp metadata error (rc={result.returncode}): {err_snippet}')
               tg(f'⚠️ yt-dlp error (rc={result.returncode}):\n<code>{err_snippet[-300:]}</code>')
+          print(f'yt-dlp raw stdout: {result.stdout[:500]}')
           lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
           print(f'Found {len(lines)} videos from TikTok')
 
           new_videos = []
+          skip_reasons = []
           for line in lines:
               parts = line.split('|||', 4)
               if len(parts) < 4: continue
@@ -131,20 +138,25 @@ jobs:
               title       = parts[3]
               description = parts[4] if len(parts) > 4 else ''
 
-              # Skip only if we definitively know it's from a past date
-              # (upload_date can be 'NA' or empty for brand-new uploads not yet indexed)
+              # Skip only if definitively from before yesterday
+              # Allow yesterday too: Athens is UTC+3, so a video posted at 1 AM Athens
+              # has yesterday's UTC date but is still "today" for us
               upload_yyyymmdd = upload_date.replace('-', '') if upload_date and upload_date not in ('NA', 'None', '') else ''
-              if upload_yyyymmdd and upload_yyyymmdd != today.replace('-', ''):
-                  print(f'Skipping {vid_id} — date {upload_date} not today')
+              allowed_dates = {today.replace('-', ''), yesterday.replace('-', '')}
+              if upload_yyyymmdd and upload_yyyymmdd not in allowed_dates:
+                  print(f'Skipping {vid_id} — date {upload_date} too old')
+                  skip_reasons.append(f'{vid_id}: date={upload_date} (too old)')
                   continue
               if vid_id in existing_ids:
                   print(f'Skipping {vid_id} — already saved')
+                  skip_reasons.append(f'{vid_id}: already saved')
                   continue
               new_videos.append({'id': vid_id, 'ext': ext, 'title': title, 'description': description})
 
           if not new_videos:
               already = len(existing_ids)
-              tg(f'TikTok: 0 new videos.\nyt-dlp found {len(lines)} total · {already} already saved · date: {today}')
+              detail = '\n'.join(skip_reasons) if skip_reasons else 'yt-dlp returned 0 results (cookie auth?)'
+              tg(f'TikTok: 0 new videos.\nyt-dlp found {len(lines)} total · {already} already saved · date: {today}\n\n<code>{detail}</code>')
               sys.exit(0)
 
           print(f'{len(new_videos)} new videos to process')
