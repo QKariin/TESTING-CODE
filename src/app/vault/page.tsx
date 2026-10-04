@@ -221,6 +221,9 @@ export default function VaultPage() {
     const [trialDone, setTrialDone] = useState(false);
     const [chastityUploading, setChastityUploading] = useState(false);
     const [chastityStatus, setChastityStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none');
+    const [queenVideo, setQueenVideo] = useState<any>(null);
+    const [queenOnline, setQueenOnline] = useState<{ online: boolean; label: string }>({ online: false, label: '' });
+    const [queenVideoPlaying, setQueenVideoPlaying] = useState(false);
     const [chastityWindow, setChastityWindow] = useState<{ open: boolean; before: boolean; localHour: number; localMinute: number }>(() => {
         try {
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -997,6 +1000,25 @@ export default function VaultPage() {
         }
     }, [chastityStatus, gateSuccess]);
 
+    // Queen daily video + online status
+    useEffect(() => {
+        const today = new Date().toISOString().split('T')[0];
+        fetch(`/api/queen-video?date=${today}`).then(r => r.json()).then(d => { if (d.video) setQueenVideo(d.video); }).catch(() => {});
+
+        const calcOnline = () => {
+            const now = new Date();
+            const h = parseInt(new Intl.DateTimeFormat('en', { timeZone: 'Europe/Athens', hour: '2-digit', hour12: false }).format(now), 10);
+            const m = parseInt(new Intl.DateTimeFormat('en', { timeZone: 'Europe/Athens', minute: '2-digit' }).format(now), 10);
+            const isOnline = h >= 15 || h < 1;
+            if (isOnline) { setQueenOnline({ online: true, label: 'QUEEN IS ONLINE' }); return; }
+            const mins = (15 - h) * 60 - m;
+            setQueenOnline({ online: false, label: `QUEEN IN ${Math.floor(mins / 60)}h ${mins % 60}m` });
+        };
+        calcOnline();
+        const t = setInterval(calcOnline, 60000);
+        return () => clearInterval(t);
+    }, []);
+
     const HOLD_TIME = 2000;
     const attnDown = useCallback(() => {
         if (attnCooldown || attnResult) return;
@@ -1432,6 +1454,47 @@ export default function VaultPage() {
                         <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.5rem', color: 'rgba(197,160,89,0.3)', letterSpacing: '5px', marginTop: 4, position: 'relative' }}>RELEASE IN</div>
                     </div>
                 )}
+
+                {/* ── QUEEN DAILY VIDEO + ONLINE STATUS ── */}
+                {queenVideo && queenVideoPlaying && (
+                    <div onClick={() => setQueenVideoPlaying(false)} style={{ position: 'fixed', inset: 0, zIndex: 9000, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <video src={queenVideo.video_url} autoPlay controls playsInline style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 12 }} onClick={e => e.stopPropagation()} />
+                    </div>
+                )}
+                <div style={{ width: '100%', padding: '12px 16px 0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {/* Online status pill */}
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 16px',
+                            borderRadius: 20, border: `1px solid ${queenOnline.online ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                            background: queenOnline.online ? 'rgba(197,160,89,0.06)' : 'rgba(255,255,255,0.02)',
+                        }}>
+                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: queenOnline.online ? '#c5a059' : 'rgba(255,255,255,0.2)', boxShadow: queenOnline.online ? '0 0 8px rgba(197,160,89,0.8)' : 'none' }} />
+                            <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.42rem', letterSpacing: 3, color: queenOnline.online ? 'rgba(197,160,89,0.9)' : 'rgba(255,255,255,0.25)' }}>{queenOnline.label}</span>
+                        </div>
+                    </div>
+                    {/* Video card */}
+                    {queenVideo && (
+                        <div onClick={() => setQueenVideoPlaying(true)} style={{
+                            width: '100%', borderRadius: 12, overflow: 'hidden', position: 'relative', cursor: 'pointer',
+                            border: '1px solid rgba(197,160,89,0.15)', aspectRatio: '16/7',
+                            background: queenVideo.thumb_url ? `url(${queenVideo.thumb_url}) center/cover no-repeat` : 'rgba(197,160,89,0.04)',
+                        }}>
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.6) 100%)' }} />
+                            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: '50%', border: '1.5px solid rgba(197,160,89,0.7)', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,4 13,8 6,12" fill="rgba(197,160,89,0.9)" /></svg>
+                                </div>
+                                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.45rem', letterSpacing: 4, color: 'rgba(197,160,89,0.7)' }}>QUEEN'S MESSAGE</span>
+                            </div>
+                            {queenVideo.message && (
+                                <div style={{ position: 'absolute', bottom: 10, left: 12, right: 12 }}>
+                                    <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>{queenVideo.message}</div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 {/* ── HALO HERO SECTION ── */}
                 {(() => {

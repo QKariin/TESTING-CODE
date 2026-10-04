@@ -786,9 +786,24 @@ export default function DashboardPage() {
         setPaymentLogsLoading(true);
         fetch('/api/payment-logs').then(r => r.json()).then(d => { setPaymentLogs(d.logs || []); setPaymentLogsLoading(false); }).catch(() => setPaymentLogsLoading(false));
     }, [showPaymentLogs]);
+
+    useEffect(() => {
+        if (!showDailyVideo) return;
+        const today = new Date().toISOString().split('T')[0];
+        fetch(`/api/queen-video?date=${today}`).then(r => r.json()).then(d => {
+            if (d.video) { setDailyVideoData(d.video); setDailyVideoMsg(d.video.message || ''); }
+            else { setDailyVideoData(null); setDailyVideoMsg(''); }
+        }).catch(() => {});
+    }, [showDailyVideo]);
     const [keyholderMember, setKeyholderMember] = useState('');
     const [showBasicProgram, setShowBasicProgram] = useState(false);
     const [showMorning, setShowMorning] = useState(false);
+    const [showDailyVideo, setShowDailyVideo] = useState(false);
+    const [dailyVideoData, setDailyVideoData] = useState<any>(null);
+    const [dailyVideoUploading, setDailyVideoUploading] = useState(false);
+    const [dailyVideoMsg, setDailyVideoMsg] = useState('');
+    const [dailyVideoStatus, setDailyVideoStatus] = useState('');
+    const dailyVideoFileRef = useRef<HTMLInputElement>(null);
     const [basicProgramMember, setBasicProgramMember] = useState('');
     const [role, setRole] = useState<'queen' | 'chatter'>('queen');
     const roleRef = useRef<'queen' | 'chatter'>('queen');
@@ -1609,6 +1624,121 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {/* DAILY VIDEO PANEL */}
+                {showDailyVideo && !isMobile && (
+                    <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#06060e', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: '1px solid rgba(197,160,89,0.12)', flexShrink: 0 }}>
+                            <div>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#c5a059', letterSpacing: '4px' }}>DAILY VIDEO</div>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginTop: 4 }}>
+                                    {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
+                                </div>
+                            </div>
+                            <button onClick={() => { setShowDailyVideo(false); setDailyVideoStatus(''); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '6px 16px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '2px' }}>CLOSE</button>
+                        </div>
+                        <div style={{ flex: 1, padding: '28px', maxWidth: 600 }}>
+                            {dailyVideoData?.video_url && (
+                                <div style={{ marginBottom: 24, background: 'rgba(197,160,89,0.03)', border: '1px solid rgba(197,160,89,0.15)', borderRadius: 8, overflow: 'hidden' }}>
+                                    <video src={dailyVideoData.video_url} poster={dailyVideoData.thumb_url || undefined} controls style={{ width: '100%', maxHeight: 280, background: '#000', display: 'block' }} />
+                                    {dailyVideoData.message && (
+                                        <div style={{ padding: '10px 14px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>"{dailyVideoData.message}"</div>
+                                    )}
+                                </div>
+                            )}
+                            <div style={{ marginBottom: 20 }}>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 10 }}>
+                                    {dailyVideoData ? 'REPLACE VIDEO' : 'UPLOAD VIDEO'}
+                                </div>
+                                <div
+                                    onClick={() => !dailyVideoUploading && dailyVideoFileRef.current?.click()}
+                                    style={{ border: `1px dashed rgba(197,160,89,${dailyVideoUploading ? '0.15' : '0.3'})`, borderRadius: 6, padding: '28px 20px', textAlign: 'center', cursor: dailyVideoUploading ? 'default' : 'pointer', background: 'rgba(197,160,89,0.02)', transition: 'border-color 0.2s' }}
+                                    onMouseEnter={e => { if (!dailyVideoUploading) e.currentTarget.style.borderColor = 'rgba(197,160,89,0.6)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = `rgba(197,160,89,${dailyVideoUploading ? '0.15' : '0.3'})`; }}
+                                >
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: dailyVideoUploading ? 'rgba(197,160,89,0.4)' : 'rgba(255,255,255,0.35)', letterSpacing: '2px' }}>
+                                        {dailyVideoUploading ? 'UPLOADING...' : 'TAP TO SELECT VIDEO'}
+                                    </div>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.15)', marginTop: 6 }}>MP4 · MOV · WEBM · MAX 5GB</div>
+                                </div>
+                                <input ref={dailyVideoFileRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={async e => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setDailyVideoUploading(true);
+                                    setDailyVideoStatus('Uploading video...');
+                                    try {
+                                        const today = new Date().toISOString().split('T')[0];
+                                        const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+                                        const signRes = await fetch('/api/upload/signed', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ bucket: 'media', path: `queen_daily/${today}_${Date.now()}.${ext}` }),
+                                        });
+                                        if (!signRes.ok) throw new Error('Failed to get upload URL');
+                                        const { signedUrl, publicUrl } = await signRes.json();
+                                        const mimeMap: Record<string, string> = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', m4v: 'video/mp4', '3gp': 'video/3gpp' };
+                                        const contentType = file.type || mimeMap[ext] || 'video/mp4';
+                                        const uploadRes = await fetch(signedUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file });
+                                        if (!uploadRes.ok) throw new Error('Upload failed');
+                                        setDailyVideoStatus('Saving...');
+                                        const saveRes = await fetch('/api/queen-video', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ videoUrl: publicUrl, message: dailyVideoMsg || null, date: today }),
+                                        });
+                                        if (!saveRes.ok) throw new Error('Failed to save');
+                                        const saved = await saveRes.json();
+                                        setDailyVideoData(saved.video);
+                                        setDailyVideoStatus('Video saved.');
+                                    } catch (err: any) {
+                                        setDailyVideoStatus(`Error: ${err?.message || 'Upload failed'}`);
+                                    } finally {
+                                        setDailyVideoUploading(false);
+                                        e.target.value = '';
+                                    }
+                                }} />
+                            </div>
+                            <div style={{ marginBottom: 20 }}>
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.6)', letterSpacing: '3px', marginBottom: 8 }}>CAPTION</div>
+                                <textarea
+                                    value={dailyVideoMsg}
+                                    onChange={e => setDailyVideoMsg(e.target.value)}
+                                    placeholder="A message for your subjects..."
+                                    rows={3}
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(197,160,89,0.2)', borderRadius: 6, color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', padding: '10px 14px', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                            </div>
+                            {dailyVideoData?.video_url && (
+                                <button
+                                    onClick={async () => {
+                                        setDailyVideoUploading(true);
+                                        setDailyVideoStatus('Saving...');
+                                        try {
+                                            const today = new Date().toISOString().split('T')[0];
+                                            await fetch('/api/queen-video', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ videoUrl: dailyVideoData.video_url, thumbUrl: dailyVideoData.thumb_url, message: dailyVideoMsg || null, date: today }),
+                                            });
+                                            setDailyVideoStatus('Caption saved.');
+                                        } catch {
+                                            setDailyVideoStatus('Save failed.');
+                                        } finally {
+                                            setDailyVideoUploading(false);
+                                        }
+                                    }}
+                                    disabled={dailyVideoUploading}
+                                    style={{ background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', padding: '10px 24px', borderRadius: 6, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '3px', opacity: dailyVideoUploading ? 0.5 : 1 }}
+                                >UPDATE CAPTION</button>
+                            )}
+                            {dailyVideoStatus && (
+                                <div style={{ marginTop: 16, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: dailyVideoStatus.startsWith('Error') ? '#e03030' : '#c5a059', letterSpacing: '1px' }}>
+                                    {dailyVideoStatus}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* 1. HOME VIEW */}
                 <div id="viewHome">
                     <div className="v-header">
@@ -1619,60 +1749,66 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="v-grid-stats">
-                        <div className="v-stat-card glass-card" onClick={() => { setShowPaymentLogs(false); setShowBlog(false); (window as any).showHome(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); (window as any).showHome(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: '#c5a059' }}>DASHBOARD</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⌂</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: '#c5a059' }}>POSTS</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>✦</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
                             {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showVideoChallenges ? '#a855f7' : '#a855f799' }}>VIDEO</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.12)', fontSize: '1.1rem' }}>▶</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(180,40,40,0.6)' }}>KEYHOLDER</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(139,0,0,0.12)', fontSize: '1.1rem' }}>&#9919;</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(true); setShowPaymentLogs(false); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBasicProgram ? 'rgba(74,222,128,0.5)' : 'rgba(45,90,39,0.3)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(true); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBasicProgram ? 'rgba(74,222,128,0.5)' : 'rgba(45,90,39,0.3)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showBasicProgram ? 'rgba(74,222,128,0.9)' : 'rgba(74,222,128,0.5)' }}>PROGRAM</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(45,90,39,0.15)', fontSize: '1.1rem' }}>&#9783;</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(true); setShowBlog(false); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(true); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showPaymentLogs ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>PAYMENTS</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>💳</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(true); }} style={{ cursor: 'pointer', border: `1px solid ${showBlog ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.15)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(true); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBlog ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.15)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showBlog ? '#a855f7' : 'rgba(168,85,247,0.5)' }}>BLOG</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.08)', fontSize: '1.1rem' }}>&#9998;</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(true); }} style={{ cursor: 'pointer', border: `1px solid ${showDailyVideo ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showDailyVideo ? '#c5a059' : 'rgba(197,160,89,0.4)' }}>DAILY VIDEO</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>▶</div>
                         </div>
                     </div>
 
