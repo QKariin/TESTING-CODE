@@ -3,6 +3,7 @@ import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { DbService } from '@/lib/supabase-service';
 import { discordWishlistPurchase } from '@/lib/discord';
 import { findProfile } from '@/lib/lookup';
+import { tgSend, escapeHtml } from '@/lib/telegram';
 
 export async function POST(request: Request) {
     try {
@@ -122,9 +123,10 @@ export async function POST(request: Request) {
             } catch (_) {}
         }
 
-        // Discord notification
+        // Discord + Telegram notification
         const senderNameFinal = (profile as any).name || realEmail.split('@')[0];
         discordWishlistPurchase(senderNameFinal, tributeTitle, tributeCost, tributeImage).catch(() => {});
+        tgSend(`💰 <b>${escapeHtml(senderNameFinal)}</b> sent <b>${escapeHtml(tributeTitle)}</b>\n${tributeCost.toLocaleString()} coins`).catch(() => {});
 
         return NextResponse.json({ success: true, newWallet, newScore, meritGained: meritGain, message: `Tribute "${tributeTitle}" purchased successfully.` });
     } catch (err: any) {
