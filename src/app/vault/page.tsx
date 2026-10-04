@@ -1436,10 +1436,9 @@ export default function VaultPage() {
                 {/* ── HALO HERO SECTION ── */}
                 {(() => {
                     const hasChastityTask = daysIn >= 1;
-                    const cWindowOpen = isLocktober ? true : chastityWindow.open;
-                    const cBeforeWindow = isLocktober ? false : chastityWindow.before;
+                    const cWindowOpen = chastityWindow.open;
+                    const cBeforeWindow = chastityWindow.before;
                     const cMissed = !cWindowOpen && !cBeforeWindow && chastityStatus === 'none' && hasChastityTask;
-                    const cMinsLeft = (!isLocktober && cWindowOpen) ? (10 - chastityWindow.localHour) * 60 - chastityWindow.localMinute : 0;
                     const cCanUpload = hasChastityTask && (cWindowOpen || chastityStatus === 'rejected') && chastityStatus !== 'pending' && chastityStatus !== 'approved';
 
                     // Color scheme based on chastity status
@@ -1674,7 +1673,7 @@ export default function VaultPage() {
                                     : chastityStatus === 'rejected' ? '✕ REJECTED'
                                     : cMissed ? '✕ MISSED'
                                     : cBeforeWindow ? 'CHECK OPENS 6 AM'
-                                    : cWindowOpen ? `CHECK · ${cMinsLeft}MIN LEFT`
+                                    : cWindowOpen ? 'SUBMIT CHECK'
                                     : ''}
                             </div>
                         )}

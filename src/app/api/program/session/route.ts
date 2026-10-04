@@ -206,7 +206,7 @@ export async function GET(req: NextRequest) {
     try {
         const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
         const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
-        dailyWindow = { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
+        dailyWindow = { open: localHour >= 6, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
     // Read daily check from program_check_log (proper table)
@@ -643,10 +643,10 @@ export async function POST(req: NextRequest) {
             if (existing && (existing.status === 'pending' || existing.status === 'approved')) {
                 return NextResponse.json({ error: 'Chastity check already submitted today', dailyStatus: existing.status }, { status: 400 });
             }
-            // Enforce 6-10 AM window — allow resubmit anytime if Queen rejected
+            // Enforce 6 AM – midnight window, allow resubmit anytime if Queen rejected
             const isRejectedRetry = existing?.status === 'rejected';
-            if (!isRejectedRetry && (localHour < 6 || localHour >= 10)) {
-                return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
+            if (!isRejectedRetry && localHour < 6) {
+                return NextResponse.json({ error: 'Chastity check window opens at 6:00 AM', windowClosed: true }, { status: 400 });
             }
 
             // Write to program_check_log (proper table — same pattern as user_routines)

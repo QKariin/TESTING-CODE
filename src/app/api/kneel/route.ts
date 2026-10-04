@@ -76,13 +76,13 @@ export async function POST(req: Request) {
         }
 
         // Chastity check gate: vault members MUST submit today's chastity check before kneeling
-        // Gate applies after 10 AM local (submission window 6-10 AM has closed)
+        // Gate applies from 6 AM (when window opens) until midnight
         try {
             const localHour = parseInt(
                 new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(now),
                 10
             );
-            if (localHour >= 10) {
+            if (localHour >= 6) {
                 const emailCheck = (taskEmail || memberId).toLowerCase();
                 const todayCheckStr = now.toLocaleDateString('en-CA', { timeZone: tz });
                 // Find active vault session

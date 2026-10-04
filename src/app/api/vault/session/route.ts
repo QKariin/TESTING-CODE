@@ -235,10 +235,8 @@ export async function GET(req: NextRequest) {
     try {
         const localHour = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, hour: '2-digit', hour12: false }).format(new Date()), 10);
         const localMinute = parseInt(new Intl.DateTimeFormat('en', { timeZone: tz, minute: '2-digit' }).format(new Date()), 10);
-        const isLocktoberSession = session?.tier === 'locktober';
-        chastityWindow = isLocktoberSession
-            ? { open: true, before: false, localHour, localMinute }
-            : { open: localHour >= 6 && localHour < 10, before: localHour < 6, localHour, localMinute };
+        // Window is 6 AM – midnight for everyone (including Locktober)
+        chastityWindow = { open: localHour >= 6, before: localHour < 6, localHour, localMinute };
     } catch (_) {}
 
     // Read chastity check from vault_check_log (proper table)
@@ -600,11 +598,10 @@ export async function POST(req: NextRequest) {
             if (existing && (existing.status === 'pending' || existing.status === 'approved')) {
                 return NextResponse.json({ error: 'Chastity check already submitted today', chastityStatus: existing.status }, { status: 400 });
             }
-            // Enforce 6-10 AM window — skip for Locktober (no time limit), allow resubmit anytime if rejected
+            // Enforce 6 AM – midnight window for everyone, allow resubmit anytime if rejected
             const isRejectedRetry = existing?.status === 'rejected';
-            const isLocktober = session.tier === 'locktober';
-            if (!isLocktober && !isRejectedRetry && (localHour < 6 || localHour >= 10)) {
-                return NextResponse.json({ error: 'Chastity check window is 6:00 - 10:00 AM', windowClosed: true }, { status: 400 });
+            if (!isRejectedRetry && localHour < 6) {
+                return NextResponse.json({ error: 'Chastity check window opens at 6:00 AM', windowClosed: true }, { status: 400 });
             }
 
             // Write to vault_check_log (proper table — same pattern as user_routines)
