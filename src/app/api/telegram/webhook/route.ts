@@ -139,30 +139,9 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
-    // No tag detected — show member buttons
-    const profiles = await getProfiles();
-    const buttons = profiles
-        .filter(p => p.member_id)
-        .map(p => {
-            const nick = p.parameters?.nickname;
-            const label = nick ? `@${nick}` : (p.name || p.member_id.split('@')[0]);
-            return [{ text: label, callback_data: `tag_direct:${p.member_id}` }];
-        })
-        .slice(0, 20);
-
-    await tgSend(
-        '✓ Story live! Who is it for?',
-        {
-            chatId,
-            replyMarkup: {
-                inline_keyboard: [
-                    ...buttons,
-                    [{ text: '🌍 Everyone', callback_data: 'tag_all' }],
-                    [{ text: '🗄 Vault (save for later)', callback_data: 'tag_vault' }],
-                ],
-            },
-        }
-    );
+    // No tag detected — show today's active subs + search
+    await tgSend('✓ Story live! Who is it for?', { chatId });
+    await sendTagMenu(chatId, true);
 }
 
 async function handleMessage(chatId: string, text: string) {
@@ -326,42 +305,47 @@ async function handleDailyStatus(chatId: string) {
     }
 }
 
-async function handleTagMenu(chatId: string) {
-    // Get recently active members from tasks table
-    const { data: recentTasks } = await supabaseAdmin
+async function sendTagMenu(chatId: string, includeVault = false) {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Only today's active subs
+    const { data: todayTasks } = await supabaseAdmin
         .from('tasks')
         .select('member_id, lastWorship')
-        .not('lastWorship', 'is', null)
-        .order('lastWorship', { ascending: false })
-        .limit(15);
+        .like('lastWorship', `${today}%`)
+        .limit(20);
 
-    let buttons: { text: string; callback_data: string }[][] = [];
+    const profiles = await getProfiles();
+    const profileMap = new Map(profiles.map(p => [p.member_id, p]));
 
-    if (recentTasks && recentTasks.length > 0) {
-        const profiles = await getProfiles();
-        const profileMap = new Map(profiles.map(p => [p.member_id, p]));
+    const memberButtons = (todayTasks || [])
+        .filter((t: any) => t.member_id)
+        .map((t: any) => {
+            const p = profileMap.get(t.member_id);
+            const nick = p?.parameters?.nickname;
+            const name = p?.name || t.member_id.split('@')[0];
+            const label = nick ? `@${nick} (${name})` : name;
+            return [{ text: `🟢 ${label}`, callback_data: `tag_direct:${t.member_id}` }];
+        });
 
-        buttons = recentTasks
-            .filter((t: any) => t.member_id)
-            .map((t: any) => {
-                const p = profileMap.get(t.member_id);
-                const nick = p?.parameters?.nickname;
-                const name = p?.name || t.member_id.split('@')[0];
-                const label = nick ? `@${nick} (${name})` : name;
-                const worshipDate = t.lastWorship ? t.lastWorship.split('T')[0] : '';
-                const today = new Date().toISOString().split('T')[0];
-                const dot = worshipDate === today ? ' 🟢' : '';
-                return [{ text: `${label}${dot}`, callback_data: `tag_direct:${t.member_id}` }];
-            });
-    }
+    const bottomButtons = [
+        [{ text: '🔍 Search by name', callback_data: 'tag_search' }],
+        [{ text: '🌍 Everyone', callback_data: 'tag_all' }],
+        ...(includeVault ? [[{ text: '🗄 Vault', callback_data: 'tag_vault' }]] : []),
+    ];
 
-    await tgSend(
-        `Tag who?\n🟢 = active today\n\n<i>Not here? Use /tag [name] to search all 120 subs.</i>`,
-        {
-            chatId,
-            replyMarkup: { inline_keyboard: buttons },
-        }
-    );
+    const intro = memberButtons.length > 0
+        ? `🟢 Active today (${memberButtons.length}):`
+        : 'No one active yet today.';
+
+    await tgSend(intro, {
+        chatId,
+        replyMarkup: { inline_keyboard: [...memberButtons, ...bottomButtons] },
+    });
+}
+
+async function handleTagMenu(chatId: string) {
+    await sendTagMenu(chatId, false);
 }
 
 async function handleSetNickname(chatId: string, args: string) {
@@ -481,6 +465,11 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         const name = value.split('@')[0];
         await tgAnswer(callbackQueryId, `Tagged ${name}`);
         await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b> in today's stories.`, { chatId });
+
+    } else if (action === 'tag_search') {
+        await setBotState('awaiting_tag');
+        await tgAnswer(callbackQueryId);
+        await tgSend('Type a name or @nickname:', { chatId });
 
     } else if (action === 'tag_all') {
         await tgAnswer(callbackQueryId, 'Set to public');
