@@ -170,7 +170,12 @@ export default function ProfilePage() {
     const [storiesData, setStoriesData] = useState<any[]>([]);
     const [storiesGateItems, setStoriesGateItems] = useState<any[]>([]);
     const [showStories, setShowStories] = useState(false);
-    const [storiesViewed, setStoriesViewed] = useState(false);
+    const [storiesViewed, setStoriesViewed] = useState(() => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            return localStorage.getItem(`stories_viewed_${today}`) === '1';
+        } catch { return false; }
+    });
     const [storiesIdx, setStoriesIdx] = useState(0);
     const [storiesBuying, setStoriesBuying] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -2599,7 +2604,7 @@ export default function ProfilePage() {
                                     <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>TODAY · {storiesIdx + 1}/{storiesData.length}</div>
                                 </div>
                             </div>
-                            <button onClick={() => { setShowStories(false); setStoriesViewed(true); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
+                            <button onClick={() => { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
                         </div>
                         {/* Media - tap left/right to navigate */}
                         <div style={{ position: 'absolute', inset: 0 }} onClick={e => {
@@ -2608,7 +2613,7 @@ export default function ProfilePage() {
                             if (x < w / 3) setStoriesIdx(Math.max(0, storiesIdx - 1));
                             else if (x > (w * 2) / 3) {
                                 if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                else { setShowStories(false); setStoriesViewed(true); }
+                                else { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }
                             }
                         }}>
                             {storiesData[storiesIdx]?.media_type === 'video' ? (
@@ -2621,7 +2626,7 @@ export default function ProfilePage() {
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     onEnded={() => {
                                         if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                        else { setShowStories(false); setStoriesViewed(true); }
+                                        else { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }
                                     }}
                                 />
                             ) : (
@@ -2639,7 +2644,7 @@ export default function ProfilePage() {
                         {/* Chat button */}
                         <div style={{ position: 'absolute', bottom: 24, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>
                             <button
-                                onClick={() => { setShowStories(false); setStoriesViewed(true); (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
+                                onClick={() => { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
                                 style={{ background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', padding: '12px 36px', borderRadius: 28, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', letterSpacing: 3, cursor: 'pointer' }}
                             >OPEN CHAT</button>
                         </div>
