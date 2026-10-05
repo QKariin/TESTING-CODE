@@ -1563,6 +1563,26 @@ export default function VaultPage() {
                         const ltOffset = 4; // Oct 1 2026 = Thursday
                         return (
                             <div style={{ width: '100%', padding: '24px 16px 0' }}>
+                                {/* Stories indicator for locktober (no big circle here) */}
+                                {storiesAvail && (
+                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                                        <div
+                                            onClick={() => setShowStories(true)}
+                                            style={{
+                                                width: 70, height: 70, borderRadius: '50%', cursor: 'pointer',
+                                                border: '3px solid transparent',
+                                                background: storiesViewed
+                                                    ? 'rgba(0,0,0,0.55) padding-box, conic-gradient(from 0deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05), rgba(255,255,255,0.15)) border-box'
+                                                    : 'rgba(0,0,0,0.65) padding-box, conic-gradient(from 0deg, #fcaf45, #f77737, #f56040, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #fcaf45) border-box',
+                                                animation: storiesViewed ? 'none' : 'haloIgSpin 4s linear infinite',
+                                                boxShadow: storiesViewed ? 'none' : '0 0 20px rgba(193,53,132,0.45), 0 0 40px rgba(131,58,180,0.25)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                                            }}
+                                        >
+                                            <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                        </div>
+                                    </div>
+                                )}
                                 <div style={{
                                     display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
                                     gap: 6, width: '100%', marginBottom: 24,
