@@ -307,25 +307,32 @@ async function handleDailyStatus(chatId: string) {
 
 async function sendTagMenu(chatId: string, includeVault = false) {
     const today = new Date().toISOString().split('T')[0];
+    const todayStart = `${today}T00:00:00.000Z`;
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const tomorrowStart = `${tomorrow}T00:00:00.000Z`;
 
-    // Only today's active subs
-    const { data: todayTasks } = await supabaseAdmin
+    // Top 15 most recently active (any date)
+    const { data: recentTasks } = await supabaseAdmin
         .from('tasks')
         .select('member_id, lastWorship')
-        .like('lastWorship', `${today}%`)
-        .limit(20);
+        .not('lastWorship', 'is', null)
+        .order('lastWorship', { ascending: false })
+        .limit(15);
 
     const profiles = await getProfiles();
     const profileMap = new Map(profiles.map(p => [p.member_id, p]));
 
-    const memberButtons = (todayTasks || [])
+    const memberButtons = (recentTasks || [])
         .filter((t: any) => t.member_id)
         .map((t: any) => {
             const p = profileMap.get(t.member_id);
             const nick = p?.parameters?.nickname;
             const name = p?.name || t.member_id.split('@')[0];
             const label = nick ? `@${nick} (${name})` : name;
-            return [{ text: `🟢 ${label}`, callback_data: `tag_direct:${t.member_id}` }];
+            const lw = t.lastWorship || '';
+            const isToday = lw >= todayStart && lw < tomorrowStart;
+            const dot = isToday ? '🟢 ' : '';
+            return [{ text: `${dot}${label}`, callback_data: `tag_direct:${t.member_id}` }];
         });
 
     const bottomButtons = [
@@ -334,11 +341,7 @@ async function sendTagMenu(chatId: string, includeVault = false) {
         ...(includeVault ? [[{ text: '🗄 Vault', callback_data: 'tag_vault' }]] : []),
     ];
 
-    const intro = memberButtons.length > 0
-        ? `🟢 Active today (${memberButtons.length}):`
-        : 'No one active yet today.';
-
-    await tgSend(intro, {
+    await tgSend('Who is it for? (🟢 = active today)', {
         chatId,
         replyMarkup: { inline_keyboard: [...memberButtons, ...bottomButtons] },
     });
@@ -397,10 +400,12 @@ async function handleListMembers(chatId: string) {
 }
 
 async function handleTag(chatId: string, name: string) {
-    if (!name) {
+    const cleanName = name.replace(/^@/, '').trim();
+    if (!cleanName) {
         await tgSend('Provide a name. Example: /tag Sissywolf', { chatId });
         return;
     }
+    name = cleanName;
     const today = new Date().toISOString().split('T')[0];
 
     const { data: profiles } = await supabaseAdmin
