@@ -39,19 +39,28 @@ async function setBotState(context: string | null, data?: any) {
 
 // ─── HANDLERS ────────────────────────────────────────────────────────────────
 
+interface Profile { member_id: string; name: string | null; parameters: Record<string, any> | null; }
+
+async function getProfiles(): Promise<Profile[]> {
+    const { data } = await supabaseAdmin
+        .from('profiles')
+        .select('member_id, name, parameters')
+        .limit(200);
+    return (data || []) as Profile[];
+}
+
 async function findMemberInText(text: string): Promise<string | null> {
     if (!text) return null;
-    const { data: profiles } = await supabaseAdmin
-        .from('profiles')
-        .select('member_id, name')
-        .limit(100);
-    if (!profiles) return null;
-    const lower = text.toLowerCase();
+    const profiles = await getProfiles();
+    // strip leading @ if present
+    const lower = text.replace(/^@/, '').toLowerCase();
     for (const p of profiles) {
-        const name = (p.name || '').trim();
-        const prefix = (p.member_id || '').split('@')[0];
-        if (name && name.length > 2 && lower.includes(name.toLowerCase())) return p.member_id;
-        if (prefix && prefix.length > 3 && lower.includes(prefix.toLowerCase())) return p.member_id;
+        const nickname = (p.parameters?.nickname || '').toLowerCase();
+        const name = (p.name || '').trim().toLowerCase();
+        const prefix = (p.member_id || '').split('@')[0].toLowerCase();
+        if (nickname && (lower === nickname || lower.includes(nickname))) return p.member_id;
+        if (name && name.length > 2 && lower.includes(name)) return p.member_id;
+        if (prefix && prefix.length > 3 && lower.includes(prefix)) return p.member_id;
     }
     return null;
 }
@@ -97,18 +106,20 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         if (tagged) taggedMembers = [tagged];
     }
 
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const isVault = caption?.trim().toLowerCase() === 'vault';
+    const isAll = caption?.trim().toLowerCase() === 'all' || caption?.trim().toLowerCase() === 'public';
+    const expiresAt = isVault ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
     const { error: dbError } = await supabaseAdmin.from('stories').insert({
         date: today,
         media_url: publicUrl,
         media_type: 'video',
         order_index: 0,
         caption: caption || '',
-        source: 'tiktok',
+        source: isVault ? 'vault' : 'tiktok',
         source_id: fileId,
-        tagged_members: taggedMembers,
+        tagged_members: isAll || isVault ? [] : taggedMembers,
         expires_at: expiresAt,
-        archived: false,
     });
 
     if (dbError) {
@@ -116,10 +127,42 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
-    const tagLine = taggedMembers.length
-        ? `Tagged: <b>${escapeHtml(taggedMembers[0].split('@')[0])}</b>`
-        : 'Public (no member name in caption).\nUse /tag [name] to tag someone.';
-    await tgSend(`✓ Story live!\n${tagLine}`, { chatId });
+    if (isVault) {
+        await tgSend('✓ Saved to vault.', { chatId });
+        return;
+    }
+    if (isAll || taggedMembers.length > 0) {
+        const tagLine = taggedMembers.length
+            ? `Tagged: <b>${escapeHtml(taggedMembers[0].split('@')[0])}</b>`
+            : 'Public — visible to all.';
+        await tgSend(`✓ Story live!\n${tagLine}`, { chatId });
+        return;
+    }
+
+    // No tag detected — show member buttons
+    const profiles = await getProfiles();
+    const buttons = profiles
+        .filter(p => p.member_id)
+        .map(p => {
+            const nick = p.parameters?.nickname;
+            const label = nick ? `@${nick}` : (p.name || p.member_id.split('@')[0]);
+            return [{ text: label, callback_data: `tag_direct:${p.member_id}` }];
+        })
+        .slice(0, 20);
+
+    await tgSend(
+        '✓ Story live! Who is it for?',
+        {
+            chatId,
+            replyMarkup: {
+                inline_keyboard: [
+                    ...buttons,
+                    [{ text: '🌍 Everyone', callback_data: 'tag_all' }],
+                    [{ text: '🗄 Vault (save for later)', callback_data: 'tag_vault' }],
+                ],
+            },
+        }
+    );
 }
 
 async function handleMessage(chatId: string, text: string) {
@@ -130,10 +173,13 @@ async function handleMessage(chatId: string, text: string) {
         await setBotState(null);
         await tgSend(
             `<b>THRONE COMMAND CENTER</b>\n\nReady, Queen.\n\n` +
+            `<b>Stories</b>\nSend a video → bot uploads it\nCaption: @nickname / "all" / "vault"\n\n` +
+            `/tag — tag member in today's stories\n` +
+            `/members — list all subs + nicknames\n` +
+            `/nickname @nick email — set a nickname\n\n` +
             `/status — pending items + today's activity\n` +
             `/stories — today's stories + who unlocked\n` +
             `/daily — morning video status\n` +
-            `/tag [name] — tag member in today's stories\n` +
             `/skip — cancel pending action`,
             { chatId }
         );
@@ -156,13 +202,22 @@ async function handleMessage(chatId: string, text: string) {
     }
 
     if (txt === '/tag') {
-        await setBotState('awaiting_tag');
-        await tgSend('Who do you want to tag in today\'s stories?\nReply with their name or email prefix.', { chatId });
+        await handleTagMenu(chatId);
         return;
     }
 
     if (txt.startsWith('/tag ')) {
         await handleTag(chatId, txt.slice(5).trim());
+        return;
+    }
+
+    if (txt.startsWith('/nickname ')) {
+        await handleSetNickname(chatId, txt.slice(10).trim());
+        return;
+    }
+
+    if (txt === '/members') {
+        await handleListMembers(chatId);
         return;
     }
 
@@ -271,6 +326,76 @@ async function handleDailyStatus(chatId: string) {
     }
 }
 
+async function handleTagMenu(chatId: string) {
+    const profiles = await getProfiles();
+    if (!profiles.length) {
+        await setBotState('awaiting_tag');
+        await tgSend('No members found. Type a name manually:', { chatId });
+        return;
+    }
+    const buttons = profiles
+        .filter(p => p.member_id)
+        .map(p => {
+            const nick = p.parameters?.nickname;
+            const label = nick ? `@${nick}` : (p.name || p.member_id.split('@')[0]);
+            return [{ text: label, callback_data: `tag_direct:${p.member_id}` }];
+        })
+        .slice(0, 20);
+
+    await tgSend('Tag who?', {
+        chatId,
+        replyMarkup: { inline_keyboard: buttons },
+    });
+}
+
+async function handleSetNickname(chatId: string, args: string) {
+    // Usage: /nickname @sissywolf pr.finsko@gmail.com
+    // OR:    /nickname sissywolf pr.finsko@gmail.com
+    const parts = args.split(/\s+/);
+    if (parts.length < 2) {
+        await tgSend('Usage: /nickname @sissywolf member@email.com\n\nUse /members to see all members.', { chatId });
+        return;
+    }
+    const nickname = parts[0].replace(/^@/, '').toLowerCase();
+    const search = parts.slice(1).join(' ');
+
+    const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('member_id, name, parameters')
+        .or(`member_id.ilike.%${search}%,name.ilike.%${search}%`)
+        .limit(1);
+
+    if (!profiles || profiles.length === 0) {
+        await tgSend(`No member found matching "<b>${escapeHtml(search)}</b>".`, { chatId });
+        return;
+    }
+
+    const profile = profiles[0];
+    const existing = profile.parameters || {};
+    await supabaseAdmin
+        .from('profiles')
+        .update({ parameters: { ...existing, nickname } })
+        .eq('member_id', profile.member_id);
+
+    await tgSend(`✓ <b>@${escapeHtml(nickname)}</b> → ${escapeHtml(profile.name || profile.member_id.split('@')[0])}`, { chatId });
+}
+
+async function handleListMembers(chatId: string) {
+    const profiles = await getProfiles();
+    if (!profiles.length) {
+        await tgSend('No members found.', { chatId });
+        return;
+    }
+    const lines = profiles
+        .filter(p => p.member_id)
+        .map(p => {
+            const nick = p.parameters?.nickname ? `@${p.parameters.nickname}` : '(no nickname)';
+            const name = p.name || p.member_id.split('@')[0];
+            return `• <b>${escapeHtml(name)}</b> — ${escapeHtml(nick)}`;
+        });
+    await tgSend(`<b>MEMBERS</b>\n\n${lines.join('\n')}\n\nSet nickname: /nickname @nick email`, { chatId });
+}
+
 async function handleTag(chatId: string, name: string) {
     if (!name) {
         await tgSend('Provide a name. Example: /tag Sissywolf', { chatId });
@@ -318,12 +443,44 @@ async function handleTag(chatId: string, name: string) {
 }
 
 async function handleCallbackQuery(callbackQueryId: string, data: string, chatId: string) {
-    const [action] = data.split(':');
+    const [action, value] = data.split(':');
 
-    if (action === 'tag_member') {
+    if (action === 'tag_direct' && value) {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: stories } = await supabaseAdmin
+            .from('stories')
+            .select('id, tagged_members')
+            .eq('date', today);
+
+        if (!stories || stories.length === 0) {
+            await tgAnswer(callbackQueryId, 'No stories today.');
+            return;
+        }
+        for (const story of stories) {
+            const existing: string[] = Array.isArray(story.tagged_members) ? story.tagged_members : [];
+            if (!existing.includes(value)) {
+                await supabaseAdmin.from('stories').update({ tagged_members: [...existing, value] }).eq('id', story.id);
+            }
+        }
+        const name = value.split('@')[0];
+        await tgAnswer(callbackQueryId, `Tagged ${name}`);
+        await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b> in today's stories.`, { chatId });
+
+    } else if (action === 'tag_all') {
+        await tgAnswer(callbackQueryId, 'Set to public');
+        await tgSend('✓ Story is public — visible to all.', { chatId });
+
+    } else if (action === 'tag_vault') {
+        const today = new Date().toISOString().split('T')[0];
+        await supabaseAdmin.from('stories').update({ source: 'vault', expires_at: null }).eq('date', today).eq('source', 'tiktok');
+        await tgAnswer(callbackQueryId, 'Moved to vault');
+        await tgSend('✓ Moved to vault.', { chatId });
+
+    } else if (action === 'tag_member') {
         await setBotState('awaiting_tag');
         await tgAnswer(callbackQueryId);
         await tgSend('Who do you want to tag? Reply with their name or email prefix.', { chatId });
+
     } else if (action === 'skip') {
         await setBotState(null);
         await tgAnswer(callbackQueryId, 'Skipped.');
