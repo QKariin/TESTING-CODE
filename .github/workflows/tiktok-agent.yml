@@ -171,9 +171,11 @@ jobs:
               if tagged_email:
                   print(f'Auto-tagged {tagged_email} based on description')
 
-              files = glob.glob(f'/tmp/{vid_id}.*')
+              files = [f for f in glob.glob(f'/tmp/{vid_id}.*') if not f.endswith('.json')]
               if not files:
-                  print(f'Download failed: {dl.stderr[-300:]}')
+                  err = dl.stderr[-300:] if dl.stderr else '(no stderr)'
+                  print(f'Download failed: {err}')
+                  tg(f'❌ Download failed for {vid_id}:\n<code>{err[-200:]}</code>')
                   continue
 
               filepath = files[0]
@@ -189,6 +191,7 @@ jobs:
                   )
               if not up.ok:
                   print(f'Upload failed: {up.text}')
+                  tg(f'❌ Supabase upload failed for {vid_id}:\n<code>{up.text[:200]}</code>')
                   continue
 
               public_url = f'{SUPABASE_URL}/storage/v1/object/public/media/{storage_path}'
