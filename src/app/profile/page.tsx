@@ -170,6 +170,7 @@ export default function ProfilePage() {
     const [storiesData, setStoriesData] = useState<any[]>([]);
     const [storiesGateItems, setStoriesGateItems] = useState<any[]>([]);
     const [showStories, setShowStories] = useState(false);
+    const [videoProgress, setVideoProgress] = useState(0);
     const [storiesViewedCount, setStoriesViewedCount] = useState(() => {
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -2593,7 +2594,7 @@ export default function ProfilePage() {
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', gap: 3, padding: '10px 10px 0', zIndex: 3 }}>
                             {storiesData.map((_: any, i: number) => (
                                 <div key={i} style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 1, overflow: 'hidden' }}>
-                                    <div style={{ height: '100%', background: '#fff', width: i < storiesIdx ? '100%' : i === storiesIdx ? '50%' : '0%' }} />
+                                    <div style={{ height: '100%', background: '#fff', width: i < storiesIdx ? '100%' : i === storiesIdx ? `${videoProgress * 100}%` : '0%', transition: i === storiesIdx ? 'none' : 'width 0.2s' }} />
                                 </div>
                             ))}
                         </div>
@@ -2609,8 +2610,8 @@ export default function ProfilePage() {
                                             const tagged: string[] = Array.isArray(storiesData[storiesIdx]?.tagged_members) ? storiesData[storiesIdx].tagged_members : [];
                                             const isPersonal = tagged.length > 0 && tagged.some((e: string) => e.toLowerCase() === (profile?.member_id || '').toLowerCase());
                                             return isPersonal
-                                                ? <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.28rem', background: 'linear-gradient(90deg,#fcaf45,#e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, fontWeight: 700 }}>FOR YOU</span>
-                                                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>PUBLIC</span>;
+                                                ? <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', background: 'linear-gradient(90deg,#fcaf45,#e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, fontWeight: 700 }}>FOR YOU</span>
+                                                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>PUBLIC</span>;
                                         })()}
                                     </div>
                                 </div>
@@ -2621,10 +2622,10 @@ export default function ProfilePage() {
                         <div style={{ position: 'absolute', inset: 0 }} onClick={e => {
                             const x = (e as React.MouseEvent).clientX;
                             const w = window.innerWidth;
-                            if (x < w / 3) setStoriesIdx(Math.max(0, storiesIdx - 1));
+                            if (x < w / 3) { setStoriesIdx(Math.max(0, storiesIdx - 1)); setVideoProgress(0); }
                             else if (x > (w * 2) / 3) {
-                                if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                else { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
+                                if (storiesIdx < storiesData.length - 1) { setStoriesIdx(storiesIdx + 1); setVideoProgress(0); }
+                                else { setShowStories(false); setVideoProgress(0); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
                             }
                         }}>
                             {storiesData[storiesIdx]?.media_type === 'video' ? (
@@ -2635,7 +2636,8 @@ export default function ProfilePage() {
                                     playsInline
                                     muted={false}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    onEnded={() => {
+                                    onTimeUpdate={e => { const v = e.currentTarget; if (v.duration) setVideoProgress(v.currentTime / v.duration); }}
+                                    onEnded={() => { setVideoProgress(0);
                                         if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
                                         else { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
                                     }}
