@@ -794,6 +794,8 @@ export default function DashboardPage() {
     const [storiesMgmtDate, setStoriesMgmtDate] = useState(() => new Date().toISOString().split('T')[0]);
     const [vaultSelected, setVaultSelected] = useState<string | null>(null);
     const [storiesAssigning, setStoriesAssigning] = useState(false);
+    const [draggingVaultId, setDraggingVaultId] = useState<string | null>(null);
+    const [dropTarget, setDropTarget] = useState<string | null>(null);
 
     useEffect(() => {
         if (!showPaymentLogs) return;
@@ -1645,30 +1647,32 @@ export default function DashboardPage() {
 
                 {/* STORIES MANAGEMENT PANEL */}
                 {showStoriesMgmt && !isMobile && (() => {
+                    const now24 = Date.now() - 24 * 3600 * 1000;
                     const vaultStories = storiesMgmtData.filter((s: any) => s.source === 'vault');
                     const activeStories = storiesMgmtData.filter((s: any) => s.source !== 'vault');
 
-                    // Group active stories by member / public
-                    const groups: { label: string; key: string; stories: any[] }[] = [];
-                    const keyIdx: Record<string, number> = {};
+                    // Members active in last 24h, sorted by most recent first
+                    const activeMembers = (users as any[])
+                        .filter((u: any) => {
+                            const t = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+                            return t > now24;
+                        })
+                        .sort((a: any, b: any) => {
+                            const ta = a.lastSeen ? new Date(a.lastSeen).getTime() : 0;
+                            const tb = b.lastSeen ? new Date(b.lastSeen).getTime() : 0;
+                            return tb - ta;
+                        });
+
+                    // Build story map by member key for fast lookup
+                    const storyMap: Record<string, any[]> = {};
                     activeStories.forEach((s: any) => {
                         const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
                         const key = tagged.length > 0 ? tagged[0] : '__public__';
-                        if (keyIdx[key] === undefined) {
-                            let label = 'PUBLIC';
-                            if (key !== '__public__') {
-                                const found = (users as any[]).find((u: any) =>
-                                    (u.member_id || u.memberId || '').toLowerCase() === key.toLowerCase()
-                                );
-                                label = found?.name || key.split('@')[0].toUpperCase();
-                            }
-                            keyIdx[key] = groups.length;
-                            groups.push({ label, key, stories: [] });
-                        }
-                        groups[keyIdx[key]].stories.push(s);
+                        if (!storyMap[key]) storyMap[key] = [];
+                        storyMap[key].push(s);
                     });
 
-                    // Helper: assign a vault story to target
+                    // Helper: assign vault story to target
                     const assignVault = async (storyId: string, target: 'everyone' | string) => {
                         setStoriesAssigning(true);
                         const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
@@ -1681,19 +1685,29 @@ export default function DashboardPage() {
                             : x
                         ));
                         setVaultSelected(null);
+                        setDraggingVaultId(null);
+                        setDropTarget(null);
                         setStoriesAssigning(false);
                     };
 
-                    // Story row used in expanded views
+                    // Drag handlers
+                    const onDragStart = (storyId: string) => { setDraggingVaultId(storyId); setVaultSelected(storyId); };
+                    const onDragOver = (e: React.DragEvent, key: string) => { e.preventDefault(); setDropTarget(key); };
+                    const onDragLeave = () => setDropTarget(null);
+                    const onDrop = async (e: React.DragEvent, key: string) => {
+                        e.preventDefault(); setDropTarget(null);
+                        if (!draggingVaultId) return;
+                        await assignVault(draggingVaultId, key === '__public__' ? 'everyone' : key);
+                    };
+
+                    // Story row for expanded view
                     const StoryRow = ({ s }: { s: any }) => {
                         const expiresAt = s.expires_at ? new Date(s.expires_at) : null;
                         const hoursLeft = expiresAt ? Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 3600000)) : null;
                         return (
                             <div style={{ display: 'flex', gap: 14, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 14px', alignItems: 'flex-start' }}>
                                 <div style={{ width: 72, height: 72, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: '#000', flexShrink: 0 }}>
-                                    {s.media_type === 'video'
-                                        ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                                        : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
+                                    {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', gap: 6, marginBottom: 5, flexWrap: 'wrap' }}>
@@ -1704,9 +1718,57 @@ export default function DashboardPage() {
                                     <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.18)' }}>{s.created_at ? new Date(s.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flexShrink: 0 }}>
-                                    <a href={s.media_url} target="_blank" rel="noreferrer" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '4px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '1px', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' }}>OPEN</a>
+                                    <a href={s.media_url} target="_blank" rel="noreferrer" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '4px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' }}>OPEN</a>
                                     <button onClick={async () => { if (!confirm('Delete?')) return; await fetch(`/api/stories/admin?id=${s.id}`, { method: 'DELETE' }); setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== s.id)); }} style={{ background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', padding: '4px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', cursor: 'pointer' }}>DELETE</button>
                                 </div>
+                            </div>
+                        );
+                    };
+
+                    // Member card (drop target)
+                    const MemberCard = ({ cardKey, label, cardStories, isPublic }: { cardKey: string; label: string; cardStories: any[]; isPublic?: boolean }) => {
+                        const isDrop = dropTarget === cardKey;
+                        const isSelected = (vaultSelected || draggingVaultId) && !storiesAssigning;
+                        return (
+                            <div
+                                onClick={() => {
+                                    if (vaultSelected && !storiesAssigning) { assignVault(vaultSelected, isPublic ? 'everyone' : cardKey); return; }
+                                    if (cardStories.length > 0) setStoriesMgmtExpanded(cardKey);
+                                }}
+                                onDragOver={e => onDragOver(e, cardKey)}
+                                onDragLeave={onDragLeave}
+                                onDrop={e => onDrop(e, cardKey)}
+                                style={{
+                                    background: isDrop ? 'rgba(197,160,89,0.08)' : isSelected ? 'rgba(225,48,108,0.04)' : 'rgba(255,255,255,0.02)',
+                                    border: `1px solid ${isDrop ? '#c5a059' : isSelected ? 'rgba(225,48,108,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                                    borderRadius: 10, padding: '14px 16px',
+                                    cursor: isSelected ? 'copy' : cardStories.length > 0 ? 'pointer' : 'default',
+                                    transition: 'border-color 0.15s, background 0.15s',
+                                    outline: isDrop ? '2px solid rgba(197,160,89,0.4)' : 'none',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: cardStories.length > 0 ? 10 : 0 }}>
+                                    <div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', fontWeight: 600, color: isPublic ? '#aaa' : '#e1306c', letterSpacing: '2px' }}>
+                                            {isPublic ? '🌍 ' : ''}{label}
+                                        </div>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
+                                            {cardStories.length > 0 ? `${cardStories.length} ${cardStories.length === 1 ? 'video' : 'videos'}` : isSelected ? 'DROP HERE' : 'no stories yet'}
+                                        </div>
+                                    </div>
+                                    {cardStories.length > 0 && !isSelected && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '2px' }}>VIEW →</div>}
+                                    {isSelected && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: '#c5a059', letterSpacing: '2px' }}>ASSIGN ↓</div>}
+                                </div>
+                                {cardStories.length > 0 && (
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        {cardStories.slice(0, 5).map((s: any) => (
+                                            <div key={s.id} style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#000', flexShrink: 0 }}>
+                                                {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
+                                            </div>
+                                        ))}
+                                        {cardStories.length > 5 && <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.3)' }}>+{cardStories.length - 5}</div>}
+                                    </div>
+                                )}
                             </div>
                         );
                     };
@@ -1717,119 +1779,89 @@ export default function DashboardPage() {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 28px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                                     <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#e1306c', letterSpacing: '4px' }}>STORIES</div>
-                                    <input type="date" value={storiesMgmtDate} onChange={e => { setStoriesMgmtDate(e.target.value); setStoriesMgmtExpanded(null); setVaultSelected(null); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', padding: '3px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', cursor: 'pointer' }} />
-                                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{storiesMgmtData.length} active</span>
+                                    <input type="date" value={storiesMgmtDate} onChange={e => { setStoriesMgmtDate(e.target.value); setStoriesMgmtExpanded(null); setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', padding: '3px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', cursor: 'pointer' }} />
+                                    <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{storiesMgmtData.length} active · {activeMembers.length} online 24h</span>
                                 </div>
-                                <button onClick={() => { setShowStoriesMgmt(false); setStoriesMgmtExpanded(null); setVaultSelected(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '2px' }}>CLOSE</button>
+                                <button onClick={() => { setShowStoriesMgmt(false); setStoriesMgmtExpanded(null); setVaultSelected(null); setDraggingVaultId(null); setDropTarget(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '2px' }}>CLOSE</button>
                             </div>
 
                             {storiesMgmtLoading
                                 ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: 3 }}>LOADING...</div>
-                                : storiesMgmtData.length === 0
-                                    ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: 3, fontSize: '0.42rem' }}>NO STORIES FOR THIS DATE</div>
-                                    : <div style={{ padding: '24px 28px', flex: 1 }}>
+                                : <div style={{ padding: '24px 28px', flex: 1 }}>
 
-                                        {/* ── VAULT SECTION ── */}
-                                        {vaultStories.length > 0 && (
-                                            <div style={{ marginBottom: 32, border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, background: 'rgba(197,160,89,0.03)', overflow: 'hidden' }}>
-                                                {/* Vault header */}
-                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(197,160,89,0.12)' }}>
-                                                    <div>
-                                                        <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.42rem', color: '#c5a059', letterSpacing: '3px' }}>🔒 VAULT</div>
-                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 2 }}>PRIVATE STORAGE · {vaultStories.length} {vaultStories.length === 1 ? 'VIDEO' : 'VIDEOS'} · CLICK TO ASSIGN</div>
+                                    {/* ── VAULT ── */}
+                                    {vaultStories.length > 0 && (
+                                        <div style={{ marginBottom: 28, border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, background: 'rgba(197,160,89,0.02)', overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                                                <div>
+                                                    <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px' }}>🔒 VAULT</div>
+                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 1 }}>
+                                                        {vaultSelected ? 'SELECTED — DRAG ONTO A CARD OR CLICK A CARD TO ASSIGN' : 'DRAG A VIDEO ONTO A CARD BELOW · OR CLICK TO SELECT THEN CLICK A CARD'}
                                                     </div>
-                                                    {vaultSelected && <button onClick={() => setVaultSelected(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(197,160,89,0.4)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
                                                 </div>
-                                                {/* Vault thumbnails row */}
-                                                <div style={{ display: 'flex', gap: 12, padding: '16px 20px', overflowX: 'auto' }}>
-                                                    {vaultStories.map((s: any) => (
-                                                        <div key={s.id} onClick={() => setVaultSelected(vaultSelected === s.id ? null : s.id)} style={{ flexShrink: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                                                            <div style={{ width: 80, height: 80, borderRadius: 10, overflow: 'hidden', border: `2px solid ${vaultSelected === s.id ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, background: '#000', boxShadow: vaultSelected === s.id ? '0 0 16px rgba(197,160,89,0.35)' : 'none', transition: 'border-color 0.2s, box-shadow 0.2s' }}>
-                                                                {s.media_type === 'video'
-                                                                    ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
-                                                                    : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
-                                                            </div>
-                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: vaultSelected === s.id ? '#c5a059' : 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
-                                                                {s.caption ? s.caption.slice(0, 12) + (s.caption.length > 12 ? '…' : '') : 'no caption'}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {/* Assignment drawer — shown when a vault video is selected */}
-                                                {vaultSelected && (
-                                                    <div style={{ borderTop: '1px solid rgba(197,160,89,0.12)', padding: '16px 20px', background: 'rgba(197,160,89,0.02)' }}>
-                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginBottom: 12 }}>ASSIGN THIS VIDEO TO:</div>
-                                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                                            {/* Everyone */}
-                                                            <button disabled={storiesAssigning} onClick={() => assignVault(vaultSelected, 'everyone')} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '7px 16px', borderRadius: 6, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', opacity: storiesAssigning ? 0.5 : 1 }}>🌍 EVERYONE</button>
-                                                            {/* Members */}
-                                                            {(users as any[]).slice(0, 30).map((u: any) => {
-                                                                const email = (u.member_id || u.memberId || '');
-                                                                const name = u.name || email.split('@')[0];
-                                                                return (
-                                                                    <button key={email} disabled={storiesAssigning} onClick={() => assignVault(vaultSelected, email)} style={{ background: 'rgba(225,48,108,0.05)', border: '1px solid rgba(225,48,108,0.2)', color: '#e1306c', padding: '7px 14px', borderRadius: 6, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '1px', cursor: 'pointer', opacity: storiesAssigning ? 0.5 : 1 }}>
-                                                                        {name}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                            {/* Delete from vault */}
-                                                            <button disabled={storiesAssigning} onClick={async () => { if (!confirm('Delete from vault?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', padding: '7px 14px', borderRadius: 6, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', cursor: 'pointer', marginLeft: 'auto', opacity: storiesAssigning ? 0.5 : 1 }}>🗑 DELETE</button>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                {vaultSelected && <button onClick={() => { setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'transparent', border: 'none', color: 'rgba(197,160,89,0.5)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
                                             </div>
-                                        )}
+                                            <div style={{ display: 'flex', gap: 12, padding: '14px 20px', overflowX: 'auto' }}>
+                                                {vaultStories.map((s: any) => (
+                                                    <div
+                                                        key={s.id}
+                                                        draggable
+                                                        onDragStart={() => onDragStart(s.id)}
+                                                        onDragEnd={() => { setDraggingVaultId(null); setDropTarget(null); }}
+                                                        onClick={() => setVaultSelected(vaultSelected === s.id ? null : s.id)}
+                                                        style={{ flexShrink: 0, cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, opacity: storiesAssigning ? 0.4 : 1 }}
+                                                    >
+                                                        <div style={{ width: 76, height: 76, borderRadius: 10, overflow: 'hidden', border: `2px solid ${vaultSelected === s.id ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, background: '#000', boxShadow: vaultSelected === s.id ? '0 0 14px rgba(197,160,89,0.4)' : 'none', transition: 'all 0.15s' }}>
+                                                            {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
+                                                        </div>
+                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: vaultSelected === s.id ? '#c5a059' : 'rgba(255,255,255,0.2)', letterSpacing: '1px', maxWidth: 76, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {s.caption ? s.caption.slice(0, 10) + (s.caption.length > 10 ? '…' : '') : '—'}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {/* Trash drop zone in vault row */}
+                                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, marginLeft: 8 }}>
+                                                    <button disabled={!vaultSelected || storiesAssigning} onClick={async () => { if (!vaultSelected || !confirm('Delete from vault?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', cursor: vaultSelected ? 'pointer' : 'default', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: vaultSelected ? 1 : 0.3 }}>🗑</button>
+                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(224,48,48,0.4)', letterSpacing: '1px' }}>DELETE</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
-                                        {/* ── ACTIVE STORIES SECTION ── */}
-                                        {activeStories.length > 0 && (
-                                            <>
-                                                {storiesMgmtExpanded === null && (
-                                                    <>
-                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '3px', marginBottom: 14 }}>ACTIVE STORIES</div>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
-                                                            {groups.map(group => (
-                                                                <div key={group.key} onClick={() => setStoriesMgmtExpanded(group.key)} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'border-color 0.15s, background 0.15s' }}
-                                                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(225,48,108,0.35)'; e.currentTarget.style.background = 'rgba(225,48,108,0.03)'; }}
-                                                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                                                        <div>
-                                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', fontWeight: 600, color: group.key === '__public__' ? '#aaa' : '#e1306c', letterSpacing: '2px' }}>
-                                                                                {group.key === '__public__' ? '🌍 ' : ''}{group.label}
-                                                                            </div>
-                                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>{group.stories.length} {group.stories.length === 1 ? 'video' : 'videos'}</div>
-                                                                        </div>
-                                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '2px' }}>VIEW →</div>
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', gap: 6 }}>
-                                                                        {group.stories.slice(0, 5).map((s: any) => (
-                                                                            <div key={s.id} style={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#000', flexShrink: 0 }}>
-                                                                                {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
-                                                                            </div>
-                                                                        ))}
-                                                                        {group.stories.length > 5 && <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.3)' }}>+{group.stories.length - 5}</div>}
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </>
-                                                )}
-                                                {storiesMgmtExpanded !== null && (() => {
-                                                    const group = groups.find(g => g.key === storiesMgmtExpanded);
-                                                    if (!group) return null;
-                                                    return (
-                                                        <div>
-                                                            <button onClick={() => setStoriesMgmtExpanded(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(225,48,108,0.6)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', marginBottom: 18, padding: 0 }}>← BACK</button>
-                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.52rem', color: '#fff', letterSpacing: '3px', marginBottom: 4 }}>{group.label}</div>
-                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.25)', marginBottom: 20 }}>{group.stories.length} {group.stories.length === 1 ? 'video' : 'videos'} · {storiesMgmtDate}</div>
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                                                {group.stories.map((s: any) => <StoryRow key={s.id} s={s} />)}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </>
-                                        )}
-                                    </div>
+                                    {/* ── MEMBER CARDS (expanded view or grid) ── */}
+                                    {storiesMgmtExpanded !== null ? (() => {
+                                        const expStories = storyMap[storiesMgmtExpanded] || [];
+                                        const expLabel = storiesMgmtExpanded === '__public__' ? 'PUBLIC'
+                                            : activeMembers.find((u: any) => (u.member_id || u.memberId || '').toLowerCase() === storiesMgmtExpanded.toLowerCase())?.name
+                                            || storiesMgmtExpanded.split('@')[0].toUpperCase();
+                                        return (
+                                            <div>
+                                                <button onClick={() => setStoriesMgmtExpanded(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(225,48,108,0.6)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '2px', cursor: 'pointer', marginBottom: 16, padding: 0 }}>← BACK</button>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.52rem', color: '#fff', letterSpacing: '3px', marginBottom: 4 }}>{expLabel}</div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.22)', marginBottom: 18 }}>{expStories.length} {expStories.length === 1 ? 'video' : 'videos'} · {storiesMgmtDate}</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                    {expStories.map((s: any) => <StoryRow key={s.id} s={s} />)}
+                                                </div>
+                                            </div>
+                                        );
+                                    })() : (
+                                        <>
+                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px', marginBottom: 12 }}>
+                                                {(vaultSelected || draggingVaultId) ? '— DROP VIDEO ONTO A CARD —' : 'ACTIVE IN LAST 24H · SORTED BY RECENCY'}
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                                                {/* Everyone card — always first */}
+                                                <MemberCard cardKey="__public__" label="EVERYONE" cardStories={storyMap['__public__'] || []} isPublic />
+                                                {/* Members active in last 24h */}
+                                                {activeMembers.map((u: any) => {
+                                                    const email = (u.member_id || u.memberId || '');
+                                                    const memberStories = storyMap[email.toLowerCase()] || storyMap[email] || [];
+                                                    return <MemberCard key={email} cardKey={email} label={u.name || email.split('@')[0].toUpperCase()} cardStories={memberStories} />;
+                                                })}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             }
                         </div>
                     );
