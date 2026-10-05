@@ -1701,13 +1701,7 @@ export default function ProfilePage() {
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
-                        <div className={`hud-circle queen${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`} onClick={() => {
-                            if (storiesAvail) {
-                                setShowStories(true);
-                            } else {
-                                (window as any).openQueenMenu();
-                            }
-                        }}>
+                        <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
                             {dutiesUploadedToday === true ? (
                                 <img src="/routine-done.svg" alt="Done" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             ) : (
@@ -2010,8 +2004,14 @@ export default function ProfilePage() {
 
                         {/* 1. HALO HERO SECTION */}
                         <div className="halo-hero">
-                            {/* Large halo circle */}
-                            <div className="halo-circle-lg">
+                            {/* Large halo circle — doubles as stories indicator */}
+                            <div
+                                className={`halo-circle-lg${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`}
+                                onClick={() => { if (storiesAvail) setShowStories(true); }}
+                            >
+                                {storiesAvail && (
+                                    <div className="halo-stories-badge">QUEEN'S STORIES · {storiesCount}</div>
+                                )}
                                 <div id="mob_slaveName" className="halo-name-lg">{profile?.name || "SLAVE"}</div>
                                 <div id="mob_rankStamp" className="halo-rank-lg">{profile?.hierarchy || profile?.rank || "INITIATE"}</div>
                                 <div className="halo-progress-label">DAILY PROGRESS</div>
@@ -2516,7 +2516,7 @@ export default function ProfilePage() {
 
         {/* ── STORIES OVERLAY ── */}
         {showStories && (
-            <div style={{ position: 'fixed', inset: 0, zIndex: 9500, background: '#000', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 10000010, background: '#000', display: 'flex', flexDirection: 'column' }}>
                 {!storiesAccess ? (
                     /* ── LOCKED: show gate items ── */
                     <>
