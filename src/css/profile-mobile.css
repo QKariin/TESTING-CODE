@@ -198,41 +198,60 @@ body.desktop-preview #mobBottomNav { display: none !important; }
         overflow: hidden;
     }
 
-    /* Stories ring on halo circle */
+    /* Stories ring on halo circle — Instagram-style gradient */
     .halo-circle-lg.has-stories {
-        border: 3px solid transparent;
+        border: 4px solid transparent;
         background:
             rgba(0, 0, 0, 0.55) padding-box,
-            conic-gradient(from 0deg, #c5a059, #f5e09a, #ff9a44, #e0a020, #c5a059) border-box;
-        box-shadow: 0 0 50px rgba(197, 160, 89, 0.6), inset 0 0 20px rgba(197, 160, 89, 0.2);
+            conic-gradient(from 0deg,
+                #fcaf45,
+                #f77737,
+                #f56040,
+                #fd1d1d,
+                #833ab4,
+                #c13584,
+                #e1306c,
+                #fd1d1d,
+                #f56040,
+                #fcaf45
+            ) border-box;
+        box-shadow:
+            0 0 0 6px rgba(0,0,0,0.6),
+            0 0 40px rgba(193, 53, 132, 0.4),
+            0 0 80px rgba(131, 58, 180, 0.2),
+            inset 0 0 20px rgba(197, 160, 89, 0.15);
         cursor: pointer;
-        animation: haloStoriesGlow 2.5s ease-in-out infinite;
+        animation: haloIgSpin 4s linear infinite;
     }
 
     .halo-circle-lg.has-stories.viewed {
+        border: 4px solid transparent;
         background:
             rgba(0, 0, 0, 0.55) padding-box,
-            conic-gradient(from 0deg, rgba(197,160,89,0.3), rgba(197,160,89,0.3)) border-box;
-        box-shadow: 0 0 40px rgba(197, 160, 89, 0.2), inset 0 0 20px rgba(197, 160, 89, 0.1);
+            conic-gradient(from 0deg, rgba(255,255,255,0.15), rgba(255,255,255,0.15)) border-box;
+        box-shadow: 0 0 40px rgba(197, 160, 89, 0.15), inset 0 0 20px rgba(197, 160, 89, 0.1);
         animation: none;
+        cursor: pointer;
     }
 
-    @keyframes haloStoriesGlow {
-        0%   { box-shadow: 0 0 50px rgba(197,160,89,0.5), inset 0 0 20px rgba(197,160,89,0.15); }
-        50%  { box-shadow: 0 0 70px rgba(197,160,89,0.85), 0 0 120px rgba(197,160,89,0.3), inset 0 0 30px rgba(197,160,89,0.25); }
-        100% { box-shadow: 0 0 50px rgba(197,160,89,0.5), inset 0 0 20px rgba(197,160,89,0.15); }
+    @keyframes haloIgSpin {
+        from { filter: hue-rotate(0deg) brightness(1.05); }
+        50%  { filter: hue-rotate(30deg) brightness(1.2); }
+        to   { filter: hue-rotate(0deg) brightness(1.05); }
     }
 
     /* "QUEEN'S STORIES" badge inside halo circle */
     .halo-stories-badge {
         font-family: 'Orbitron', sans-serif;
-        font-size: 0.42rem;
-        color: #c5a059;
+        font-size: 0.38rem;
+        background: linear-gradient(90deg, #fcaf45, #e1306c, #833ab4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         letter-spacing: 3px;
         text-transform: uppercase;
-        margin-bottom: 8px;
-        opacity: 0.9;
-        animation: haloStoriesGlow 2.5s ease-in-out infinite;
+        margin-bottom: 10px;
+        opacity: 1;
     }
 
 
