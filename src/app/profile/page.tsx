@@ -170,12 +170,14 @@ export default function ProfilePage() {
     const [storiesData, setStoriesData] = useState<any[]>([]);
     const [storiesGateItems, setStoriesGateItems] = useState<any[]>([]);
     const [showStories, setShowStories] = useState(false);
-    const [storiesViewed, setStoriesViewed] = useState(() => {
+    const [storiesViewedCount, setStoriesViewedCount] = useState(() => {
         try {
             const today = new Date().toISOString().split('T')[0];
-            return localStorage.getItem(`stories_viewed_${today}`) === '1';
-        } catch { return false; }
+            return parseInt(localStorage.getItem(`stories_viewed_count_${today}`) || '0', 10);
+        } catch { return 0; }
     });
+    // Ring dims only if member has seen at least as many stories as currently exist
+    const storiesViewed = storiesViewedCount > 0 && storiesViewedCount >= storiesCount;
     const [storiesIdx, setStoriesIdx] = useState(0);
     const [storiesBuying, setStoriesBuying] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -2601,10 +2603,19 @@ export default function ProfilePage() {
                                 <img src="/queen-nav.png" style={{ width: 34, height: 34, borderRadius: '50%', border: '1px solid rgba(197,160,89,0.5)', objectFit: 'cover' }} alt="" />
                                 <div>
                                     <div style={{ fontFamily: 'Cinzel', fontSize: '0.55rem', color: '#fff', letterSpacing: 2 }}>QUEEN KARIN</div>
-                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>TODAY · {storiesIdx + 1}/{storiesData.length}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>TODAY · {storiesIdx + 1}/{storiesData.length}</div>
+                                        {(() => {
+                                            const tagged: string[] = Array.isArray(storiesData[storiesIdx]?.tagged_members) ? storiesData[storiesIdx].tagged_members : [];
+                                            const isPersonal = tagged.length > 0 && tagged.some((e: string) => e.toLowerCase() === (profile?.member_id || '').toLowerCase());
+                                            return isPersonal
+                                                ? <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.28rem', background: 'linear-gradient(90deg,#fcaf45,#e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, fontWeight: 700 }}>FOR YOU</span>
+                                                : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.3rem', color: 'rgba(255,255,255,0.25)', letterSpacing: 2 }}>PUBLIC</span>;
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={() => { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
+                            <button onClick={() => { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
                         </div>
                         {/* Media - tap left/right to navigate */}
                         <div style={{ position: 'absolute', inset: 0 }} onClick={e => {
@@ -2613,7 +2624,7 @@ export default function ProfilePage() {
                             if (x < w / 3) setStoriesIdx(Math.max(0, storiesIdx - 1));
                             else if (x > (w * 2) / 3) {
                                 if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                else { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }
+                                else { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
                             }
                         }}>
                             {storiesData[storiesIdx]?.media_type === 'video' ? (
@@ -2626,7 +2637,7 @@ export default function ProfilePage() {
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     onEnded={() => {
                                         if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                        else { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; }
+                                        else { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
                                     }}
                                 />
                             ) : (
@@ -2644,7 +2655,7 @@ export default function ProfilePage() {
                         {/* Chat button */}
                         <div style={{ position: 'absolute', bottom: 24, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>
                             <button
-                                onClick={() => { setShowStories(false); setStoriesViewed(true); try { localStorage.setItem(`stories_viewed_${new Date().toISOString().split('T')[0]}`, '1'); } catch {}; (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
+                                onClick={() => { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
                                 style={{ background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', padding: '12px 36px', borderRadius: 28, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', letterSpacing: 3, cursor: 'pointer' }}
                             >OPEN CHAT</button>
                         </div>
