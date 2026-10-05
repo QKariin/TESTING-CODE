@@ -240,6 +240,36 @@ body.desktop-preview #mobBottomNav { display: none !important; }
         to   { filter: hue-rotate(0deg) brightness(1.05); }
     }
 
+    /* Persistent stories pill in mob-hud-row — always visible across all moods */
+    .hud-stories-pill {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 3px solid transparent;
+        background:
+            rgba(0, 0, 0, 0.65) padding-box,
+            conic-gradient(from 0deg, #fcaf45, #f77737, #f56040, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #fcaf45) border-box;
+        box-shadow: 0 0 16px rgba(193, 53, 132, 0.4), 0 0 30px rgba(131, 58, 180, 0.2);
+        animation: haloIgSpin 4s linear infinite;
+    }
+
+    .hud-stories-pill.viewed {
+        background:
+            rgba(0, 0, 0, 0.55) padding-box,
+            conic-gradient(from 0deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05), rgba(255,255,255,0.15)) border-box;
+        box-shadow: none;
+        animation: none;
+    }
+
+    .hud-stories-pill:active {
+        opacity: 0.7;
+    }
+
     /* "QUEEN'S STORIES" badge inside halo circle */
     .halo-stories-badge {
         font-family: 'Orbitron', sans-serif;
