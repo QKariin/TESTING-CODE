@@ -1579,25 +1579,13 @@ export default function VaultPage() {
                                     >
                                         <div style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
-                                            background: 'rgba(6,3,12,0.96)', borderRadius: 12, padding: '12px 16px',
+                                            background: 'rgba(6,3,12,0.5)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+                                            borderRadius: 12, padding: '12px 16px',
                                         }}>
-                                            <div style={{ position: 'relative', flexShrink: 0 }}>
-                                                <img src="/queen-nav.png" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', display: 'block', opacity: storiesViewed ? 0.4 : 1, border: '1px solid rgba(197,160,89,0.2)' }} alt="" />
-                                                {queenOnline.online && (
-                                                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: '50%', background: '#c5a059', border: '2px solid rgba(6,3,12,0.96)', boxShadow: '0 0 6px rgba(197,160,89,0.8)' }} />
-                                                )}
-                                            </div>
+                                            <img src="/queen-nav.png" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, opacity: storiesViewed ? 0.4 : 1, border: '1px solid rgba(197,160,89,0.2)' }} alt="" />
                                             <div style={{ flex: 1 }}>
                                                 <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: storiesViewed ? 'rgba(255,255,255,0.3)' : '#fff', letterSpacing: 2, marginBottom: 4 }}>QUEEN'S STORIES</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.22)', letterSpacing: 2 }}>{storiesCount} {storiesCount === 1 ? 'STORY' : 'STORIES'} TODAY</div>
-                                                    {queenOnline.online && (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#c5a059', boxShadow: '0 0 5px rgba(197,160,89,0.8)' }} />
-                                                            <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.38rem', color: 'rgba(197,160,89,0.7)', letterSpacing: 2 }}>ONLINE</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>{storiesCount} {storiesCount === 1 ? 'STORY' : 'STORIES'} TODAY</div>
                                             </div>
                                             <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.5rem', letterSpacing: 2, color: storiesViewed ? 'rgba(255,255,255,0.15)' : '#e1306c', flexShrink: 0 }}>
                                                 {storiesViewed ? 'VIEWED' : '▶'}
