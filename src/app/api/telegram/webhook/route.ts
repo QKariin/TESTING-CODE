@@ -327,25 +327,41 @@ async function handleDailyStatus(chatId: string) {
 }
 
 async function handleTagMenu(chatId: string) {
-    const profiles = await getProfiles();
-    if (!profiles.length) {
-        await setBotState('awaiting_tag');
-        await tgSend('No members found. Type a name manually:', { chatId });
-        return;
-    }
-    const buttons = profiles
-        .filter(p => p.member_id)
-        .map(p => {
-            const nick = p.parameters?.nickname;
-            const label = nick ? `@${nick}` : (p.name || p.member_id.split('@')[0]);
-            return [{ text: label, callback_data: `tag_direct:${p.member_id}` }];
-        })
-        .slice(0, 20);
+    // Get recently active members from tasks table
+    const { data: recentTasks } = await supabaseAdmin
+        .from('tasks')
+        .select('member_id, lastWorship')
+        .not('lastWorship', 'is', null)
+        .order('lastWorship', { ascending: false })
+        .limit(15);
 
-    await tgSend('Tag who?', {
-        chatId,
-        replyMarkup: { inline_keyboard: buttons },
-    });
+    let buttons: { text: string; callback_data: string }[][] = [];
+
+    if (recentTasks && recentTasks.length > 0) {
+        const profiles = await getProfiles();
+        const profileMap = new Map(profiles.map(p => [p.member_id, p]));
+
+        buttons = recentTasks
+            .filter((t: any) => t.member_id)
+            .map((t: any) => {
+                const p = profileMap.get(t.member_id);
+                const nick = p?.parameters?.nickname;
+                const name = p?.name || t.member_id.split('@')[0];
+                const label = nick ? `@${nick} (${name})` : name;
+                const worshipDate = t.lastWorship ? t.lastWorship.split('T')[0] : '';
+                const today = new Date().toISOString().split('T')[0];
+                const dot = worshipDate === today ? ' 🟢' : '';
+                return [{ text: `${label}${dot}`, callback_data: `tag_direct:${t.member_id}` }];
+            });
+    }
+
+    await tgSend(
+        `Tag who?\n🟢 = active today\n\n<i>Not here? Use /tag [name] to search all 120 subs.</i>`,
+        {
+            chatId,
+            replyMarkup: { inline_keyboard: buttons },
+        }
+    );
 }
 
 async function handleSetNickname(chatId: string, args: string) {
