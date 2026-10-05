@@ -787,6 +787,12 @@ export default function DashboardPage() {
     const [dailyVideoStatus, setDailyVideoStatus] = useState('');
     const dailyVideoFileRef = useRef<HTMLInputElement>(null);
 
+    const [showStoriesMgmt, setShowStoriesMgmt] = useState(false);
+    const [storiesMgmtData, setStoriesMgmtData] = useState<any[]>([]);
+    const [storiesMgmtLoading, setStoriesMgmtLoading] = useState(false);
+    const [storiesMgmtExpanded, setStoriesMgmtExpanded] = useState<string | null>(null);
+    const [storiesMgmtDate, setStoriesMgmtDate] = useState(() => new Date().toISOString().split('T')[0]);
+
     useEffect(() => {
         if (!showPaymentLogs) return;
         setPaymentLogsLoading(true);
@@ -801,6 +807,16 @@ export default function DashboardPage() {
             else { setDailyVideoData(null); setDailyVideoMsg(''); }
         }).catch(() => {});
     }, [showDailyVideo]);
+
+    useEffect(() => {
+        if (!showStoriesMgmt) return;
+        setStoriesMgmtLoading(true);
+        fetch(`/api/stories/admin?date=${storiesMgmtDate}`)
+            .then(r => r.json())
+            .then(d => { setStoriesMgmtData(d.stories || []); setStoriesMgmtLoading(false); })
+            .catch(() => setStoriesMgmtLoading(false));
+    }, [showStoriesMgmt, storiesMgmtDate]);
+
     const [keyholderMember, setKeyholderMember] = useState('');
     const [showBasicProgram, setShowBasicProgram] = useState(false);
     const [showMorning, setShowMorning] = useState(false);
@@ -1135,6 +1151,7 @@ export default function DashboardPage() {
                 setShowKeyholder(false);
                 setShowPaymentLogs(false);
                 setShowBlog(false);
+                setShowStoriesMgmt(false);
             };
         }
 
@@ -1624,6 +1641,165 @@ export default function DashboardPage() {
                     </div>
                 )}
 
+                {/* STORIES MANAGEMENT PANEL */}
+                {showStoriesMgmt && !isMobile && (() => {
+                    // Group stories by tagged member / public / vault
+                    const groups: Record<string, { label: string; key: string; stories: any[] }> = {};
+                    storiesMgmtData.forEach((s: any) => {
+                        const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
+                        let key = '__public__';
+                        if (s.source === 'vault') key = '__vault__';
+                        else if (tagged.length > 0) key = tagged[0];
+
+                        if (!groups[key]) {
+                            let label = 'PUBLIC';
+                            if (key === '__vault__') label = 'VAULT';
+                            else if (key !== '__public__') {
+                                const found = (users as any[]).find((u: any) =>
+                                    (u.member_id || u.memberId || '').toLowerCase() === key.toLowerCase()
+                                );
+                                label = found?.name || key.split('@')[0].toUpperCase();
+                            }
+                            groups[key] = { label, key, stories: [] };
+                        }
+                        groups[key].stories.push(s);
+                    });
+                    const groupList = Object.values(groups);
+
+                    return (
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#06060e', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 28px', borderBottom: '1px solid rgba(225,48,108,0.15)', flexShrink: 0 }}>
+                                <div>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', color: '#e1306c', letterSpacing: '4px' }}>STORIES</div>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '2px', marginTop: 4, display: 'flex', alignItems: 'center', gap: 16 }}>
+                                        <span>{storiesMgmtData.length} active stories</span>
+                                        <input
+                                            type="date"
+                                            value={storiesMgmtDate}
+                                            onChange={e => { setStoriesMgmtDate(e.target.value); setStoriesMgmtExpanded(null); }}
+                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '2px 8px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.4rem', letterSpacing: '1px', cursor: 'pointer' }}
+                                        />
+                                    </div>
+                                </div>
+                                <button onClick={() => { setShowStoriesMgmt(false); setStoriesMgmtExpanded(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '6px 16px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '2px' }}>CLOSE</button>
+                            </div>
+
+                            {storiesMgmtLoading ? (
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.2)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: 3 }}>LOADING...</div>
+                            ) : storiesMgmtData.length === 0 ? (
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.2)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: 3, fontSize: '0.45rem' }}>NO STORIES FOR THIS DATE</div>
+                            ) : (
+                                <div style={{ padding: '24px 28px', flex: 1 }}>
+                                    {/* Member cards grid */}
+                                    {storiesMgmtExpanded === null && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+                                            {groupList.map(group => (
+                                                <div
+                                                    key={group.key}
+                                                    onClick={() => setStoriesMgmtExpanded(group.key)}
+                                                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '16px 18px', cursor: 'pointer', transition: 'border-color 0.2s, background 0.2s' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(225,48,108,0.4)'; e.currentTarget.style.background = 'rgba(225,48,108,0.04)'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                                                >
+                                                    {/* Card header */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                                                        <div>
+                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: group.key === '__vault__' ? '#c5a059' : group.key === '__public__' ? '#aaa' : '#e1306c', letterSpacing: '2px', fontWeight: 600 }}>
+                                                                {group.key === '__vault__' ? '🔒 ' : group.key === '__public__' ? '🌍 ' : ''}{group.label}
+                                                            </div>
+                                                            <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginTop: 2 }}>
+                                                                {group.stories.length} {group.stories.length === 1 ? 'video' : 'videos'} today
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '2px' }}>VIEW →</div>
+                                                    </div>
+                                                    {/* Thumbnail circles */}
+                                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                        {group.stories.slice(0, 5).map((s: any) => (
+                                                            <div key={s.id} style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', background: '#000', flexShrink: 0, position: 'relative' }}>
+                                                                {s.media_type === 'video' ? (
+                                                                    <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
+                                                                ) : (
+                                                                    <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                        {group.stories.length > 5 && (
+                                                            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.4)' }}>
+                                                                +{group.stories.length - 5}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Expanded: single member view */}
+                                    {storiesMgmtExpanded !== null && (() => {
+                                        const group = groupList.find(g => g.key === storiesMgmtExpanded);
+                                        if (!group) return null;
+                                        return (
+                                            <div>
+                                                <button onClick={() => setStoriesMgmtExpanded(null)} style={{ background: 'transparent', border: 'none', color: 'rgba(225,48,108,0.7)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', letterSpacing: '2px', cursor: 'pointer', marginBottom: 20, padding: 0 }}>← BACK TO ALL</button>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.55rem', color: '#fff', letterSpacing: '3px', marginBottom: 4 }}>{group.label}</div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', marginBottom: 24 }}>{group.stories.length} {group.stories.length === 1 ? 'video' : 'videos'} · {storiesMgmtDate}</div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                                    {group.stories.map((s: any) => {
+                                                        const expiresAt = s.expires_at ? new Date(s.expires_at) : null;
+                                                        const hoursLeft = expiresAt ? Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 3600000)) : null;
+                                                        return (
+                                                            <div key={s.id} style={{ display: 'flex', gap: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '14px 16px', alignItems: 'flex-start' }}>
+                                                                {/* Thumbnail */}
+                                                                <div style={{ width: 80, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#000', flexShrink: 0 }}>
+                                                                    {s.media_type === 'video' ? (
+                                                                        <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                                                    ) : (
+                                                                        <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                                                    )}
+                                                                </div>
+                                                                {/* Meta */}
+                                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                                                                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 3 }}>{s.source || 'manual'}</span>
+                                                                        <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 3 }}>{s.media_type}</span>
+                                                                        {hoursLeft !== null && (
+                                                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: hoursLeft < 3 ? '#e03030' : 'rgba(255,255,255,0.3)', letterSpacing: '1px', background: hoursLeft < 3 ? 'rgba(224,48,48,0.1)' : 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 3 }}>expires {hoursLeft}h</span>
+                                                                        )}
+                                                                    </div>
+                                                                    {s.caption && (
+                                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>"{s.caption}"</div>
+                                                                    )}
+                                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.35rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>
+                                                                        {s.created_at ? new Date(s.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                                                                    </div>
+                                                                </div>
+                                                                {/* Actions */}
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                                                                    <a href={s.media_url} target="_blank" rel="noreferrer" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '5px 12px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer', textDecoration: 'none', textAlign: 'center' }}>OPEN</a>
+                                                                    <button
+                                                                        onClick={async () => {
+                                                                            if (!confirm('Delete this story?')) return;
+                                                                            await fetch(`/api/stories/admin?id=${s.id}`, { method: 'DELETE' });
+                                                                            setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== s.id));
+                                                                        }}
+                                                                        style={{ background: 'rgba(224,48,48,0.08)', border: '1px solid rgba(224,48,48,0.25)', color: '#e03030', padding: '5px 12px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '1px', cursor: 'pointer' }}
+                                                                    >DELETE</button>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 {/* DAILY VIDEO PANEL */}
                 {showDailyVideo && !isMobile && (
                     <div style={{ position: 'absolute', inset: 0, zIndex: 1000, background: '#06060e', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -1767,56 +1943,56 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="v-grid-stats">
-                        <div className="v-stat-card glass-card" onClick={() => { setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); (window as any).showHome(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); (window as any).showHome(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: '#c5a059' }}>DASHBOARD</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⌂</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); (window as any).showPosts(); }} style={{ cursor: 'pointer', border: '1px solid rgba(197,160,89,0.25)' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: '#c5a059' }}>POSTS</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>✦</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowVideoChallenges(false); setShowChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showChallenges ? 'rgba(74,222,128,0.5)' : 'rgba(74,222,128,0.2)'}`, position: 'relative' }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showChallenges ? '#4ade80' : '#4ade8099' }}>CHALLENGES</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(74,222,128,0.12)', fontSize: '1.1rem' }}>⚔</div>
                             {pendingVerificationCount > 0 && <span style={{ position: 'absolute', top: 8, right: 12, background: '#e03030', color: '#fff', borderRadius: 10, padding: '2px 7px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', fontWeight: 700, letterSpacing: '0.5px' }}>{pendingVerificationCount}</span>}
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowGlobal(false); setShowChallenges(false); setShowVideoChallenges(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showVideoChallenges ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showVideoChallenges ? '#a855f7' : '#a855f799' }}>VIDEO</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(168,85,247,0.12)', fontSize: '1.1rem' }}>▶</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(true); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showGlobal ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showGlobal ? '#c5a059' : 'rgba(255,255,255,0.45)' }}>GLOBAL</div>
                             </div>
                             <div className="vs-icon gold-bg" style={{ fontSize: '1.1rem' }}>⊕</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(true); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showKeyholder ? 'rgba(139,0,0,0.5)' : 'rgba(139,0,0,0.2)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showKeyholder ? 'rgba(180,40,40,0.9)' : 'rgba(180,40,40,0.6)' }}>KEYHOLDER</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(139,0,0,0.12)', fontSize: '1.1rem' }}>&#9919;</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(true); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBasicProgram ? 'rgba(74,222,128,0.5)' : 'rgba(45,90,39,0.3)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(true); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBasicProgram ? 'rgba(74,222,128,0.5)' : 'rgba(45,90,39,0.3)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showBasicProgram ? 'rgba(74,222,128,0.9)' : 'rgba(74,222,128,0.5)' }}>PROGRAM</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(45,90,39,0.15)', fontSize: '1.1rem' }}>&#9783;</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(true); setShowBlog(false); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(true); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showPaymentLogs ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.15)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showPaymentLogs ? '#c5a059' : 'rgba(197,160,89,0.5)' }}>PAYMENTS</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>💳</div>
                         </div>
-                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(true); setShowDailyVideo(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBlog ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.15)'}` }}>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(true); setShowDailyVideo(false); setShowStoriesMgmt(false); }} style={{ cursor: 'pointer', border: `1px solid ${showBlog ? 'rgba(168,85,247,0.5)' : 'rgba(168,85,247,0.15)'}` }}>
                             <div className="vs-info">
                                 <div className="vs-label" style={{ color: showBlog ? '#a855f7' : 'rgba(168,85,247,0.5)' }}>BLOG</div>
                             </div>
@@ -1827,6 +2003,13 @@ export default function DashboardPage() {
                                 <div className="vs-label" style={{ color: showDailyVideo ? '#c5a059' : 'rgba(197,160,89,0.4)' }}>DAILY VIDEO</div>
                             </div>
                             <div className="vs-icon" style={{ background: 'rgba(197,160,89,0.08)', fontSize: '1.1rem' }}>▶</div>
+                        </div>
+                        <div className="v-stat-card glass-card" onClick={() => { setShowChallenges(false); setShowVideoChallenges(false); setShowGlobal(false); setShowKeyholder(false); setShowBasicProgram(false); setShowPaymentLogs(false); setShowBlog(false); setShowDailyVideo(false); setShowStoriesMgmt(true); }} style={{ cursor: 'pointer', border: `1px solid ${showStoriesMgmt ? 'rgba(225,48,108,0.5)' : 'rgba(225,48,108,0.2)'}` }}>
+                            <div className="vs-info">
+                                <div className="vs-label" style={{ color: showStoriesMgmt ? '#e1306c' : 'rgba(225,48,108,0.45)' }}>STORIES</div>
+                                <div className="vs-val" style={{ fontSize: '0.7rem', color: showStoriesMgmt ? '#f77737' : 'rgba(247,119,55,0.4)' }}>{storiesMgmtData.length > 0 ? `${storiesMgmtData.length} active` : ''}</div>
+                            </div>
+                            <div className="vs-icon" style={{ background: 'rgba(225,48,108,0.08)', fontSize: '1.1rem' }}>◉</div>
                         </div>
                     </div>
 
