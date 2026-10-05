@@ -20,16 +20,18 @@ export async function GET(req: Request) {
     // Get all stories for this date that haven't expired
     const { data: allStories } = await supabaseAdmin
         .from('stories')
-        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at')
+        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source')
         .eq('date', date)
         .eq('archived', false)
         .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order('order_index', { ascending: true });
 
     // Filter to stories this member can see:
-    // - tagged_members is empty/null = everyone can see it
+    // - vault stories (source='vault') are NEVER shown to members
+    // - tagged_members is empty/null = public, everyone can see it
     // - tagged_members contains this member = personalized for them
     const visibleStories = (allStories || []).filter((s: any) => {
+        if (s.source === 'vault') return false;
         const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
         return tagged.length === 0 || (memberEmail && tagged.includes(memberEmail));
     });
