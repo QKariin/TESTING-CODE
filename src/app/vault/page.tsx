@@ -1563,23 +1563,32 @@ export default function VaultPage() {
                         const ltOffset = 4; // Oct 1 2026 = Thursday
                         return (
                             <div style={{ width: '100%', padding: '24px 16px 0' }}>
-                                {/* Stories indicator for locktober (no big circle here) */}
+                                {/* Stories banner for locktober — gradient-bordered strip */}
                                 {storiesAvail && (
-                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-                                        <div
-                                            onClick={() => setShowStories(true)}
-                                            style={{
-                                                width: 70, height: 70, borderRadius: '50%', cursor: 'pointer',
-                                                border: '3px solid transparent',
-                                                background: storiesViewed
-                                                    ? 'rgba(0,0,0,0.55) padding-box, conic-gradient(from 0deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05), rgba(255,255,255,0.15)) border-box'
-                                                    : 'rgba(0,0,0,0.65) padding-box, conic-gradient(from 0deg, #fcaf45, #f77737, #f56040, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #fcaf45) border-box',
-                                                animation: storiesViewed ? 'none' : 'haloIgSpin 4s linear infinite',
-                                                boxShadow: storiesViewed ? 'none' : '0 0 20px rgba(193,53,132,0.45), 0 0 40px rgba(131,58,180,0.25)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                                            }}
-                                        >
-                                            <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                    <div
+                                        onClick={() => setShowStories(true)}
+                                        style={{
+                                            width: '100%', marginBottom: 20, borderRadius: 14,
+                                            padding: 2, cursor: 'pointer',
+                                            background: storiesViewed
+                                                ? 'rgba(255,255,255,0.07)'
+                                                : 'conic-gradient(from 0deg, #fcaf45, #f77737, #f56040, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #fcaf45)',
+                                            boxShadow: storiesViewed ? 'none' : '0 0 24px rgba(193,53,132,0.35), 0 0 48px rgba(131,58,180,0.15)',
+                                            animation: storiesViewed ? 'none' : 'haloIgSpin 4s linear infinite',
+                                        }}
+                                    >
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: 12,
+                                            background: 'rgba(6,3,12,0.96)', borderRadius: 12, padding: '12px 16px',
+                                        }}>
+                                            <img src="/queen-nav.png" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, opacity: storiesViewed ? 0.4 : 1, border: '1px solid rgba(197,160,89,0.2)' }} alt="" />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.55rem', color: storiesViewed ? 'rgba(255,255,255,0.3)' : '#fff', letterSpacing: 3, marginBottom: 3 }}>QUEEN'S STORIES</div>
+                                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.37rem', color: 'rgba(255,255,255,0.22)', letterSpacing: 2 }}>{storiesCount} {storiesCount === 1 ? 'STORY' : 'STORIES'} TODAY</div>
+                                            </div>
+                                            <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.45rem', letterSpacing: 2, color: storiesViewed ? 'rgba(255,255,255,0.15)' : '#e1306c', flexShrink: 0 }}>
+                                                {storiesViewed ? 'VIEWED' : '▶'}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
