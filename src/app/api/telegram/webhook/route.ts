@@ -39,6 +39,89 @@ async function setBotState(context: string | null, data?: any) {
 
 // ─── HANDLERS ────────────────────────────────────────────────────────────────
 
+async function findMemberInText(text: string): Promise<string | null> {
+    if (!text) return null;
+    const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('member_id, name')
+        .limit(100);
+    if (!profiles) return null;
+    const lower = text.toLowerCase();
+    for (const p of profiles) {
+        const name = (p.name || '').trim();
+        const prefix = (p.member_id || '').split('@')[0];
+        if (name && name.length > 2 && lower.includes(name.toLowerCase())) return p.member_id;
+        if (prefix && prefix.length > 3 && lower.includes(prefix.toLowerCase())) return p.member_id;
+    }
+    return null;
+}
+
+async function handleVideoUpload(chatId: string, fileId: string, caption: string | null) {
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+    await tgSend('⏳ Uploading...', { chatId });
+
+    // Get file path from Telegram
+    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const fileData = await fileRes.json();
+    const filePath = fileData.result?.file_path;
+    if (!filePath) {
+        await tgSend('❌ Could not get file from Telegram. Video might be too large (20MB limit).', { chatId });
+        return;
+    }
+
+    // Download from Telegram
+    const videoRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
+    if (!videoRes.ok) {
+        await tgSend('❌ Failed to download video from Telegram.', { chatId });
+        return;
+    }
+    const videoBuffer = await videoRes.arrayBuffer();
+
+    // Upload to Supabase storage
+    const today = new Date().toISOString().split('T')[0];
+    const storagePath = `tiktok_stories/${today}_${fileId}.mp4`;
+    const { error: uploadError } = await supabaseAdmin.storage
+        .from('media')
+        .upload(storagePath, videoBuffer, { contentType: 'video/mp4', upsert: true });
+    if (uploadError) {
+        await tgSend(`❌ Storage upload failed: ${escapeHtml(uploadError.message)}`, { chatId });
+        return;
+    }
+
+    const { data: { publicUrl } } = supabaseAdmin.storage.from('media').getPublicUrl(storagePath);
+
+    // Find tagged member from caption
+    let taggedMembers: string[] = [];
+    if (caption) {
+        const tagged = await findMemberInText(caption);
+        if (tagged) taggedMembers = [tagged];
+    }
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { error: dbError } = await supabaseAdmin.from('stories').insert({
+        date: today,
+        media_url: publicUrl,
+        media_type: 'video',
+        order_index: 0,
+        caption: caption || '',
+        source: 'tiktok',
+        source_id: fileId,
+        tagged_members: taggedMembers,
+        expires_at: expiresAt,
+        archived: false,
+    });
+
+    if (dbError) {
+        await tgSend(`❌ DB insert failed: ${escapeHtml(dbError.message)}`, { chatId });
+        return;
+    }
+
+    const tagLine = taggedMembers.length
+        ? `Tagged: <b>${escapeHtml(taggedMembers[0].split('@')[0])}</b>`
+        : 'Public (no member name in caption).\nUse /tag [name] to tag someone.';
+    await tgSend(`✓ Story live!\n${tagLine}`, { chatId });
+}
+
 async function handleMessage(chatId: string, text: string) {
     const state = await getBotState();
     const txt = (text || '').trim();
@@ -266,7 +349,12 @@ export async function POST(req: Request) {
             if (QUEEN_CHAT_ID && chatId !== QUEEN_CHAT_ID) {
                 return NextResponse.json({ ok: true }); // ignore non-Queen messages
             }
-            await handleMessage(chatId, msg.text || '');
+            const fileId = msg.video?.file_id || msg.document?.file_id;
+            if (fileId) {
+                await handleVideoUpload(chatId, fileId, msg.caption || null);
+            } else {
+                await handleMessage(chatId, msg.text || '');
+            }
         }
 
         if (update.callback_query) {
