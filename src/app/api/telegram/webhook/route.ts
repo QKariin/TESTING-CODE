@@ -332,18 +332,23 @@ async function sendTagMenu(chatId: string, includeVault = false) {
             const lw = t.lastWorship || '';
             const isToday = lw >= todayStart && lw < tomorrowStart;
             const dot = isToday ? '🟢 ' : '';
-            return [{ text: `${dot}${label}`, callback_data: `tag_direct:${t.member_id}` }];
+            return { text: `${dot}${label}`, callback_data: `tag_direct:${t.member_id}` };
         });
 
+    // Pair into rows of 2
+    const memberRows: { text: string; callback_data: string }[][] = [];
+    for (let i = 0; i < memberButtons.length; i += 2) {
+        memberRows.push(memberButtons.slice(i, i + 2));
+    }
+
     const bottomButtons = [
-        [{ text: '🔍 Search by name', callback_data: 'tag_search' }],
-        [{ text: '🌍 Everyone', callback_data: 'tag_all' }],
+        [{ text: '🔍 Search by name', callback_data: 'tag_search' }, { text: '🌍 Everyone', callback_data: 'tag_all' }],
         ...(includeVault ? [[{ text: '🗄 Vault', callback_data: 'tag_vault' }]] : []),
     ];
 
     await tgSend('Who is it for? (🟢 = active today)', {
         chatId,
-        replyMarkup: { inline_keyboard: [...memberButtons, ...bottomButtons] },
+        replyMarkup: { inline_keyboard: [...memberRows, ...bottomButtons] },
     });
 }
 
