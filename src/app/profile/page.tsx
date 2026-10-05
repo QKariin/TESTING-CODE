@@ -1709,14 +1709,6 @@ export default function ProfilePage() {
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
-                        {storiesAvail && (
-                            <div
-                                className={`hud-stories-pill${storiesViewed ? ' viewed' : ''}`}
-                                onClick={() => setShowStories(true)}
-                            >
-                                <img src="/queen-nav.png" style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', opacity: 0.9 }} alt="" />
-                            </div>
-                        )}
                         <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
                             {dutiesUploadedToday === true ? (
                                 <img src="/routine-done.svg" alt="Done" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
