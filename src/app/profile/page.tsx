@@ -2570,7 +2570,10 @@ export default function ProfilePage() {
                                     </div>
                                 </>
                             ) : (
-                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>STORIES COMING SOON</div>
+                                <>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 2, marginBottom: 24, textAlign: 'center' }}>Stories are available for those who tribute.</div>
+                                    <button onClick={() => setShowStories(false)} style={{ background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.3)', color: '#c5a059', padding: '12px 32px', borderRadius: 8, fontFamily: 'Orbitron', fontSize: '0.55rem', letterSpacing: 2, cursor: 'pointer' }}>CLOSE</button>
+                                </>
                             )}
                         </div>
                     </>

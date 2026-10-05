@@ -42,8 +42,14 @@ export async function GET(req: Request) {
         .select('ID, Title, Price, Image')
         .eq('stories_gate', true);
 
-    let hasAccess = false;
-    if (memberEmail && count > 0) {
+    // Tagged stories (personalized for this member) are always free
+    const hasPersonalized = visibleStories.some((s: any) => {
+        const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
+        return tagged.length > 0 && memberEmail && tagged.includes(memberEmail);
+    });
+
+    let hasAccess = hasPersonalized;
+    if (!hasAccess && memberEmail && count > 0) {
         const { data: access } = await supabaseAdmin
             .from('story_access')
             .select('id')
