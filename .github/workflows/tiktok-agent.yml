@@ -16,7 +16,7 @@ jobs:
           sudo apt-get install -y -q ffmpeg
           wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp
           chmod +x /usr/local/bin/yt-dlp
-          pip install -q --break-system-packages requests pycryptodomex websockets
+          pip install -q --break-system-packages requests pycryptodomex websockets brotlicffi
 
       - name: Write TikTok cookies
         run: |
@@ -102,52 +102,33 @@ jobs:
           result = subprocess.run([
               'yt-dlp',
               '--cookies', '/tmp/cookies.txt',
-              '--extractor-args', 'tiktok:app_name=musical_ly,app_version=34.1.2,manifest_app_version=2023405030,device_id=7488127649735099397',
-              '--add-header', 'User-Agent:com.zhiliaoapp.musically/2023405030 (Linux; U; Android 13; en_US; Pixel 7; Build/TQ3A.230901.001; Cronet/113.0.5672.135)',
+              '--flat-playlist',
               '--playlist-end', '5',
-              '--no-download',
-              '--print', '%(id)s|||%(upload_date)s|||%(ext)s|||%(title)s|||%(description)s',
+              '--print', '%(id)s',
               f'https://www.tiktok.com/@{USERNAME}',
           ], capture_output=True, text=True, timeout=120)
 
           if result.returncode != 0:
               err_snippet = result.stderr[-400:] if result.stderr else '(no stderr)'
-              print(f'yt-dlp metadata error (rc={result.returncode}): {err_snippet}')
+              print(f'yt-dlp listing error (rc={result.returncode}): {err_snippet}')
               tg(f'⚠️ yt-dlp error (rc={result.returncode}):\n<code>{err_snippet[-300:]}</code>')
           print(f'yt-dlp raw stdout: {result.stdout[:500]}')
-          lines = [l.strip() for l in result.stdout.strip().split('\n') if '|||' in l]
-          print(f'Found {len(lines)} videos from TikTok')
+          video_ids = [l.strip() for l in result.stdout.strip().split('\n') if l.strip() and not l.startswith('[')]
+          print(f'Found {len(video_ids)} video IDs from TikTok')
 
           new_videos = []
           skip_reasons = []
-          for line in lines:
-              parts = line.split('|||', 4)
-              if len(parts) < 4: continue
-              vid_id      = parts[0]
-              upload_date = parts[1]
-              ext         = parts[2]
-              title       = parts[3]
-              description = parts[4] if len(parts) > 4 else ''
-
-              # Skip only if definitively from before yesterday
-              # Allow yesterday too: Athens is UTC+3, so a video posted at 1 AM Athens
-              # has yesterday's UTC date but is still "today" for us
-              upload_yyyymmdd = upload_date.replace('-', '') if upload_date and upload_date not in ('NA', 'None', '') else ''
-              allowed_dates = {today.replace('-', ''), yesterday.replace('-', '')}
-              if upload_yyyymmdd and upload_yyyymmdd not in allowed_dates:
-                  print(f'Skipping {vid_id} — date {upload_date} too old')
-                  skip_reasons.append(f'{vid_id}: date={upload_date} (too old)')
-                  continue
+          for vid_id in video_ids:
               if vid_id in existing_ids:
                   print(f'Skipping {vid_id} — already saved')
                   skip_reasons.append(f'{vid_id}: already saved')
                   continue
-              new_videos.append({'id': vid_id, 'ext': ext, 'title': title, 'description': description})
+              new_videos.append({'id': vid_id})
 
           if not new_videos:
               already = len(existing_ids)
-              detail = '\n'.join(skip_reasons) if skip_reasons else 'yt-dlp returned 0 results (cookie auth?)'
-              tg(f'TikTok: 0 new videos.\nyt-dlp found {len(lines)} total · {already} already saved · date: {today}\n\n<code>{detail}</code>')
+              detail = '\n'.join(skip_reasons) if skip_reasons else 'yt-dlp returned 0 IDs (cookie auth?)'
+              tg(f'TikTok: 0 new videos.\nyt-dlp found {len(video_ids)} total · {already} already saved · date: {today}\n\n<code>{detail}</code>')
               sys.exit(0)
 
           print(f'{len(new_videos)} new videos to process')
@@ -156,29 +137,39 @@ jobs:
 
           for idx, video in enumerate(new_videos):
               vid_id      = video['id']
-              title       = video['title']
-              description = video['description']
-              full_text   = f'{title} {description}'
               url         = f'https://www.tiktok.com/@{USERNAME}/video/{vid_id}'
+
+              # Download video (also grab title/description via --print-json written to file)
+              print(f'Downloading {vid_id}...')
+              dl = subprocess.run([
+                  'yt-dlp',
+                  '--cookies', '/tmp/cookies.txt',
+                  '-o', f'/tmp/{vid_id}.%(ext)s',
+                  '--merge-output-format', 'mp4',
+                  '--no-playlist',
+                  '--write-info-json',
+                  url,
+              ], capture_output=True, text=True, timeout=300)
+
+              # Try to read title/description from info json
+              import json as _json
+              info_files = glob.glob(f'/tmp/{vid_id}.info.json')
+              title = ''
+              description = ''
+              if info_files:
+                  try:
+                      with open(info_files[0]) as _f:
+                          _info = _json.load(_f)
+                          title = _info.get('title', '') or ''
+                          description = _info.get('description', '') or ''
+                  except: pass
+              full_text = f'{title} {description}'
 
               # Auto-detect tagged member from description
               tagged_email = find_member_in_text(full_text)
               tagged_members = [tagged_email] if tagged_email else []
               if tagged_email:
                   print(f'Auto-tagged {tagged_email} based on description')
-
-              # Download video
-              print(f'Downloading {vid_id}...')
-              dl = subprocess.run([
-                  'yt-dlp',
-                  '--cookies', '/tmp/cookies.txt',
-                  '--extractor-args', 'tiktok:app_name=musical_ly,app_version=34.1.2,manifest_app_version=2023405030,device_id=7488127649735099397',
-                  '--add-header', 'User-Agent:com.zhiliaoapp.musically/2023405030 (Linux; U; Android 13; en_US; Pixel 7; Build/TQ3A.230901.001; Cronet/113.0.5672.135)',
-                  '-o', f'/tmp/{vid_id}.%(ext)s',
-                  '--merge-output-format', 'mp4',
-                  '--no-playlist',
-                  url,
-              ], capture_output=True, text=True, timeout=300)
 
               files = glob.glob(f'/tmp/{vid_id}.*')
               if not files:
