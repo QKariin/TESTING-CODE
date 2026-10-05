@@ -262,28 +262,69 @@ async function handleStatus(chatId: string) {
 
 async function handleStoriesStatus(chatId: string) {
     const today = new Date().toISOString().split('T')[0];
-    const [{ data: stories }, { data: access }] = await Promise.all([
-        supabaseAdmin.from('stories').select('id, caption, tagged_members').eq('date', today).order('order_index'),
+    const [{ data: stories }, { data: access }, profiles] = await Promise.all([
+        supabaseAdmin.from('stories')
+            .select('id, media_url, media_type, caption, tagged_members, source, expires_at, order_index')
+            .eq('date', today)
+            .eq('archived', false)
+            .order('order_index'),
         supabaseAdmin.from('story_access').select('member_email, coins_spent').eq('date', today),
+        getProfiles(),
     ]);
 
     if (!stories || stories.length === 0) {
-        await tgSend(`No stories uploaded for today (${today}).`, { chatId });
+        await tgSend(`No stories for today (${today}).`, { chatId });
         return;
     }
 
-    const accessList = (access || [])
-        .map((a: any) => `  • ${escapeHtml(a.member_email.split('@')[0])} (${a.coins_spent} coins)`)
-        .join('\n');
+    // Group by member / public / vault
+    const groups: { label: string; emoji: string; stories: any[] }[] = [];
+    const keyIndex: Record<string, number> = {};
+    for (const s of stories) {
+        const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
+        let key = s.source === 'vault' ? '__vault__' : tagged.length > 0 ? tagged[0] : '__public__';
+        if (keyIndex[key] === undefined) {
+            let label = 'PUBLIC';
+            let emoji = '🌍';
+            if (key === '__vault__') { label = 'VAULT'; emoji = '🔒'; }
+            else if (key !== '__public__') {
+                const p = profiles.find(x => (x.member_id || '').toLowerCase() === key.toLowerCase());
+                const nick = p?.parameters?.nickname;
+                label = nick || p?.name || key.split('@')[0].toUpperCase();
+                emoji = '👤';
+            }
+            keyIndex[key] = groups.length;
+            groups.push({ label, emoji, stories: [] });
+        }
+        groups[keyIndex[key]].stories.push(s);
+    }
 
-    await tgSend(
+    const summary = groups.map(g => `${g.emoji} <b>${escapeHtml(g.label)}</b> · ${g.stories.length} ${g.stories.length === 1 ? 'video' : 'videos'}`).join('\n');
+    const unlockList = (access || []).map((a: any) => `  • ${escapeHtml(a.member_email.split('@')[0])} (${a.coins_spent})`).join('\n');
+
+    const text =
         `<b>STORIES — ${today}</b>\n\n` +
-        `${stories.length} ${stories.length === 1 ? 'story' : 'stories'} posted\n` +
-        `${(access || []).length} members unlocked\n\n` +
-        (accessList ? `<b>Who paid:</b>\n${accessList}` : 'No unlocks yet.') +
-        `\n\nTo tag someone: /tag [name]`,
-        { chatId }
-    );
+        summary +
+        `\n\n<i>${stories.length} total · ${(access || []).length} unlocked</i>` +
+        (unlockList ? `\n\n<b>Paid:</b>\n${unlockList}` : '');
+
+    // Inline keyboard: one row per story — [▶ open url] [🗑 delete]
+    const keyboard: any[][] = [];
+    for (const group of groups) {
+        for (let i = 0; i < group.stories.length; i++) {
+            const s = group.stories[i];
+            const expiresAt = s.expires_at ? new Date(s.expires_at) : null;
+            const hoursLeft = expiresAt ? Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 3600000)) : null;
+            const timeTag = hoursLeft !== null ? ` · ${hoursLeft}h left` : '';
+            const rowLabel = `${group.emoji} ${group.label} #${i + 1}${timeTag}`;
+            keyboard.push([
+                { text: `▶ ${rowLabel}`, url: s.media_url },
+                { text: '🗑 Delete', callback_data: `del_story:${s.id}` },
+            ]);
+        }
+    }
+
+    await tgSend(text, { chatId, replyMarkup: { inline_keyboard: keyboard } });
 }
 
 async function handleDailyStatus(chatId: string) {
@@ -495,6 +536,15 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await setBotState('awaiting_tag');
         await tgAnswer(callbackQueryId);
         await tgSend('Who do you want to tag? Reply with their name or email prefix.', { chatId });
+
+    } else if (action === 'del_story' && value) {
+        const { error } = await supabaseAdmin.from('stories').update({ archived: true }).eq('id', value);
+        if (error) {
+            await tgAnswer(callbackQueryId, '❌ Delete failed');
+        } else {
+            await tgAnswer(callbackQueryId, '🗑 Deleted');
+            await tgSend('✓ Story deleted.', { chatId });
+        }
 
     } else if (action === 'skip') {
         await setBotState(null);
