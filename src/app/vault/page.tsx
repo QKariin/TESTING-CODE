@@ -3959,7 +3959,7 @@ export default function VaultPage() {
             {/* ══════════════════════════════════════════════
                 BOTTOM NAV — 5 tabs matching /profile
             ══════════════════════════════════════════════ */}
-            <nav id="mobBottomNav" className="mob-bottom-nav" onClick={() => { const _ov = document.getElementById('mobChatOverlay'); if (_ov?.classList.contains('mob-overlay-open')) (window as any).closeMobChatOverlay?.(); }} style={{
+            <nav id="mobBottomNav" className="mob-bottom-nav" onClick={() => { const _ov = document.getElementById('mobChatOverlay'); if (_ov?.classList.contains('mob-overlay-open')) (window as any).closeMobChatOverlay?.(); if (showStories) { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; } }} style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 zIndex: 2147483647,
                 height: 'calc(68px + env(safe-area-inset-bottom, 0px))',
