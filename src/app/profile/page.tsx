@@ -1701,7 +1701,13 @@ export default function ProfilePage() {
                             </div>
                             <div className="hud-gear">⚙</div>
                         </div>
-                        <div className="hud-circle queen" onClick={() => (window as any).openQueenMenu()}>
+                        <div className={`hud-circle queen${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`} onClick={() => {
+                            if (storiesAvail) {
+                                setShowStories(true);
+                            } else {
+                                (window as any).openQueenMenu();
+                            }
+                        }}>
                             {dutiesUploadedToday === true ? (
                                 <img src="/routine-done.svg" alt="Done" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
                             ) : (
@@ -2481,14 +2487,10 @@ export default function ProfilePage() {
                     <span className="mob-nav-label">ARENA</span>
                 </button>
                 <button className="mob-nav-queen-btn" onClick={() => {
-                    if (storiesAvail) {
-                        setShowStories(true);
-                    } else {
-                        (window as any).closeStandaloneTribute?.();
-                        (window as any).closeExchequer?.();
-                        (window as any).closeVaultLockOverlay?.();
-                        (window as any).openMobChatOverlay();
-                    }
+                    (window as any).closeStandaloneTribute?.();
+                    (window as any).closeExchequer?.();
+                    (window as any).closeVaultLockOverlay?.();
+                    (window as any).openMobChatOverlay();
                 }}>
                     <div className={`mob-nav-queen-ring${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`}>
                         <img id="navQueenPic" src="/queen-nav.png" className="mob-nav-queen-img" alt="Queen" />
