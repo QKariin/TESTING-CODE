@@ -44,22 +44,9 @@ export async function GET(req: Request) {
         .select('ID, Title, Price, Image')
         .eq('stories_gate', true);
 
-    // Tagged stories (personalized for this member) are always free
-    const hasPersonalized = visibleStories.some((s: any) => {
-        const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
-        return tagged.length > 0 && memberEmail && tagged.includes(memberEmail);
-    });
-
-    let hasAccess = hasPersonalized;
-    if (!hasAccess && memberEmail && count > 0) {
-        const { data: access } = await supabaseAdmin
-            .from('story_access')
-            .select('id')
-            .eq('member_email', memberEmail)
-            .eq('date', date)
-            .maybeSingle();
-        hasAccess = !!access;
-    }
+    // All authenticated members have access — the app itself is tribute-gated.
+    // story_access table is kept for Wishlist gate items (optional premium flow).
+    const hasAccess = !!memberEmail;
 
     // Strip internal fields before returning
     const safeStories = visibleStories.map(({ expires_at, created_at, ...s }: any) => s);
