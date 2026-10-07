@@ -26,15 +26,19 @@ export async function GET(req: Request) {
         .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order('order_index', { ascending: true });
 
-    // Check if this member has tributed (score > 0 means they've paid something)
+    // Check if this member has tributed:
+    // - score > 0 (merit from kneeling/tasks signals active engagement)
+    // - parameters.wishlist_spent > 0 (direct tribute payments)
+    // - active regular keyholder lock (paid for lock = tribute)
     let hasTributed = false;
     if (memberEmail) {
-        const { data: memberProfile } = await supabaseAdmin
-            .from('profiles')
-            .select('score')
-            .ilike('member_id', memberEmail)
-            .maybeSingle();
-        hasTributed = (memberProfile?.score || 0) > 0;
+        const [{ data: memberProfile }, { data: activeSession }] = await Promise.all([
+            supabaseAdmin.from('profiles').select('score, parameters').ilike('member_id', memberEmail).maybeSingle(),
+            supabaseAdmin.from('vault_sessions').select('id').eq('member_id', memberEmail).eq('status', 'active').neq('tier', 'locktober').maybeSingle(),
+        ]);
+        hasTributed = (memberProfile?.score || 0) > 0
+            || (memberProfile?.parameters?.wishlist_spent || 0) > 0
+            || !!activeSession;
     }
 
     // Filter to stories this member can see:
