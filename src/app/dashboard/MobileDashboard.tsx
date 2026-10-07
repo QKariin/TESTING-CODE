@@ -2821,6 +2821,7 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifResults, setGifResults] = useState<any[]>([]);
     const [gifLoading, setGifLoading] = useState(false);
+    const [callingGuardian, setCallingGuardian] = useState(false);
     const scrollBoxRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const prevMsgCountRef = useRef(-1);
@@ -2864,6 +2865,20 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
             prevMsgCountRef.current = messages.length;
         }
     }, [messages, loadingMsgs, scrollToBottom]);
+
+    const callGuardian = async (msgContent: string) => {
+        if (callingGuardian) return;
+        setCallingGuardian(true);
+        try {
+            const res = await fetch('/api/chat/guardian', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userMessage: msgContent, memberId: user.memberId, callerRole: 'queen' }),
+            });
+            if (res.ok) setTimeout(() => fetchMessages(), 1500);
+        } catch {}
+        setCallingGuardian(false);
+    };
 
     const sendMessage = async () => {
         const txt = input.trim();
@@ -3200,6 +3215,19 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                             return null;
                         }
 
+                        const isGuardian = (msg.sender_email || '').toLowerCase() === 'guardian';
+                        if (isGuardian) {
+                            return (
+                                <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    <div style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.42rem', background: 'linear-gradient(135deg,#ff00ed,#000aff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '2px', marginBottom: 3 }}>THE GUARDIAN</div>
+                                    <div style={{ background: 'linear-gradient(135deg,rgba(255,0,237,0.08),rgba(0,10,255,0.08))', border: '1px solid rgba(255,0,237,0.3)', color: '#fff', padding: '10px 14px', borderRadius: '16px 16px 3px 16px', maxWidth: '78%', fontSize: '0.95rem', lineHeight: 1.55, fontFamily: 'Orbitron,sans-serif', wordBreak: 'break-word' }}>
+                                        <span>{text}</span>
+                                    </div>
+                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: 'rgba(255,0,237,0.3)', marginTop: 3 }}>{timeStr}</span>
+                                </div>
+                            );
+                        }
+
                         return (
                             <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isAdmin ? 'flex-end' : 'flex-start' }}>
                                 <div style={{ background: isAdmin ? '#000' : '#1c1c1e', color: '#fff', padding: (isPhoto || isVideo) ? '4px' : '10px 14px', borderRadius: isAdmin ? '16px 16px 3px 16px' : '16px 16px 16px 3px', maxWidth: '78%', fontSize: '0.95rem', lineHeight: 1.55, fontFamily: 'Orbitron,sans-serif', wordBreak: 'break-word', boxShadow: isAdmin ? '0 0 0 1px rgba(197,160,89,0.55)' : undefined, border: !isAdmin ? '1px solid rgba(255,255,255,0.06)' : undefined }}>
@@ -3207,7 +3235,17 @@ function ChatView({ user, adminEmail }: { user: DashUser; adminEmail: string | n
                                         : isVideo ? <video src={text} controls playsInline style={{ display: 'block', maxWidth: 220, borderRadius: 10 }} />
                                             : <span>{text}</span>}
                                 </div>
-                                <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: isAdmin ? '#444' : 'rgba(197,160,89,0.4)', marginTop: 3 }}>{timeStr}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                                    <span style={{ fontFamily: 'Orbitron,monospace', fontSize: '0.62rem', color: isAdmin ? '#444' : 'rgba(197,160,89,0.4)' }}>{timeStr}</span>
+                                    {!isAdmin && (
+                                        <button
+                                            onClick={() => callGuardian(text)}
+                                            disabled={callingGuardian}
+                                            style={{ background: 'linear-gradient(135deg,rgba(255,0,237,0.10),rgba(0,10,255,0.10))', border: '1px solid rgba(255,0,237,0.3)', borderRadius: 5, color: 'rgba(255,0,237,0.8)', fontFamily: 'Orbitron,monospace', fontSize: '0.45rem', letterSpacing: '1px', padding: '2px 7px', cursor: callingGuardian ? 'default' : 'pointer', opacity: callingGuardian ? 0.4 : 1, WebkitTapHighlightColor: 'transparent' }}>
+                                            {callingGuardian ? '...' : 'VLAD'}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
