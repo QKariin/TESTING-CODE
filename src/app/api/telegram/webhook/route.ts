@@ -576,17 +576,19 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await setBotState(null);
 
         // Send OneSignal push notification
-        const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || '';
+        const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
         const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
-        if (ONESIGNAL_APP_ID && ONESIGNAL_API_KEY) {
-            await fetch('https://onesignal.com/api/v1/notifications', {
+        if (ONESIGNAL_API_KEY) {
+            await fetch('https://api.onesignal.com/notifications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
                 body: JSON.stringify({
                     app_id: ONESIGNAL_APP_ID,
+                    target_channel: 'push',
                     included_segments: ['Subscribed Users'],
                     headings: { en: 'Queen Karin' },
                     contents: { en: value === 'paid' ? '🔥 New story — for tributes only' : '✨ New story available' },
+                    url: 'https://throne.qkarin.com/profile',
                 }),
             }).catch(() => {});
         }
