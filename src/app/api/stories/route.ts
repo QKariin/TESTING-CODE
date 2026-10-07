@@ -20,18 +20,31 @@ export async function GET(req: Request) {
     // Get all stories for this date that haven't expired
     const { data: allStories } = await supabaseAdmin
         .from('stories')
-        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source')
+        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, tier')
         .eq('date', date)
         .eq('archived', false)
         .or(`expires_at.is.null,expires_at.gt.${now}`)
         .order('order_index', { ascending: true });
 
+    // Check if this member has tributed (score > 0 means they've paid something)
+    let hasTributed = false;
+    if (memberEmail) {
+        const { data: memberProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('score')
+            .ilike('member_id', memberEmail)
+            .maybeSingle();
+        hasTributed = (memberProfile?.score || 0) > 0;
+    }
+
     // Filter to stories this member can see:
     // - vault stories (source='vault') are NEVER shown to members
     // - tagged_members is empty/null = public, everyone can see it
     // - tagged_members contains this member = personalized for them
+    // - paid stories (tier='paid') only visible to members who have tributed
     const visibleStories = (allStories || []).filter((s: any) => {
         if (s.source === 'vault') return false;
+        if (s.tier === 'paid' && !hasTributed) return false;
         const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
         return tagged.length === 0 || (memberEmail && tagged.includes(memberEmail));
     });

@@ -120,6 +120,7 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         source_id: fileId,
         tagged_members: isAll || isVault ? [] : taggedMembers,
         expires_at: expiresAt,
+        tier: 'free',
     });
 
     if (dbError) {
@@ -132,34 +133,18 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
-    // Push notification to all subscribers
-    const _appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-    const _apiKey = process.env.ONESIGNAL_REST_API_KEY;
-    if (_apiKey) {
-        fetch('https://api.onesignal.com/notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${_apiKey}` },
-            body: JSON.stringify({
-                app_id: _appId,
-                target_channel: 'push',
-                included_segments: ['Subscribed Users'],
-                headings: { en: 'Queen Karin' },
-                contents: { en: '👑 New story just dropped' },
-                url: 'https://throne.qkarin.com/profile',
-            }),
-        }).catch(() => {});
-    }
-    if (isAll || taggedMembers.length > 0) {
-        const tagLine = taggedMembers.length
-            ? `Tagged: <b>${escapeHtml(taggedMembers[0].split('@')[0])}</b>`
-            : 'Public — visible to all.';
-        await tgSend(`✓ Story live!\n${tagLine}`, { chatId });
-        return;
-    }
+    // Store upload context so the tier callback can continue the flow
+    await setBotState('awaiting_story_tier', { isAll, taggedMembers });
 
-    // No tag detected — show today's active subs + search
-    await tgSend('✓ Story live! Who is it for?', { chatId });
-    await sendTagMenu(chatId, true);
+    await tgSend('Uploaded! Free or paid?', {
+        chatId,
+        replyMarkup: {
+            inline_keyboard: [[
+                { text: '🌐 Free — all members', callback_data: 'story_tier:free' },
+                { text: '💰 Paid — tribute required', callback_data: 'story_tier:paid' },
+            ]],
+        },
+    });
 }
 
 async function handleMessage(chatId: string, text: string) {
@@ -567,6 +552,55 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'skip') {
         await setBotState(null);
         await tgAnswer(callbackQueryId, 'Skipped.');
+
+    } else if (action === 'story_tier' && (value === 'free' || value === 'paid')) {
+        const state = await getBotState();
+        const { isAll, taggedMembers } = state.data || {};
+
+        // Update the most recently inserted non-vault story today with the chosen tier
+        const today = new Date().toISOString().split('T')[0];
+        const { data: latestStory } = await supabaseAdmin
+            .from('stories')
+            .select('id')
+            .eq('date', today)
+            .neq('source', 'vault')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (latestStory) {
+            await supabaseAdmin.from('stories').update({ tier: value }).eq('id', latestStory.id);
+        }
+
+        await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
+        await setBotState(null);
+
+        // Send OneSignal push notification
+        const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || '';
+        const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
+        if (ONESIGNAL_APP_ID && ONESIGNAL_API_KEY) {
+            await fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
+                body: JSON.stringify({
+                    app_id: ONESIGNAL_APP_ID,
+                    included_segments: ['Subscribed Users'],
+                    headings: { en: 'Queen Karin' },
+                    contents: { en: value === 'paid' ? '🔥 New story — for tributes only' : '✨ New story available' },
+                }),
+            }).catch(() => {});
+        }
+
+        // Continue tag flow
+        if (isAll) {
+            await tgSend('✓ Story is public — visible to all. Notification sent.', { chatId });
+        } else if (Array.isArray(taggedMembers) && taggedMembers.length > 0) {
+            const name = taggedMembers[0].split('@')[0];
+            await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b>. Notification sent.`, { chatId });
+        } else {
+            await tgSend(`✓ ${value === 'paid' ? 'Paid' : 'Free'} story uploaded. Who is it for?`, { chatId });
+            await sendTagMenu(chatId, false);
+        }
     }
 }
 
