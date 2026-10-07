@@ -131,6 +131,24 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         await tgSend('✓ Saved to vault.', { chatId });
         return;
     }
+
+    // Push notification to all subscribers
+    const _appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const _apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    if (_apiKey) {
+        fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${_apiKey}` },
+            body: JSON.stringify({
+                app_id: _appId,
+                target_channel: 'push',
+                included_segments: ['Subscribed Users'],
+                headings: { en: 'Queen Karin' },
+                contents: { en: '👑 New story just dropped' },
+                url: 'https://throne.qkarin.com/profile',
+            }),
+        }).catch(() => {});
+    }
     if (isAll || taggedMembers.length > 0) {
         const tagLine = taggedMembers.length
             ? `Tagged: <b>${escapeHtml(taggedMembers[0].split('@')[0])}</b>`

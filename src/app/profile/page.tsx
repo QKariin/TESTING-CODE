@@ -171,14 +171,21 @@ export default function ProfilePage() {
     const [storiesGateItems, setStoriesGateItems] = useState<any[]>([]);
     const [showStories, setShowStories] = useState(false);
     const [videoProgress, setVideoProgress] = useState(0);
-    const [storiesViewedCount, setStoriesViewedCount] = useState(() => {
+    const [storiesViewedIds, setStoriesViewedIds] = useState<Set<string>>(() => {
         try {
             const today = new Date().toISOString().split('T')[0];
-            return parseInt(localStorage.getItem(`stories_viewed_count_${today}`) || '0', 10);
-        } catch { return 0; }
+            const stored = localStorage.getItem(`stories_viewed_ids_${today}`);
+            return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+        } catch { return new Set<string>(); }
     });
-    // Ring dims only if member has seen at least as many stories as currently exist
-    const storiesViewed = storiesViewedCount > 0 && storiesViewedCount >= storiesCount;
+    // Ring dims only if every currently-loaded story ID has been seen
+    const storiesViewed = storiesData.length > 0 && storiesData.every((s: any) => storiesViewedIds.has(s.id));
+    const markStoriesViewed = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const ids = new Set<string>(storiesData.map((s: any) => s.id));
+        setStoriesViewedIds(ids);
+        try { localStorage.setItem(`stories_viewed_ids_${today}`, JSON.stringify([...ids])); } catch {}
+    };
     const [storiesIdx, setStoriesIdx] = useState(0);
     const [storiesBuying, setStoriesBuying] = useState(false);
     const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -289,7 +296,7 @@ export default function ProfilePage() {
     // ─── STORIES STATUS ──────────────────────────────────────────────────
     useEffect(() => {
         const today = new Date().toISOString().split('T')[0];
-        fetch(`/api/stories?date=${today}`)
+        const fetchStories = () => fetch(`/api/stories?date=${today}`)
             .then(r => r.json())
             .then(d => {
                 setStoriesAvail(d.available || false);
@@ -299,6 +306,18 @@ export default function ProfilePage() {
                 setStoriesGateItems(d.gateItems || []);
             })
             .catch(() => {});
+        fetchStories();
+
+        // Real-time: ring lights up instantly when Queen uploads a new story
+        const supabase = createClient();
+        const channel = supabase.channel('stories-live')
+            .on('postgres_changes' as any, { event: 'INSERT', schema: 'public', table: 'stories' }, (payload: any) => {
+                const s = payload.new;
+                if (s?.source !== 'vault' && s?.date === today && !s?.archived) fetchStories();
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     }, []);
 
     // ─── 1. FETCH PROFILE DATA ───────────────────────────────────────────
@@ -2015,7 +2034,7 @@ export default function ProfilePage() {
                             {/* Large halo circle — doubles as stories indicator */}
                             <div
                                 className={`halo-circle-lg${storiesAvail ? ` has-stories${storiesViewed ? ' viewed' : ''}` : ''}`}
-                                onClick={() => { if (storiesAvail) setShowStories(true); }}
+                                onClick={() => { if (storiesAvail) { const fi = storiesData.findIndex((s: any) => !storiesViewedIds.has(s.id)); setStoriesIdx(fi >= 0 ? fi : 0); setShowStories(true); } }}
                             >
                                 {storiesAvail && (
                                     <div className="halo-stories-badge">QUEEN'S STORIES · {storiesCount}</div>
@@ -2616,7 +2635,7 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
+                            <button onClick={() => { setShowStories(false); markStoriesViewed(); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.3rem', opacity: 0.7, padding: 4 }}>✕</button>
                         </div>
                         {/* Media - tap left/right to navigate */}
                         <div style={{ position: 'absolute', inset: 0 }} onClick={e => {
@@ -2625,7 +2644,7 @@ export default function ProfilePage() {
                             if (x < w / 3) { setStoriesIdx(Math.max(0, storiesIdx - 1)); setVideoProgress(0); }
                             else if (x > (w * 2) / 3) {
                                 if (storiesIdx < storiesData.length - 1) { setStoriesIdx(storiesIdx + 1); setVideoProgress(0); }
-                                else { setShowStories(false); setVideoProgress(0); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
+                                else { setShowStories(false); setVideoProgress(0); markStoriesViewed(); }
                             }
                         }}>
                             {storiesData[storiesIdx]?.media_type === 'video' ? (
@@ -2639,7 +2658,7 @@ export default function ProfilePage() {
                                     onTimeUpdate={e => { const v = e.currentTarget; if (v.duration) setVideoProgress(v.currentTime / v.duration); }}
                                     onEnded={() => { setVideoProgress(0);
                                         if (storiesIdx < storiesData.length - 1) setStoriesIdx(storiesIdx + 1);
-                                        else { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; }
+                                        else { setShowStories(false); markStoriesViewed(); }
                                     }}
                                 />
                             ) : (
@@ -2657,7 +2676,7 @@ export default function ProfilePage() {
                         {/* Chat button */}
                         <div style={{ position: 'absolute', bottom: 24, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 3 }}>
                             <button
-                                onClick={() => { setShowStories(false); setStoriesViewedCount(storiesCount); try { localStorage.setItem(`stories_viewed_count_${new Date().toISOString().split('T')[0]}`, String(storiesCount)); } catch {}; (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
+                                onClick={() => { setShowStories(false); markStoriesViewed(); (window as any).closeStandaloneTribute?.(); (window as any).openMobChatOverlay?.(); }}
                                 style={{ background: 'rgba(197,160,89,0.12)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', padding: '12px 36px', borderRadius: 28, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', letterSpacing: 3, cursor: 'pointer' }}
                             >OPEN CHAT</button>
                         </div>
