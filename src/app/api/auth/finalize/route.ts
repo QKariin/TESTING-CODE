@@ -21,12 +21,16 @@ export async function POST(req: Request) {
 
         const admin = getAdmin();
 
-        const { data: profile } = await admin
-            .from('profiles')
-            .select('ID')
-            .or(`ID.eq.${userId}${email ? `,member_id.ilike.${email}` : ''}`)
-            .limit(1)
-            .maybeSingle();
+        // Split into two queries to avoid PostgREST .or() parsing issues with email values
+        let profile: any = null;
+        if (userId) {
+            const { data } = await admin.from('profiles').select('ID').eq('ID', userId).maybeSingle();
+            profile = data;
+        }
+        if (!profile && email) {
+            const { data } = await admin.from('profiles').select('ID').ilike('member_id', email).maybeSingle();
+            profile = data;
+        }
 
         if (profile) {
             console.log('[auth/finalize] existing member:', email);

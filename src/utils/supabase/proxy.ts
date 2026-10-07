@@ -108,6 +108,32 @@ export async function updateSession(request: NextRequest) {
         }
 
         const isCEO = userEmailNormalized === 'ceo@qkarin.com' || userEmailNormalized === 'queen@qkarin.com';
+
+        // 🔔 LEAD FALLBACK: if auth/finalize didn't run or failed, log the lead here
+        if (!profile && !isLegacyMember && !isCEO && userEmailNormalized) {
+            try {
+                const { data: existingLead } = await adminSupabase
+                    .from('leads')
+                    .select('id')
+                    .eq('email', userEmailNormalized)
+                    .maybeSingle();
+                if (!existingLead) {
+                    const now = new Date().toISOString();
+                    const provider = (user.app_metadata as any)?.provider || 'unknown';
+                    await adminSupabase.from('leads').insert({
+                        email: userEmailNormalized,
+                        provider,
+                        first_seen: now,
+                        last_seen: now,
+                        attempts: 1,
+                    });
+                    console.log(`[BOUNCER] Lead logged (fallback): ${userEmailNormalized}`);
+                }
+            } catch (e: any) {
+                console.error('[BOUNCER] Lead log error:', e.message);
+            }
+        }
+
         const hasAccess = !!profile || isLegacyMember || isCEO;
         const isDashboardPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
         const isChatPage = pathname === '/chat' || pathname.startsWith('/chat/');
