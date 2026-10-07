@@ -3995,17 +3995,28 @@ export default function VaultPage() {
                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>} />
 
                 {/* Center Queen button */}
-                <button onClick={() => { setVladOpen(false); setTab('chat'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(22px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
+                <button onClick={() => { setVladOpen(false); if (storiesAvail && !storiesViewed) { const fi = storiesData.findIndex((s: any) => !storiesViewedIds.has(s.id)); setStoriesIdx(fi >= 0 ? fi : 0); setShowStories(true); } else { setTab('chat'); } }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, position: 'relative', transform: 'translateY(22px)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 0, overflow: 'visible' }}>
                     <div style={{
                         width: 80, height: 80, borderRadius: '50%',
-                        border: `2px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
+                        border: storiesAvail && !storiesViewed
+                            ? '3px solid transparent'
+                            : `2px solid ${tab === 'chat' ? `${R}0.5)` : `${R}0.15)`}`,
                         overflow: 'hidden',
-                        boxShadow: tab === 'chat' ? `0 0 16px ${R}0.15)` : 'none',
+                        background: storiesAvail && !storiesViewed
+                            ? 'conic-gradient(from 0deg, #fcaf45, #f77737, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #fcaf45) border-box'
+                            : 'none',
+                        boxShadow: storiesAvail && !storiesViewed
+                            ? '0 0 18px rgba(193,53,132,0.5), 0 0 36px rgba(131,58,180,0.25)'
+                            : tab === 'chat' ? `0 0 16px ${R}0.15)` : 'none',
+                        animation: storiesAvail && !storiesViewed ? 'haloIgSpin 4s linear infinite' : 'none',
                         flexShrink: 0,
+                        padding: storiesAvail && !storiesViewed ? 3 : 0,
                     }}>
-                        <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Q" />
+                        <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden' }}>
+                            <img src="/queen-nav.png" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Q" />
+                        </div>
                     </div>
-                    {!chatOk && (
+                    {!chatOk && !(storiesAvail && !storiesViewed) && (
                         <div style={{ position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: '50%', background: '#050508', border: `1px solid ${R}0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg viewBox="0 0 24 24" width="8" height="8" fill={`${R}0.5)`}><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
                         </div>
