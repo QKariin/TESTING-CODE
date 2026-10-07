@@ -1943,10 +1943,42 @@ export default function VaultPage() {
                     {/* Close outer ring */}
                     </div>
 
+                    {/* Stories banner — shown when stories are available */}
+                    {storiesAvail && (
+                        <div
+                            onClick={() => { const fi = storiesData.findIndex((s: any) => !storiesViewedIds.has(s.id)); setStoriesIdx(fi >= 0 ? fi : 0); setShowStories(true); }}
+                            style={{
+                                width: '94%', marginTop: 16, marginBottom: 0, borderRadius: 14,
+                                padding: 2, cursor: 'pointer',
+                                background: storiesViewed
+                                    ? 'rgba(255,255,255,0.07)'
+                                    : 'conic-gradient(from 0deg, #fcaf45, #f77737, #f56040, #fd1d1d, #833ab4, #c13584, #e1306c, #fd1d1d, #f56040, #fcaf45)',
+                                boxShadow: storiesViewed ? 'none' : '0 0 24px rgba(193,53,132,0.35), 0 0 48px rgba(131,58,180,0.15)',
+                                animation: storiesViewed ? 'none' : 'haloIgSpin 4s linear infinite',
+                                zIndex: 3, position: 'relative',
+                            }}
+                        >
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: 12,
+                                background: 'rgba(6,3,12,0.85)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+                                borderRadius: 12, padding: '12px 16px',
+                            }}>
+                                <img src="/queen-nav.png" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, opacity: storiesViewed ? 0.4 : 1, border: '1px solid rgba(197,160,89,0.2)' }} alt="" />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.75rem', color: storiesViewed ? 'rgba(255,255,255,0.3)' : '#fff', letterSpacing: 2, marginBottom: 3 }}>QUEEN'S STORIES</div>
+                                    <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 2 }}>{storiesCount} {storiesCount === 1 ? 'STORY' : 'STORIES'} TODAY</div>
+                                </div>
+                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.5rem', letterSpacing: 2, color: storiesViewed ? 'rgba(255,255,255,0.15)' : '#e1306c', flexShrink: 0 }}>
+                                    {storiesViewed ? 'VIEWED' : '▶'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Stats pill — overlapping the circle (matches profile layout) */}
                     <div style={{
                         position: 'relative', zIndex: 3,
-                        marginTop: -55, width: '94%',
+                        marginTop: storiesAvail ? 16 : -55, width: '94%',
                         background: 'rgba(18,12,14,0.92)',
                         border: `1px solid ${hasChastityTask && chastityStatus === 'approved' ? 'rgba(197,160,89,0.2)' : hasChastityTask && chastityStatus === 'pending' ? 'rgba(197,160,89,0.15)' : 'rgba(160,20,20,0.25)'}`,
                         borderRadius: 12, padding: '16px 10px',
