@@ -28,7 +28,27 @@ export async function checkAndPromote(profileIdOrEmail: string): Promise<{ promo
         const mapped = mapUserProfile(profile, taskRow);
         const report = getHierarchyReport(mapped);
 
-        if (!report.canPromote || report.isMax) return { promoted: false };
+        if (report.isMax) return { promoted: false };
+
+        // Vault/keyholder members bypass the certificate requirement
+        let canPromote = report.canPromote;
+        if (!canPromote) {
+            const { data: activeSession } = await supabaseAdmin
+                .from('vault_sessions')
+                .select('id')
+                .eq('member_id', profile.member_id)
+                .eq('status', 'active')
+                .neq('tier', 'locktober')
+                .maybeSingle();
+            if (activeSession) {
+                // Re-evaluate ignoring the cert requirement
+                canPromote = report.requirements
+                    .filter(r => r.id !== 'cert')
+                    .every(r => r.type === 'check' ? r.status === 'VERIFIED' : (r.current ?? 0) >= (r.target ?? 0));
+            }
+        }
+
+        if (!canPromote) return { promoted: false };
 
         const currentHierarchy = profile.hierarchy || "Hall Boy";
         let currentIndex = HIERARCHY_RULES.findIndex(r => clean(r.name) === clean(currentHierarchy));
