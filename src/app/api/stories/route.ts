@@ -17,13 +17,15 @@ export async function GET(req: Request) {
 
     const now = new Date().toISOString();
 
-    // Get all stories for this date that haven't expired
+    // Get all active non-vault stories that haven't expired yet.
+    // Use expires_at as the only time gate — not date — so stories uploaded
+    // near midnight stay visible for their full 24h window.
     const { data: allStories } = await supabaseAdmin
         .from('stories')
         .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, tier')
-        .eq('date', date)
         .eq('archived', false)
-        .or(`expires_at.is.null,expires_at.gt.${now}`)
+        .neq('source', 'vault')
+        .gt('expires_at', now)
         .order('order_index', { ascending: true });
 
     // Check if this member has tributed:

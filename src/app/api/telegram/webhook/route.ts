@@ -133,6 +133,24 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
+    // Fire push notification immediately — don't wait for tier selection
+    const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
+    if (ONESIGNAL_API_KEY) {
+        fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
+            body: JSON.stringify({
+                app_id: ONESIGNAL_APP_ID,
+                target_channel: 'push',
+                included_segments: ['Subscribed Users'],
+                headings: { en: 'Queen Karin' },
+                contents: { en: '✨ New story available' },
+                url: 'https://throne.qkarin.com/profile',
+            }),
+        }).catch(() => {});
+    }
+
     // Store upload context so the tier callback can continue the flow
     await setBotState('awaiting_story_tier', { isAll, taggedMembers });
 
@@ -575,30 +593,12 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
         await setBotState(null);
 
-        // Send OneSignal push notification
-        const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-        const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
-        if (ONESIGNAL_API_KEY) {
-            await fetch('https://api.onesignal.com/notifications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
-                body: JSON.stringify({
-                    app_id: ONESIGNAL_APP_ID,
-                    target_channel: 'push',
-                    included_segments: ['Subscribed Users'],
-                    headings: { en: 'Queen Karin' },
-                    contents: { en: value === 'paid' ? '🔥 New story — for tributes only' : '✨ New story available' },
-                    url: 'https://throne.qkarin.com/profile',
-                }),
-            }).catch(() => {});
-        }
-
         // Continue tag flow
         if (isAll) {
-            await tgSend('✓ Story is public — visible to all. Notification sent.', { chatId });
+            await tgSend('✓ Story is public — visible to all.', { chatId });
         } else if (Array.isArray(taggedMembers) && taggedMembers.length > 0) {
             const name = taggedMembers[0].split('@')[0];
-            await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b>. Notification sent.`, { chatId });
+            await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b>.`, { chatId });
         } else {
             await tgSend(`✓ ${value === 'paid' ? 'Paid' : 'Free'} story uploaded. Who is it for?`, { chatId });
             await sendTagMenu(chatId, false);
