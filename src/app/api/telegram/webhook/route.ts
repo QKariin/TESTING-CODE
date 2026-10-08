@@ -136,8 +136,8 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
     // Fire push notification immediately — don't wait for tier selection
     const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
-    if (ONESIGNAL_API_KEY) {
-        fetch('https://api.onesignal.com/notifications', {
+    try {
+        const pushRes = await fetch('https://api.onesignal.com/notifications', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
             body: JSON.stringify({
@@ -148,7 +148,13 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
                 contents: { en: '✨ New story available' },
                 url: 'https://throne.qkarin.com/profile',
             }),
-        }).catch(() => {});
+        });
+        if (!pushRes.ok) {
+            const pushErr = await pushRes.text();
+            console.error('[story push] OneSignal error:', pushRes.status, pushErr);
+        }
+    } catch (e) {
+        console.error('[story push] fetch failed:', e);
     }
 
     // Store upload context so the tier callback can continue the flow

@@ -4551,7 +4551,7 @@ export default function VaultPage() {
                                         <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.45)', letterSpacing: 1 }}>TODAY · {storiesIdx + 1}/{storiesData.length}</div>
                                         {(() => {
                                             const tagged: string[] = Array.isArray(storiesData[storiesIdx]?.tagged_members) ? storiesData[storiesIdx].tagged_members : [];
-                                            const isPersonal = tagged.length > 0 && tagged.some((e: string) => e.toLowerCase() === (profile?.member_id || '').toLowerCase());
+                                            const isPersonal = tagged.length > 0 && tagged.some((e: string) => e.toLowerCase() === (profile?.memberId || profile?.member_id || '').toLowerCase());
                                             return isPersonal
                                                 ? <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', background: 'linear-gradient(90deg,#fcaf45,#e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, fontWeight: 700 }}>FOR YOU</span>
                                                 : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>PUBLIC</span>;
