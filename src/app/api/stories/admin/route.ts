@@ -17,9 +17,8 @@ export async function GET(req: Request) {
         .order('created_at', { ascending: false });
 
     if (all) {
-        // ALL TIME: every story that is not currently active in the live feed
-        // (archived, expired, or stored as vault)
-        query = query.or(`archived.eq.true,source.eq.vault,expires_at.lt.${now}`);
+        // ALL TIME: every single story ever posted, no filters — limit 500
+        query = query.limit(500);
     } else {
         // ACTIVE: currently live stories only
         query = query.eq('archived', false).neq('source', 'vault').gt('expires_at', now);
@@ -33,7 +32,7 @@ export async function GET(req: Request) {
 
 // PATCH /api/stories/admin — reassign a story, set tribute price, etc.
 export async function PATCH(req: Request) {
-    const { id, source, tagged_members, expires_at, tier, tribute_price } = await req.json();
+    const { id, source, tagged_members, expires_at, tier, tribute_price, archived } = await req.json();
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
     const update: Record<string, any> = {};
@@ -42,6 +41,7 @@ export async function PATCH(req: Request) {
     if (expires_at !== undefined) update.expires_at = expires_at;
     if (tier !== undefined) update.tier = tier;
     if (tribute_price !== undefined) update.tribute_price = tribute_price;
+    if (archived !== undefined) update.archived = archived;
 
     const { error } = await supabaseAdmin.from('stories').update(update).eq('id', id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
