@@ -796,6 +796,10 @@ export default function DashboardPage() {
     const [storiesAssigning, setStoriesAssigning] = useState(false);
     const [draggingVaultId, setDraggingVaultId] = useState<string | null>(null);
     const [dropTarget, setDropTarget] = useState<string | null>(null);
+    const [vaultStoriesData, setVaultStoriesData] = useState<any[]>([]);
+    const [vaultStoriesLoading, setVaultStoriesLoading] = useState(false);
+    const [draggingTodayId, setDraggingTodayId] = useState<string | null>(null);
+    const [storyPriceEdit, setStoryPriceEdit] = useState<{ id: string; value: string; source: 'today' | 'vault' } | null>(null);
 
     useEffect(() => {
         if (!showPaymentLogs) return;
@@ -820,6 +824,15 @@ export default function DashboardPage() {
             .then(d => { setStoriesMgmtData(d.stories || []); setStoriesMgmtLoading(false); })
             .catch(() => setStoriesMgmtLoading(false));
     }, [showStoriesMgmt, storiesMgmtDate]);
+
+    useEffect(() => {
+        if (!showStoriesMgmt) return;
+        setVaultStoriesLoading(true);
+        fetch('/api/stories/admin?vault=true')
+            .then(r => r.json())
+            .then(d => { setVaultStoriesData(d.stories || []); setVaultStoriesLoading(false); })
+            .catch(() => setVaultStoriesLoading(false));
+    }, [showStoriesMgmt]);
 
     const [keyholderMember, setKeyholderMember] = useState('');
     const [showBasicProgram, setShowBasicProgram] = useState(false);
@@ -1648,8 +1661,8 @@ export default function DashboardPage() {
                 {/* STORIES MANAGEMENT PANEL */}
                 {showStoriesMgmt && !isMobile && (() => {
                     const now24 = Date.now() - 24 * 3600 * 1000;
-                    const vaultStories = storiesMgmtData.filter((s: any) => s.source === 'vault');
-                    const activeStories = storiesMgmtData.filter((s: any) => s.source !== 'vault');
+                    const vaultStories = vaultStoriesData;
+                    const activeStories = storiesMgmtData;
 
                     // Members active in last 24h, sorted by most recent first
                     const activeMembers = (users as any[])
@@ -1672,7 +1685,7 @@ export default function DashboardPage() {
                         storyMap[key].push(s);
                     });
 
-                    // Helper: assign vault story to target
+                    // Helper: assign vault story to target (activates with 24h expiry)
                     const assignVault = async (storyId: string, target: 'everyone' | string) => {
                         setStoriesAssigning(true);
                         const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
@@ -1680,24 +1693,115 @@ export default function DashboardPage() {
                             ? { id: storyId, source: 'manual', tagged_members: [], expires_at: expires }
                             : { id: storyId, source: 'manual', tagged_members: [target], expires_at: expires };
                         await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                        setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId
-                            ? { ...x, source: body.source, tagged_members: body.tagged_members, expires_at: body.expires_at }
-                            : x
-                        ));
+                        // Move from vault to active
+                        setVaultStoriesData(prev => prev.filter((x: any) => x.id !== storyId));
+                        setStoriesMgmtData(prev => {
+                            const existing = prev.find((x: any) => x.id === storyId);
+                            if (existing) return prev.map((x: any) => x.id === storyId ? { ...x, ...body } : x);
+                            const vStory = vaultStoriesData.find((x: any) => x.id === storyId);
+                            return vStory ? [...prev, { ...vStory, ...body }] : prev;
+                        });
                         setVaultSelected(null);
                         setDraggingVaultId(null);
                         setDropTarget(null);
                         setStoriesAssigning(false);
                     };
 
+                    // Helper: reassign an active story to a different member/everyone
+                    const assignStory = async (storyId: string, target: 'everyone' | string) => {
+                        setStoriesAssigning(true);
+                        const tagged = target === 'everyone' ? [] : [target];
+                        await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: storyId, tagged_members: tagged }) });
+                        setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tagged_members: tagged } : x));
+                        setDraggingTodayId(null);
+                        setDropTarget(null);
+                        setStoriesAssigning(false);
+                    };
+
+                    // Helper: set tribute price on a story
+                    const setStoryPrice = async (storyId: string, price: string, isVault: boolean) => {
+                        const p = parseFloat(price);
+                        const body = isNaN(p) || p <= 0
+                            ? { id: storyId, tier: 'free', tribute_price: null }
+                            : { id: storyId, tier: 'paid', tribute_price: p };
+                        await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                        if (isVault) {
+                            setVaultStoriesData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tier: body.tier, tribute_price: body.tribute_price } : x));
+                        } else {
+                            setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tier: body.tier, tribute_price: body.tribute_price } : x));
+                        }
+                        setStoryPriceEdit(null);
+                    };
+
                     // Drag handlers
-                    const onDragStart = (storyId: string) => { setDraggingVaultId(storyId); setVaultSelected(storyId); };
+                    const onVaultDragStart = (storyId: string) => { setDraggingVaultId(storyId); setVaultSelected(storyId); setDraggingTodayId(null); };
+                    const onTodayDragStart = (storyId: string) => { setDraggingTodayId(storyId); setDraggingVaultId(null); setVaultSelected(null); };
                     const onDragOver = (e: React.DragEvent, key: string) => { e.preventDefault(); setDropTarget(key); };
                     const onDragLeave = () => setDropTarget(null);
                     const onDrop = async (e: React.DragEvent, key: string) => {
                         e.preventDefault(); setDropTarget(null);
-                        if (!draggingVaultId) return;
-                        await assignVault(draggingVaultId, key === '__public__' ? 'everyone' : key);
+                        if (draggingVaultId) { await assignVault(draggingVaultId, key === '__public__' ? 'everyone' : key); return; }
+                        if (draggingTodayId) { await assignStory(draggingTodayId, key === '__public__' ? 'everyone' : key); return; }
+                    };
+
+                    // Draggable story thumbnail (used in both strips)
+                    const StoryThumb = ({ s, isVault }: { s: any; isVault: boolean }) => {
+                        const isSelectedVault = isVault && vaultSelected === s.id;
+                        const isPriceEditing = storyPriceEdit?.id === s.id;
+                        const isPaid = s.tier === 'paid' && s.tribute_price;
+                        return (
+                            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: storiesAssigning ? 0.4 : 1, position: 'relative' }}>
+                                <div
+                                    draggable
+                                    onDragStart={() => isVault ? onVaultDragStart(s.id) : onTodayDragStart(s.id)}
+                                    onDragEnd={() => { setDraggingVaultId(null); setDraggingTodayId(null); setDropTarget(null); }}
+                                    onClick={() => {
+                                        if (isVault) setVaultSelected(vaultSelected === s.id ? null : s.id);
+                                        setStoryPriceEdit(null);
+                                    }}
+                                    style={{
+                                        width: 76, height: 76, borderRadius: 10, overflow: 'hidden', cursor: 'grab',
+                                        border: `2px solid ${isSelectedVault ? '#c5a059' : isVault ? 'rgba(197,160,89,0.2)' : 'rgba(255,255,255,0.1)'}`,
+                                        background: '#000',
+                                        boxShadow: isSelectedVault ? '0 0 14px rgba(197,160,89,0.4)' : 'none',
+                                        transition: 'all 0.15s',
+                                    }}
+                                >
+                                    {s.media_type === 'video'
+                                        ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
+                                        : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                    }
+                                </div>
+                                {/* Caption label */}
+                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: isSelectedVault ? '#c5a059' : 'rgba(255,255,255,0.2)', letterSpacing: '1px', maxWidth: 76, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {s.caption ? s.caption.slice(0, 10) + (s.caption.length > 10 ? '…' : '') : '—'}
+                                </div>
+                                {/* Price button */}
+                                {isPriceEditing ? (
+                                    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                                        <input
+                                            autoFocus
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="€"
+                                            value={storyPriceEdit?.value ?? ''}
+                                            onChange={e => setStoryPriceEdit(prev => prev ? { ...prev, value: e.target.value } : null)}
+                                            onKeyDown={e => { if (e.key === 'Enter') setStoryPrice(s.id, storyPriceEdit?.value ?? '', isVault); if (e.key === 'Escape') setStoryPriceEdit(null); }}
+                                            style={{ width: 46, background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', padding: '2px 5px', borderRadius: 4, outline: 'none' }}
+                                        />
+                                        <button onClick={() => setStoryPrice(s.id, storyPriceEdit?.value ?? '', isVault)} style={{ background: '#c5a059', border: 'none', color: '#000', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4, cursor: 'pointer' }}>✓</button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={e => { e.stopPropagation(); setStoryPriceEdit({ id: s.id, value: isPaid ? String(s.tribute_price) : '', source: isVault ? 'vault' : 'today' }); }}
+                                        style={{ background: isPaid ? 'rgba(197,160,89,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isPaid ? 'rgba(197,160,89,0.5)' : 'rgba(255,255,255,0.1)'}`, color: isPaid ? '#c5a059' : 'rgba(255,255,255,0.25)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.6rem', padding: '2px 7px', borderRadius: 4, cursor: 'pointer', letterSpacing: '1px' }}
+                                    >
+                                        {isPaid ? `€${s.tribute_price}` : '💰'}
+                                    </button>
+                                )}
+                            </div>
+                        );
                     };
 
                     // Story row for expanded view
@@ -1728,11 +1832,12 @@ export default function DashboardPage() {
                     // Member card (drop target)
                     const MemberCard = ({ cardKey, label, cardStories, isPublic }: { cardKey: string; label: string; cardStories: any[]; isPublic?: boolean }) => {
                         const isDrop = dropTarget === cardKey;
-                        const isSelected = (vaultSelected || draggingVaultId) && !storiesAssigning;
+                        const isSelected = (vaultSelected || draggingVaultId || draggingTodayId) && !storiesAssigning;
                         return (
                             <div
                                 onClick={() => {
-                                    if (vaultSelected && !storiesAssigning) { assignVault(vaultSelected, isPublic ? 'everyone' : cardKey); return; }
+                                    if (storiesAssigning) return;
+                                    if (vaultSelected) { assignVault(vaultSelected, isPublic ? 'everyone' : cardKey); return; }
                                     if (cardStories.length > 0) setStoriesMgmtExpanded(cardKey);
                                 }}
                                 onDragOver={e => onDragOver(e, cardKey)}
@@ -1782,51 +1887,54 @@ export default function DashboardPage() {
                                     <input type="date" value={storiesMgmtDate} onChange={e => { setStoriesMgmtDate(e.target.value); setStoriesMgmtExpanded(null); setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', padding: '3px 10px', borderRadius: 4, fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', cursor: 'pointer' }} />
                                     <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '1px' }}>{storiesMgmtData.length} active · {activeMembers.length} online 24h</span>
                                 </div>
-                                <button onClick={() => { setShowStoriesMgmt(false); setStoriesMgmtExpanded(null); setVaultSelected(null); setDraggingVaultId(null); setDropTarget(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '2px' }}>CLOSE</button>
+                                <button onClick={() => { setShowStoriesMgmt(false); setStoriesMgmtExpanded(null); setVaultSelected(null); setDraggingVaultId(null); setDraggingTodayId(null); setDropTarget(null); setStoryPriceEdit(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)', padding: '5px 14px', borderRadius: 4, cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', letterSpacing: '2px' }}>CLOSE</button>
                             </div>
 
                             {storiesMgmtLoading
                                 ? <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontFamily: "'Rajdhani', sans-serif", letterSpacing: 3 }}>LOADING...</div>
                                 : <div style={{ padding: '24px 28px', flex: 1 }}>
 
-                                    {/* ── VAULT ── */}
-                                    {vaultStories.length > 0 && (
-                                        <div style={{ marginBottom: 28, border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, background: 'rgba(197,160,89,0.02)', overflow: 'hidden' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
-                                                <div>
-                                                    <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px' }}>🔒 VAULT</div>
-                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 1 }}>
-                                                        {vaultSelected ? 'SELECTED — DRAG ONTO A CARD OR CLICK A CARD TO ASSIGN' : 'DRAG A VIDEO ONTO A CARD BELOW · OR CLICK TO SELECT THEN CLICK A CARD'}
-                                                    </div>
+                                    {/* ── ALL VIDEOS OF TODAY ── */}
+                                    <div style={{ marginBottom: 20, border: '1px solid rgba(225,48,108,0.2)', borderRadius: 12, background: 'rgba(225,48,108,0.02)', overflow: 'hidden' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(225,48,108,0.08)' }}>
+                                            <div>
+                                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.4rem', color: '#e1306c', letterSpacing: '3px' }}>ALL VIDEOS OF TODAY</div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(225,48,108,0.4)', letterSpacing: '2px', marginTop: 1 }}>
+                                                    {draggingTodayId ? 'DRAG ONTO A CARD BELOW TO REASSIGN · 💰 TO SET TRIBUTE PRICE' : activeStories.length === 0 ? 'NO ACTIVE STORIES' : `${activeStories.length} ACTIVE · DRAG TO REASSIGN · 💰 TO MAKE PAID`}
                                                 </div>
-                                                {vaultSelected && <button onClick={() => { setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'transparent', border: 'none', color: 'rgba(197,160,89,0.5)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
                                             </div>
-                                            <div style={{ display: 'flex', gap: 12, padding: '14px 20px', overflowX: 'auto' }}>
-                                                {vaultStories.map((s: any) => (
-                                                    <div
-                                                        key={s.id}
-                                                        draggable
-                                                        onDragStart={() => onDragStart(s.id)}
-                                                        onDragEnd={() => { setDraggingVaultId(null); setDropTarget(null); }}
-                                                        onClick={() => setVaultSelected(vaultSelected === s.id ? null : s.id)}
-                                                        style={{ flexShrink: 0, cursor: 'grab', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, opacity: storiesAssigning ? 0.4 : 1 }}
-                                                    >
-                                                        <div style={{ width: 76, height: 76, borderRadius: 10, overflow: 'hidden', border: `2px solid ${vaultSelected === s.id ? '#c5a059' : 'rgba(197,160,89,0.2)'}`, background: '#000', boxShadow: vaultSelected === s.id ? '0 0 14px rgba(197,160,89,0.4)' : 'none', transition: 'all 0.15s' }}>
-                                                            {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
-                                                        </div>
-                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: vaultSelected === s.id ? '#c5a059' : 'rgba(255,255,255,0.2)', letterSpacing: '1px', maxWidth: 76, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            {s.caption ? s.caption.slice(0, 10) + (s.caption.length > 10 ? '…' : '') : '—'}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {/* Trash drop zone in vault row */}
+                                            {draggingTodayId && <button onClick={() => { setDraggingTodayId(null); setDropTarget(null); }} style={{ background: 'transparent', border: 'none', color: 'rgba(225,48,108,0.5)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 12, padding: '14px 20px', overflowX: 'auto', minHeight: 60 }}>
+                                            {activeStories.length === 0 && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>—</div>}
+                                            {activeStories.map((s: any) => <StoryThumb key={s.id} s={s} isVault={false} />)}
+                                        </div>
+                                    </div>
+
+                                    {/* ── ALL VIDEOS OF ALL TIME (VAULT) ── */}
+                                    <div style={{ marginBottom: 20, border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, background: 'rgba(197,160,89,0.02)', overflow: 'hidden' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
+                                            <div>
+                                                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px' }}>ALL VIDEOS OF ALL TIME</div>
+                                                <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 1 }}>
+                                                    {vaultSelected ? 'SELECTED — DRAG ONTO A CARD OR CLICK A CARD TO ASSIGN' : vaultStoriesLoading ? 'LOADING VAULT...' : vaultStories.length === 0 ? 'VAULT EMPTY' : `${vaultStories.length} IN VAULT · DRAG TO ACTIVATE · 💰 TO MAKE PAID`}
+                                                </div>
+                                            </div>
+                                            {vaultSelected && <button onClick={() => { setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'transparent', border: 'none', color: 'rgba(197,160,89,0.5)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 12, padding: '14px 20px', overflowX: 'auto', minHeight: 60 }}>
+                                            {vaultStoriesLoading && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>LOADING...</div>}
+                                            {!vaultStoriesLoading && vaultStories.length === 0 && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>—</div>}
+                                            {vaultStories.map((s: any) => <StoryThumb key={s.id} s={s} isVault={true} />)}
+                                            {/* Delete button for selected vault story */}
+                                            {vaultSelected && (
                                                 <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, marginLeft: 8 }}>
-                                                    <button disabled={!vaultSelected || storiesAssigning} onClick={async () => { if (!vaultSelected || !confirm('Delete from vault?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', cursor: vaultSelected ? 'pointer' : 'default', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: vaultSelected ? 1 : 0.3 }}>🗑</button>
+                                                    <button disabled={storiesAssigning} onClick={async () => { if (!confirm('Delete from vault?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setVaultStoriesData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑</button>
                                                     <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(224,48,48,0.4)', letterSpacing: '1px' }}>DELETE</div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
 
                                     {/* ── MEMBER CARDS (expanded view or grid) ── */}
                                     {storiesMgmtExpanded !== null ? (() => {
@@ -1847,7 +1955,7 @@ export default function DashboardPage() {
                                     })() : (
                                         <>
                                             <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '3px', marginBottom: 12 }}>
-                                                {(vaultSelected || draggingVaultId) ? '— DROP VIDEO ONTO A CARD —' : 'ACTIVE IN LAST 24H · SORTED BY RECENCY'}
+                                                {(vaultSelected || draggingVaultId || draggingTodayId) ? '— DROP VIDEO ONTO A CARD —' : 'ACTIVE IN LAST 24H · SORTED BY RECENCY'}
                                             </div>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
                                                 {/* Everyone card — always first */}
