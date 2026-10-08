@@ -65,7 +65,27 @@ async function findMemberInText(text: string): Promise<string | null> {
     return null;
 }
 
-async function handleVideoUpload(chatId: string, fileId: string, caption: string | null) {
+async function sendStoryPush(emails: string[]) {
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    if (!apiKey || emails.length === 0) return;
+    await Promise.all(emails.map(email =>
+        fetch('https://api.onesignal.com/notifications', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+            body: JSON.stringify({
+                app_id: appId,
+                target_channel: 'push',
+                include_aliases: { external_id: [email.toLowerCase()] },
+                headings: { en: 'Queen Karin' },
+                contents: { en: '✨ New story available' },
+                url: 'https://throne.qkarin.com/profile',
+            }),
+        }).catch(() => {})
+    ));
+}
+
+async function handleMediaUpload(chatId: string, fileId: string, caption: string | null, isPhoto: boolean) {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
     await tgSend('⏳ Uploading...', { chatId });
 
@@ -79,19 +99,21 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
     }
 
     // Download from Telegram
-    const videoRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
-    if (!videoRes.ok) {
-        await tgSend('❌ Failed to download video from Telegram.', { chatId });
+    const mediaRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
+    if (!mediaRes.ok) {
+        await tgSend('❌ Failed to download file from Telegram.', { chatId });
         return;
     }
-    const videoBuffer = await videoRes.arrayBuffer();
+    const mediaBuffer = await mediaRes.arrayBuffer();
 
     // Upload to Supabase storage
     const today = new Date().toISOString().split('T')[0];
-    const storagePath = `tiktok_stories/${today}_${fileId}.mp4`;
+    const ext = isPhoto ? 'jpg' : 'mp4';
+    const contentType = isPhoto ? 'image/jpeg' : 'video/mp4';
+    const storagePath = `tiktok_stories/${today}_${fileId}.${ext}`;
     const { error: uploadError } = await supabaseAdmin.storage
         .from('media')
-        .upload(storagePath, videoBuffer, { contentType: 'video/mp4', upsert: true });
+        .upload(storagePath, mediaBuffer, { contentType, upsert: true });
     if (uploadError) {
         await tgSend(`❌ Storage upload failed: ${escapeHtml(uploadError.message)}`, { chatId });
         return;
@@ -109,11 +131,12 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
     const isVault = caption?.trim().toLowerCase() === 'vault';
     const isAll = caption?.trim().toLowerCase() === 'all' || caption?.trim().toLowerCase() === 'public';
     const expiresAt = isVault ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const mediaType = isPhoto ? 'image' : 'video';
 
     const { error: dbError } = await supabaseAdmin.from('stories').insert({
         date: today,
         media_url: publicUrl,
-        media_type: 'video',
+        media_type: mediaType,
         order_index: 0,
         caption: caption || '',
         source: isVault ? 'vault' : 'tiktok',
@@ -146,32 +169,6 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         },
     });
 
-    // Push notification — one per member, EXACTLY like kneeling notification (which works)
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-    if (apiKey) {
-        const { data: memberProfiles } = await supabaseAdmin
-            .from('profiles')
-            .select('member_id')
-            .not('member_id', 'is', null);
-        const emails = (memberProfiles || [])
-            .map((p: any) => (p.member_id || '').toLowerCase())
-            .filter(Boolean);
-        await Promise.all(emails.map(email =>
-            fetch('https://api.onesignal.com/notifications', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
-                body: JSON.stringify({
-                    app_id: appId,
-                    target_channel: 'push',
-                    include_aliases: { external_id: [email] },
-                    headings: { en: 'Queen Karin' },
-                    contents: { en: '✨ New story available' },
-                    url: 'https://throne.qkarin.com/profile',
-                }),
-            }).catch(() => {})
-        ));
-    }
 }
 
 async function handleMessage(chatId: string, text: string) {
@@ -551,13 +548,15 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         }
         for (const story of stories) {
             const existing: string[] = Array.isArray(story.tagged_members) ? story.tagged_members : [];
-            if (!existing.includes(value)) {
+            if (!existing.map(e => e.toLowerCase()).includes(value.toLowerCase())) {
                 await supabaseAdmin.from('stories').update({ tagged_members: [...existing, value] }).eq('id', story.id);
             }
         }
         const name = value.split('@')[0];
         await tgAnswer(callbackQueryId, `Tagged ${name}`);
         await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b> in today's stories.`, { chatId });
+        // Push to this specific member only
+        sendStoryPush([value]).catch(() => {});
 
     } else if (action === 'tag_search') {
         await setBotState('awaiting_tag');
@@ -567,6 +566,10 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tag_all') {
         await tgAnswer(callbackQueryId, 'Set to public');
         await tgSend('✓ Story is public — visible to all.', { chatId });
+        // Push to everyone
+        const { data: allProfiles } = await supabaseAdmin.from('profiles').select('member_id').not('member_id', 'is', null);
+        const allEmails = (allProfiles || []).map((p: any) => (p.member_id || '').toLowerCase()).filter(Boolean);
+        sendStoryPush(allEmails).catch(() => {});
 
     } else if (action === 'tag_vault') {
         const today = new Date().toISOString().split('T')[0];
@@ -658,9 +661,11 @@ export async function POST(req: Request) {
             if (QUEEN_CHAT_ID && chatId !== QUEEN_CHAT_ID) {
                 return NextResponse.json({ ok: true }); // ignore non-Queen messages
             }
-            const fileId = msg.video?.file_id || msg.document?.file_id;
+            const videoFileId = msg.video?.file_id || msg.document?.file_id;
+            const photoFileId = msg.photo?.[msg.photo.length - 1]?.file_id;
+            const fileId = videoFileId || photoFileId;
             if (fileId) {
-                await handleVideoUpload(chatId, fileId, msg.caption || null);
+                await handleMediaUpload(chatId, fileId, msg.caption || null, !!photoFileId && !videoFileId);
             } else {
                 await handleMessage(chatId, msg.text || '');
             }

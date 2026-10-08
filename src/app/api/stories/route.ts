@@ -52,7 +52,7 @@ export async function GET(req: Request) {
         if (s.source === 'vault') return false;
         if (s.tier === 'paid' && !hasTributed) return false;
         const tagged: string[] = Array.isArray(s.tagged_members) ? s.tagged_members : [];
-        return tagged.length === 0 || (memberEmail && tagged.includes(memberEmail));
+        return tagged.length === 0 || (memberEmail && tagged.some((t: string) => t.toLowerCase() === memberEmail));
     });
 
     const count = visibleStories.length;
