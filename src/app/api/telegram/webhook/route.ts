@@ -87,6 +87,39 @@ async function sendStoryPush(emails: string[]) {
 
 async function handleMediaUpload(chatId: string, fileId: string, caption: string | null, isPhoto: boolean) {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+
+    // ── Dedup check: if this file_id is already in the DB, reuse the same row ──
+    const { data: existingStory } = await supabaseAdmin
+        .from('stories')
+        .select('id, source, media_url')
+        .eq('source_id', fileId)
+        .maybeSingle();
+
+    if (existingStory) {
+        // Reset it to vault state (untagged, no expiry) so we can re-assign it
+        await supabaseAdmin.from('stories').update({
+            archived: false,
+            source: 'vault',
+            expires_at: null,
+            tagged_members: [],
+            tier: 'free',
+            tribute_price: null,
+        }).eq('id', existingStory.id);
+
+        await setBotState('awaiting_story_tier', { isAll: false, taggedMembers: [], latestStoryId: existingStory.id });
+        await tgSend('♻️ This video is already in your archive. Reactivating — free or paid?', {
+            chatId,
+            replyMarkup: {
+                inline_keyboard: [[
+                    { text: '🌐 Free — all members', callback_data: 'story_tier:free' },
+                    { text: '💰 Paid — tribute required', callback_data: 'story_tier:paid' },
+                ]],
+            },
+        });
+        return;
+    }
+
+    // ── New video — upload and store ──
     await tgSend('⏳ Uploading...', { chatId });
 
     // Get file path from Telegram
@@ -121,43 +154,28 @@ async function handleMediaUpload(chatId: string, fileId: string, caption: string
 
     const { data: { publicUrl } } = supabaseAdmin.storage.from('media').getPublicUrl(storagePath);
 
-    // Find tagged member from caption
-    let taggedMembers: string[] = [];
-    if (caption) {
-        const tagged = await findMemberInText(caption);
-        if (tagged) taggedMembers = [tagged];
-    }
-
-    const isVault = caption?.trim().toLowerCase() === 'vault';
-    const isAll = caption?.trim().toLowerCase() === 'all' || caption?.trim().toLowerCase() === 'public';
-    const expiresAt = isVault ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    // Always store as vault first — tier/tag flow sets everything else
     const mediaType = isPhoto ? 'image' : 'video';
-
-    const { error: dbError } = await supabaseAdmin.from('stories').insert({
+    const { data: newStory, error: dbError } = await supabaseAdmin.from('stories').insert({
         date: today,
         media_url: publicUrl,
         media_type: mediaType,
         order_index: 0,
         caption: caption || '',
-        source: isVault ? 'vault' : 'tiktok',
+        source: 'vault',
         source_id: fileId,
-        tagged_members: isAll || isVault ? [] : taggedMembers,
-        expires_at: expiresAt,
+        tagged_members: [],
+        expires_at: null,
         tier: 'free',
-    });
+    }).select('id').single();
 
     if (dbError) {
         await tgSend(`❌ DB insert failed: ${escapeHtml(dbError.message)}`, { chatId });
         return;
     }
 
-    if (isVault) {
-        await tgSend('✓ Saved to vault.', { chatId });
-        return;
-    }
-
-    // Store upload context so the tier callback can continue the flow
-    await setBotState('awaiting_story_tier', { isAll, taggedMembers });
+    // Store story ID in state so all subsequent steps use the same row
+    await setBotState('awaiting_story_tier', { isAll: false, taggedMembers: [], latestStoryId: newStory.id });
 
     await tgSend('Uploaded! Free or paid?', {
         chatId,
@@ -168,7 +186,6 @@ async function handleMediaUpload(chatId: string, fileId: string, caption: string
             ]],
         },
     });
-
 }
 
 async function handleMessage(chatId: string, text: string) {
@@ -622,27 +639,15 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
 
     } else if (action === 'story_tier' && (value === 'free' || value === 'paid')) {
         const state = await getBotState();
-        const { isAll, taggedMembers } = state.data || {};
+        const { isAll, taggedMembers, latestStoryId } = state.data || {};
 
-        // Update the most recently inserted non-vault story today with the chosen tier
-        const today = new Date().toISOString().split('T')[0];
-        const { data: latestStory } = await supabaseAdmin
-            .from('stories')
-            .select('id')
-            .eq('date', today)
-            .neq('source', 'vault')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        if (latestStory) {
-            await supabaseAdmin.from('stories').update({ tier: value }).eq('id', latestStory.id);
+        if (latestStoryId) {
+            await supabaseAdmin.from('stories').update({ tier: value }).eq('id', latestStoryId);
         }
 
         await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
 
-        // Ask about tribute price — inline buttons same as tier selection
-        await setBotState('awaiting_story_tribute_yn', { isAll, taggedMembers, latestStoryId: latestStory?.id });
+        await setBotState('awaiting_story_tribute_yn', { isAll, taggedMembers, latestStoryId });
         await tgSend('Add a tribute price to this story?', {
             chatId,
             replyMarkup: {

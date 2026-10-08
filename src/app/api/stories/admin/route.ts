@@ -17,8 +17,18 @@ export async function GET(req: Request) {
         .order('created_at', { ascending: false });
 
     if (all) {
-        // ALL TIME: every single story ever posted, no filters — limit 500
-        query = query.limit(500);
+        // ALL TIME: every single story ever — deduplicate by source_id (same file = one entry)
+        const { data, error } = await query.limit(500);
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        // Keep only most-recent row per unique source_id (already ordered by created_at desc)
+        const seen = new Set<string>();
+        const deduped = (data || []).filter((s: any) => {
+            const key = s.source_id || s.id;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+        return NextResponse.json({ stories: deduped });
     } else {
         // ACTIVE: currently live stories only
         query = query.eq('archived', false).neq('source', 'vault').gt('expires_at', now);
