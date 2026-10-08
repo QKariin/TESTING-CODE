@@ -85,14 +85,14 @@ async function sendStoryPush(emails: string[]) {
     ));
 }
 
-async function handleMediaUpload(chatId: string, fileId: string, caption: string | null, isPhoto: boolean) {
+async function handleMediaUpload(chatId: string, fileId: string, fileUniqueId: string, caption: string | null, isPhoto: boolean) {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 
-    // ── Dedup check: if this file_id is already in the DB, reuse the same row ──
+    // ── Dedup check: file_unique_id is stable across re-sends of the same file ──
     const { data: existingStory } = await supabaseAdmin
         .from('stories')
         .select('id, source, media_url')
-        .eq('source_id', fileId)
+        .eq('source_id', fileUniqueId)
         .maybeSingle();
 
     if (existingStory) {
@@ -163,7 +163,7 @@ async function handleMediaUpload(chatId: string, fileId: string, caption: string
         order_index: 0,
         caption: caption || '',
         source: 'vault',
-        source_id: fileId,
+        source_id: fileUniqueId,  // stable across re-sends
         tagged_members: [],
         expires_at: null,
         tier: 'free',
@@ -682,8 +682,12 @@ export async function POST(req: Request) {
             const videoFileId = msg.video?.file_id || msg.document?.file_id;
             const photoFileId = msg.photo?.[msg.photo.length - 1]?.file_id;
             const fileId = videoFileId || photoFileId;
+            // file_unique_id is stable across re-sends; use it for dedup
+            const videoUniqueId = msg.video?.file_unique_id || msg.document?.file_unique_id;
+            const photoUniqueId = msg.photo?.[msg.photo.length - 1]?.file_unique_id;
+            const fileUniqueId = videoUniqueId || photoUniqueId;
             if (fileId) {
-                await handleMediaUpload(chatId, fileId, msg.caption || null, !!photoFileId && !videoFileId);
+                await handleMediaUpload(chatId, fileId, fileUniqueId || fileId, msg.caption || null, !!photoFileId && !videoFileId);
             } else {
                 await handleMessage(chatId, msg.text || '');
             }
