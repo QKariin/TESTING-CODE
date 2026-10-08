@@ -241,6 +241,24 @@ async function handleMessage(chatId: string, text: string) {
     }
 
     // Context-based replies
+    if (state.context === 'awaiting_story_cover_price') {
+        const { isAll, taggedMembers, latestStoryId } = state.data || {};
+        const price = parseInt(txt, 10);
+        if (!isNaN(price) && price > 0 && latestStoryId) {
+            await supabaseAdmin.from('stories').update({ tribute_price: price }).eq('id', latestStoryId);
+            await setBotState(null);
+            await tgSend(`✓ Tribute set: <b>${price.toLocaleString()} coins</b>`, { chatId });
+        } else {
+            await setBotState(null);
+            await tgSend('No tribute attached.', { chatId });
+        }
+        // Continue tag flow
+        if (!isAll && (!taggedMembers || taggedMembers.length === 0)) {
+            await sendTagMenu(chatId, false);
+        }
+        return;
+    }
+
     if (state.context === 'awaiting_tag') {
         await handleTag(chatId, txt);
         return;
@@ -591,18 +609,10 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         }
 
         await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
-        await setBotState(null);
 
-        // Continue tag flow
-        if (isAll) {
-            await tgSend('✓ Story is public — visible to all.', { chatId });
-        } else if (Array.isArray(taggedMembers) && taggedMembers.length > 0) {
-            const name = taggedMembers[0].split('@')[0];
-            await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b>.`, { chatId });
-        } else {
-            await tgSend(`✓ ${value === 'paid' ? 'Paid' : 'Free'} story uploaded. Who is it for?`, { chatId });
-            await sendTagMenu(chatId, false);
-        }
+        // Ask about tribute price before tag flow
+        await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId: latestStory?.id });
+        await tgSend('Attach a tribute to this story? Reply with coin amount (e.g. <b>500</b>) or /skip', { chatId });
     }
 }
 

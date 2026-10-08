@@ -394,6 +394,7 @@ export default function VaultPage() {
     const [storiesIdx, setStoriesIdx] = useState(0);
     const [videoProgress, setVideoProgress] = useState(0);
     const [storiesBuying, setStoriesBuying] = useState(false);
+    const [coverLoading, setCoverLoading] = useState(false);
     const [storiesViewedIds, setStoriesViewedIds] = useState<Set<string>>(() => {
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -4555,6 +4556,9 @@ export default function VaultPage() {
                                                 ? <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', background: 'linear-gradient(90deg,#fcaf45,#e1306c)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 2, fontWeight: 700 }}>FOR YOU</span>
                                                 : <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.45rem', color: 'rgba(255,255,255,0.3)', letterSpacing: 2 }}>PUBLIC</span>;
                                         })()}
+                                        {storiesData[storiesIdx]?.hours_left != null && (
+                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.34rem', color: 'rgba(255,255,255,0.35)', letterSpacing: 1 }}>· {storiesData[storiesIdx].hours_left}h left</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -4588,8 +4592,40 @@ export default function VaultPage() {
                         </div>
                         {/* Caption */}
                         {storiesData[storiesIdx]?.caption && (
-                            <div style={{ position: 'absolute', bottom: 90, left: 0, right: 0, padding: '0 18px', zIndex: 3 }}>
+                            <div style={{ position: 'absolute', bottom: storiesData[storiesIdx]?.tribute_price && !storiesData[storiesIdx]?.covered ? 140 : 90, left: 0, right: 0, padding: '0 18px', zIndex: 3 }}>
                                 <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', borderRadius: 8, padding: '10px 14px', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.9rem', color: '#fff', lineHeight: 1.4 }}>{storiesData[storiesIdx].caption}</div>
+                            </div>
+                        )}
+                        {/* COVER IT sticker */}
+                        {storiesData[storiesIdx]?.tribute_price > 0 && !storiesData[storiesIdx]?.covered && (
+                            <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 4 }}>
+                                <button
+                                    disabled={coverLoading}
+                                    onClick={async e => {
+                                        e.stopPropagation();
+                                        setCoverLoading(true);
+                                        try {
+                                            const res = await fetch('/api/stories/cover', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ storyId: storiesData[storiesIdx].id }) });
+                                            const json = await res.json();
+                                            if (res.ok) {
+                                                setStoriesData(prev => prev.map((s: any, i: number) => i === storiesIdx ? { ...s, covered: true } : s));
+                                            } else {
+                                                alert(json.error === 'INSUFFICIENT_FUNDS' ? `Not enough coins. You have ${(json.wallet || 0).toLocaleString()}.` : json.error || 'Error');
+                                            }
+                                        } finally {
+                                            setCoverLoading(false);
+                                        }
+                                    }}
+                                    style={{ background: 'linear-gradient(135deg,#c5a059,#a07840)', border: 'none', color: '#000', padding: '14px 44px', borderRadius: 32, fontFamily: "'Orbitron', sans-serif", fontSize: '0.55rem', letterSpacing: 3, cursor: coverLoading ? 'wait' : 'pointer', fontWeight: 700, boxShadow: '0 4px 24px rgba(197,160,89,0.5)', opacity: coverLoading ? 0.7 : 1 }}
+                                >
+                                    {coverLoading ? '...' : `COVER IT — ${storiesData[storiesIdx].tribute_price.toLocaleString()} coins`}
+                                </button>
+                            </div>
+                        )}
+                        {/* Covered badge */}
+                        {storiesData[storiesIdx]?.covered && (
+                            <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 4 }}>
+                                <div style={{ background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', padding: '10px 28px', borderRadius: 32, fontFamily: "'Orbitron', sans-serif", fontSize: '0.5rem', letterSpacing: 3 }}>COVERED ✓</div>
                             </div>
                         )}
                         {/* Chat button */}

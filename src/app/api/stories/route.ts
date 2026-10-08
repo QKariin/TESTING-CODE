@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     // near midnight stay visible for their full 24h window.
     const { data: allStories } = await supabaseAdmin
         .from('stories')
-        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, tier')
+        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, tier, tribute_price, covered_members')
         .eq('archived', false)
         .neq('source', 'vault')
         .gt('expires_at', now)
@@ -67,8 +67,12 @@ export async function GET(req: Request) {
     // story_access table is kept for Wishlist gate items (optional premium flow).
     const hasAccess = !!memberEmail;
 
-    // Strip internal fields before returning
-    const safeStories = visibleStories.map(({ expires_at, created_at, ...s }: any) => s);
+    // Strip internal fields, add hours_left + covered flag
+    const safeStories = visibleStories.map(({ expires_at, created_at, covered_members, ...s }: any) => ({
+        ...s,
+        hours_left: expires_at ? Math.max(0, Math.round((new Date(expires_at).getTime() - Date.now()) / 3600000)) : null,
+        covered: memberEmail ? ((covered_members || []) as string[]).includes(memberEmail) : false,
+    }));
 
     return NextResponse.json({
         available: count > 0,
