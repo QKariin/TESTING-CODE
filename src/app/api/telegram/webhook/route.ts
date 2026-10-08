@@ -596,6 +596,20 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             await tgSend('✓ Story deleted.', { chatId });
         }
 
+    } else if (action === 'story_tribute') {
+        const state = await getBotState();
+        const { isAll, taggedMembers, latestStoryId } = state.data || {};
+        await tgAnswer(callbackQueryId);
+        if (value === 'yes') {
+            await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId });
+            await tgSend('How much? Reply with the coin amount (e.g. <b>500</b>)', { chatId });
+        } else {
+            await setBotState(null);
+            if (!isAll && (!taggedMembers || taggedMembers.length === 0)) {
+                await sendTagMenu(chatId, false);
+            }
+        }
+
     } else if (action === 'skip') {
         await setBotState(null);
         await tgAnswer(callbackQueryId, 'Skipped.');
@@ -621,9 +635,17 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
 
         await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
 
-        // Ask about tribute price before tag flow
-        await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId: latestStory?.id });
-        await tgSend('Attach a tribute to this story? Reply with coin amount (e.g. <b>500</b>) or /skip', { chatId });
+        // Ask about tribute price — inline buttons same as tier selection
+        await setBotState('awaiting_story_tribute_yn', { isAll, taggedMembers, latestStoryId: latestStory?.id });
+        await tgSend('Add a tribute price to this story?', {
+            chatId,
+            replyMarkup: {
+                inline_keyboard: [[
+                    { text: '💰 Yes, set price', callback_data: 'story_tribute:yes' },
+                    { text: '➡️ Skip', callback_data: 'story_tribute:skip' },
+                ]],
+            },
+        });
     }
 }
 
