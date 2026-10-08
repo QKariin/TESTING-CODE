@@ -796,10 +796,13 @@ export default function DashboardPage() {
     const [storiesAssigning, setStoriesAssigning] = useState(false);
     const [draggingVaultId, setDraggingVaultId] = useState<string | null>(null);
     const [dropTarget, setDropTarget] = useState<string | null>(null);
-    const [vaultStoriesData, setVaultStoriesData] = useState<any[]>([]);
-    const [vaultStoriesLoading, setVaultStoriesLoading] = useState(false);
+    const [allTimeStoriesData, setAllTimeStoriesData] = useState<any[]>([]);
+    const [allTimeStoriesLoading, setAllTimeStoriesLoading] = useState(false);
     const [draggingTodayId, setDraggingTodayId] = useState<string | null>(null);
     const [storyPriceEdit, setStoryPriceEdit] = useState<{ id: string; value: string; source: 'today' | 'vault' } | null>(null);
+    const [pendingAssign, setPendingAssign] = useState<{ storyId: string; target: string; isAllTime: boolean } | null>(null);
+    const [pendingAssignPrice, setPendingAssignPrice] = useState('');
+    const [pendingAssignPaid, setPendingAssignPaid] = useState<boolean | null>(null);
 
     useEffect(() => {
         if (!showPaymentLogs) return;
@@ -827,11 +830,11 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (!showStoriesMgmt) return;
-        setVaultStoriesLoading(true);
-        fetch('/api/stories/admin?vault=true')
+        setAllTimeStoriesLoading(true);
+        fetch('/api/stories/admin?all=true')
             .then(r => r.json())
-            .then(d => { setVaultStoriesData(d.stories || []); setVaultStoriesLoading(false); })
-            .catch(() => setVaultStoriesLoading(false));
+            .then(d => { setAllTimeStoriesData(d.stories || []); setAllTimeStoriesLoading(false); })
+            .catch(() => setAllTimeStoriesLoading(false));
     }, [showStoriesMgmt]);
 
     const [keyholderMember, setKeyholderMember] = useState('');
@@ -1661,7 +1664,7 @@ export default function DashboardPage() {
                 {/* STORIES MANAGEMENT PANEL */}
                 {showStoriesMgmt && !isMobile && (() => {
                     const now24 = Date.now() - 24 * 3600 * 1000;
-                    const vaultStories = vaultStoriesData;
+                    const allTimeStories = allTimeStoriesData;
                     const activeStories = storiesMgmtData;
 
                     // Members active in last 24h, sorted by most recent first
@@ -1685,63 +1688,67 @@ export default function DashboardPage() {
                         storyMap[key].push(s);
                     });
 
-                    // Helper: assign vault story to target (activates with 24h expiry)
-                    const assignVault = async (storyId: string, target: 'everyone' | string) => {
+                    // Helper: actually perform assign after modal confirmation
+                    const doAssign = async (storyId: string, target: string, isAllTime: boolean, paid: boolean, price: string) => {
                         setStoriesAssigning(true);
+                        const tagged = target === '__public__' ? [] : [target];
                         const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-                        const body = target === 'everyone'
-                            ? { id: storyId, source: 'manual', tagged_members: [], expires_at: expires }
-                            : { id: storyId, source: 'manual', tagged_members: [target], expires_at: expires };
+                        const p = paid ? parseFloat(price) : null;
+                        const body: Record<string, any> = {
+                            id: storyId,
+                            tagged_members: tagged,
+                            tier: paid && p && p > 0 ? 'paid' : 'free',
+                            tribute_price: paid && p && p > 0 ? p : null,
+                        };
+                        if (isAllTime) {
+                            // Activating from archive — set source + expiry + unarchive
+                            body.source = 'manual';
+                            body.expires_at = expires;
+                            body.archived = false;
+                        }
                         await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                        // Move from vault to active
-                        setVaultStoriesData(prev => prev.filter((x: any) => x.id !== storyId));
-                        setStoriesMgmtData(prev => {
-                            const existing = prev.find((x: any) => x.id === storyId);
-                            if (existing) return prev.map((x: any) => x.id === storyId ? { ...x, ...body } : x);
-                            const vStory = vaultStoriesData.find((x: any) => x.id === storyId);
-                            return vStory ? [...prev, { ...vStory, ...body }] : prev;
-                        });
-                        setVaultSelected(null);
-                        setDraggingVaultId(null);
-                        setDropTarget(null);
+                        if (isAllTime) {
+                            // Move from all-time to active
+                            setAllTimeStoriesData(prev => prev.filter((x: any) => x.id !== storyId));
+                            const srcStory = allTimeStoriesData.find((x: any) => x.id === storyId);
+                            if (srcStory) setStoriesMgmtData(prev => [...prev, { ...srcStory, ...body }]);
+                        } else {
+                            setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, ...body } : x));
+                        }
+                        setPendingAssign(null); setPendingAssignPrice(''); setPendingAssignPaid(null);
+                        setVaultSelected(null); setDraggingVaultId(null); setDraggingTodayId(null); setDropTarget(null);
                         setStoriesAssigning(false);
                     };
 
-                    // Helper: reassign an active story to a different member/everyone
-                    const assignStory = async (storyId: string, target: 'everyone' | string) => {
-                        setStoriesAssigning(true);
-                        const tagged = target === 'everyone' ? [] : [target];
-                        await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: storyId, tagged_members: tagged }) });
-                        setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tagged_members: tagged } : x));
-                        setDraggingTodayId(null);
-                        setDropTarget(null);
-                        setStoriesAssigning(false);
-                    };
-
-                    // Helper: set tribute price on a story
-                    const setStoryPrice = async (storyId: string, price: string, isVault: boolean) => {
+                    // Helper: set tribute price on a story thumbnail
+                    const setStoryPrice = async (storyId: string, price: string, isAllTime: boolean) => {
                         const p = parseFloat(price);
                         const body = isNaN(p) || p <= 0
                             ? { id: storyId, tier: 'free', tribute_price: null }
                             : { id: storyId, tier: 'paid', tribute_price: p };
                         await fetch('/api/stories/admin', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-                        if (isVault) {
-                            setVaultStoriesData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tier: body.tier, tribute_price: body.tribute_price } : x));
+                        if (isAllTime) {
+                            setAllTimeStoriesData(prev => prev.map((x: any) => x.id === storyId ? { ...x, ...body } : x));
                         } else {
-                            setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, tier: body.tier, tribute_price: body.tribute_price } : x));
+                            setStoriesMgmtData(prev => prev.map((x: any) => x.id === storyId ? { ...x, ...body } : x));
                         }
                         setStoryPriceEdit(null);
                     };
 
-                    // Drag handlers
+                    // Drag handlers — drop opens the assign modal
                     const onVaultDragStart = (storyId: string) => { setDraggingVaultId(storyId); setVaultSelected(storyId); setDraggingTodayId(null); };
                     const onTodayDragStart = (storyId: string) => { setDraggingTodayId(storyId); setDraggingVaultId(null); setVaultSelected(null); };
                     const onDragOver = (e: React.DragEvent, key: string) => { e.preventDefault(); setDropTarget(key); };
                     const onDragLeave = () => setDropTarget(null);
-                    const onDrop = async (e: React.DragEvent, key: string) => {
+                    const onDrop = (e: React.DragEvent, key: string) => {
                         e.preventDefault(); setDropTarget(null);
-                        if (draggingVaultId) { await assignVault(draggingVaultId, key === '__public__' ? 'everyone' : key); return; }
-                        if (draggingTodayId) { await assignStory(draggingTodayId, key === '__public__' ? 'everyone' : key); return; }
+                        const sid = draggingVaultId || draggingTodayId;
+                        const isAllTime = !!draggingVaultId;
+                        if (!sid) return;
+                        setDraggingVaultId(null); setDraggingTodayId(null);
+                        // Open assign modal
+                        setPendingAssign({ storyId: sid, target: key, isAllTime });
+                        setPendingAssignPaid(null); setPendingAssignPrice('');
                     };
 
                     // Draggable story thumbnail (used in both strips)
@@ -1832,48 +1839,36 @@ export default function DashboardPage() {
                     // Member card (drop target)
                     const MemberCard = ({ cardKey, label, cardStories, isPublic }: { cardKey: string; label: string; cardStories: any[]; isPublic?: boolean }) => {
                         const isDrop = dropTarget === cardKey;
-                        const isSelected = (vaultSelected || draggingVaultId || draggingTodayId) && !storiesAssigning;
+                        const isDragging = (vaultSelected || draggingVaultId || draggingTodayId) && !storiesAssigning;
                         return (
                             <div
                                 onClick={() => {
                                     if (storiesAssigning) return;
-                                    if (vaultSelected) { assignVault(vaultSelected, isPublic ? 'everyone' : cardKey); return; }
                                     if (cardStories.length > 0) setStoriesMgmtExpanded(cardKey);
                                 }}
                                 onDragOver={e => onDragOver(e, cardKey)}
                                 onDragLeave={onDragLeave}
                                 onDrop={e => onDrop(e, cardKey)}
                                 style={{
-                                    background: isDrop ? 'rgba(197,160,89,0.08)' : isSelected ? 'rgba(225,48,108,0.04)' : 'rgba(255,255,255,0.02)',
-                                    border: `1px solid ${isDrop ? '#c5a059' : isSelected ? 'rgba(225,48,108,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                                    background: isDrop ? 'rgba(197,160,89,0.08)' : isDragging ? 'rgba(225,48,108,0.04)' : 'rgba(255,255,255,0.02)',
+                                    border: `1px solid ${isDrop ? '#c5a059' : isDragging ? 'rgba(225,48,108,0.4)' : 'rgba(255,255,255,0.07)'}`,
                                     borderRadius: 10, padding: '14px 16px',
-                                    cursor: isSelected ? 'copy' : cardStories.length > 0 ? 'pointer' : 'default',
+                                    cursor: isDragging ? 'copy' : cardStories.length > 0 ? 'pointer' : 'default',
                                     transition: 'border-color 0.15s, background 0.15s',
                                     outline: isDrop ? '2px solid rgba(197,160,89,0.4)' : 'none',
+                                    minHeight: 64,
+                                    display: 'flex', alignItems: 'center',
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: cardStories.length > 0 ? 10 : 0 }}>
-                                    <div>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', fontWeight: 600, color: isPublic ? '#aaa' : '#e1306c', letterSpacing: '2px' }}>
-                                            {isPublic ? '🌍 ' : ''}{label}
-                                        </div>
-                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>
-                                            {cardStories.length > 0 ? `${cardStories.length} ${cardStories.length === 1 ? 'video' : 'videos'}` : isSelected ? 'DROP HERE' : 'no stories yet'}
-                                        </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.5rem', fontWeight: 600, color: isPublic ? '#aaa' : '#e1306c', letterSpacing: '2px' }}>
+                                        {isPublic ? '🌍 ' : ''}{label}
                                     </div>
-                                    {cardStories.length > 0 && !isSelected && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '2px' }}>VIEW →</div>}
-                                    {isSelected && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: '#c5a059', letterSpacing: '2px' }}>ASSIGN ↓</div>}
+                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: isDrop ? '#c5a059' : isDragging ? 'rgba(225,48,108,0.6)' : 'rgba(255,255,255,0.2)', marginTop: 2 }}>
+                                        {isDrop ? 'DROP HERE ↓' : isDragging ? 'ASSIGN HERE' : cardStories.length > 0 ? `${cardStories.length} active ${cardStories.length === 1 ? 'story' : 'stories'}` : 'no active stories'}
+                                    </div>
                                 </div>
-                                {cardStories.length > 0 && (
-                                    <div style={{ display: 'flex', gap: 6 }}>
-                                        {cardStories.slice(0, 5).map((s: any) => (
-                                            <div key={s.id} style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#000', flexShrink: 0 }}>
-                                                {s.media_type === 'video' ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} /> : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />}
-                                            </div>
-                                        ))}
-                                        {cardStories.length > 5 && <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.3)' }}>+{cardStories.length - 5}</div>}
-                                    </div>
-                                )}
+                                {cardStories.length > 0 && !isDragging && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(255,255,255,0.18)', letterSpacing: '2px', flexShrink: 0 }}>VIEW →</div>}
                             </div>
                         );
                     };
@@ -1911,30 +1906,72 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
 
-                                    {/* ── ALL VIDEOS OF ALL TIME (VAULT) ── */}
+                                    {/* ── ALL VIDEOS OF ALL TIME ── */}
                                     <div style={{ marginBottom: 20, border: '1px solid rgba(197,160,89,0.2)', borderRadius: 12, background: 'rgba(197,160,89,0.02)', overflow: 'hidden' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid rgba(197,160,89,0.1)' }}>
                                             <div>
                                                 <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.4rem', color: '#c5a059', letterSpacing: '3px' }}>ALL VIDEOS OF ALL TIME</div>
                                                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.33rem', color: 'rgba(197,160,89,0.4)', letterSpacing: '2px', marginTop: 1 }}>
-                                                    {vaultSelected ? 'SELECTED — DRAG ONTO A CARD OR CLICK A CARD TO ASSIGN' : vaultStoriesLoading ? 'LOADING VAULT...' : vaultStories.length === 0 ? 'VAULT EMPTY' : `${vaultStories.length} IN VAULT · DRAG TO ACTIVATE · 💰 TO MAKE PAID`}
+                                                    {vaultSelected ? 'SELECTED — DRAG ONTO A CARD TO ACTIVATE' : allTimeStoriesLoading ? 'LOADING...' : allTimeStories.length === 0 ? 'NO ARCHIVED STORIES' : `${allTimeStories.length} TOTAL · DRAG TO ACTIVATE FOR MEMBER · 💰 TO PRICE`}
                                                 </div>
                                             </div>
                                             {vaultSelected && <button onClick={() => { setVaultSelected(null); setDraggingVaultId(null); }} style={{ background: 'transparent', border: 'none', color: 'rgba(197,160,89,0.5)', cursor: 'pointer', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.36rem', letterSpacing: '2px' }}>✕ CANCEL</button>}
                                         </div>
                                         <div style={{ display: 'flex', gap: 12, padding: '14px 20px', overflowX: 'auto', minHeight: 60 }}>
-                                            {vaultStoriesLoading && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>LOADING...</div>}
-                                            {!vaultStoriesLoading && vaultStories.length === 0 && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>—</div>}
-                                            {vaultStories.map((s: any) => <StoryThumb key={s.id} s={s} isVault={true} />)}
-                                            {/* Delete button for selected vault story */}
+                                            {allTimeStoriesLoading && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>LOADING...</div>}
+                                            {!allTimeStoriesLoading && allTimeStories.length === 0 && <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.75rem', color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>—</div>}
+                                            {allTimeStories.map((s: any) => <StoryThumb key={s.id} s={s} isVault={true} />)}
                                             {vaultSelected && (
                                                 <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, marginLeft: 8 }}>
-                                                    <button disabled={storiesAssigning} onClick={async () => { if (!confirm('Delete from vault?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setVaultStoriesData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑</button>
+                                                    <button disabled={storiesAssigning} onClick={async () => { if (!confirm('Delete this story permanently?')) return; await fetch(`/api/stories/admin?id=${vaultSelected}`, { method: 'DELETE' }); setAllTimeStoriesData(prev => prev.filter((x: any) => x.id !== vaultSelected)); setVaultSelected(null); }} style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(224,48,48,0.06)', border: '1px solid rgba(224,48,48,0.2)', color: '#e03030', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🗑</button>
                                                     <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: 'rgba(224,48,48,0.4)', letterSpacing: '1px' }}>DELETE</div>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* ── PENDING ASSIGN MODAL ── */}
+                                    {pendingAssign && (
+                                        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={e => { if (e.target === e.currentTarget) { setPendingAssign(null); setPendingAssignPaid(null); setPendingAssignPrice(''); } }}>
+                                            <div style={{ background: '#0e0e18', border: '1px solid rgba(197,160,89,0.25)', borderRadius: 14, padding: '28px 32px', width: 320, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                                                <div>
+                                                    <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.45rem', color: '#c5a059', letterSpacing: '3px', marginBottom: 4 }}>ASSIGN STORY</div>
+                                                    <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.38rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '1px' }}>
+                                                        → {pendingAssign.target === '__public__' ? 'EVERYONE' : pendingAssign.target.split('@')[0].toUpperCase()}
+                                                    </div>
+                                                </div>
+                                                {pendingAssignPaid === null ? (
+                                                    <>
+                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>MAKE IT PAID?</div>
+                                                        <div style={{ display: 'flex', gap: 10 }}>
+                                                            <button onClick={() => setPendingAssignPaid(true)} style={{ flex: 1, background: 'rgba(197,160,89,0.1)', border: '1px solid rgba(197,160,89,0.4)', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>💰 YES, SET PRICE</button>
+                                                            <button onClick={() => doAssign(pendingAssign.storyId, pendingAssign.target, pendingAssign.isAllTime, false, '')} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>➡ FREE</button>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.42rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '2px' }}>SET TRIBUTE PRICE</div>
+                                                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                                            <span style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', color: '#c5a059' }}>€</span>
+                                                            <input
+                                                                autoFocus
+                                                                type="number" min="0" step="0.01" placeholder="0.00"
+                                                                value={pendingAssignPrice}
+                                                                onChange={e => setPendingAssignPrice(e.target.value)}
+                                                                onKeyDown={e => { if (e.key === 'Enter') doAssign(pendingAssign.storyId, pendingAssign.target, pendingAssign.isAllTime, true, pendingAssignPrice); }}
+                                                                style={{ flex: 1, background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.35)', color: '#fff', fontFamily: "'Rajdhani', sans-serif", fontSize: '1rem', padding: '8px 12px', borderRadius: 8, outline: 'none' }}
+                                                            />
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: 10 }}>
+                                                            <button onClick={() => doAssign(pendingAssign.storyId, pendingAssign.target, pendingAssign.isAllTime, true, pendingAssignPrice)} style={{ flex: 1, background: 'rgba(197,160,89,0.15)', border: '1px solid rgba(197,160,89,0.5)', color: '#c5a059', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>CONFIRM</button>
+                                                            <button onClick={() => setPendingAssignPaid(null)} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', fontFamily: "'Rajdhani', sans-serif", fontSize: '0.85rem', letterSpacing: '2px', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>BACK</button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* ── MEMBER CARDS (expanded view or grid) ── */}
                                     {storiesMgmtExpanded !== null ? (() => {

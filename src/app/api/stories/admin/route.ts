@@ -3,25 +3,25 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/stories/admin?date=YYYY-MM-DD
-// Returns all non-archived, currently active stories (uses expires_at so cross-midnight stories show)
-// GET /api/stories/admin?vault=true
-// Returns all non-archived vault stories (no expiry gate)
+// GET /api/stories/admin — currently active stories
+// GET /api/stories/admin?all=true — ALL stories ever (expired, archived, vault) for the archive strip
 export async function GET(req: Request) {
     const url = new URL(req.url);
-    const vault = url.searchParams.get('vault') === 'true';
+    const all = url.searchParams.get('all') === 'true';
     const now = new Date().toISOString();
 
     let query = supabaseAdmin
         .from('stories')
-        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, source_id, date, tier, tribute_price')
-        .eq('archived', false)
+        .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, source_id, date, tier, tribute_price, archived')
         .order('created_at', { ascending: false });
 
-    if (vault) {
-        query = query.eq('source', 'vault');
+    if (all) {
+        // ALL TIME: every story that is not currently active in the live feed
+        // (archived, expired, or stored as vault)
+        query = query.or(`archived.eq.true,source.eq.vault,expires_at.lt.${now}`);
     } else {
-        query = query.neq('source', 'vault').gt('expires_at', now);
+        // ACTIVE: currently live stories only
+        query = query.eq('archived', false).neq('source', 'vault').gt('expires_at', now);
     }
 
     const { data, error } = await query;
