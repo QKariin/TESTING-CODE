@@ -4,17 +4,17 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 // GET /api/stories/admin?date=YYYY-MM-DD
-// Returns all non-archived stories for the given date (no member filtering)
+// Returns all non-archived, currently active stories (uses expires_at so cross-midnight stories show)
 export async function GET(req: Request) {
-    const url = new URL(req.url);
-    const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString();
 
     const { data, error } = await supabaseAdmin
         .from('stories')
         .select('id, media_url, media_type, order_index, caption, tagged_members, expires_at, created_at, source, source_id, date')
-        .eq('date', date)
         .eq('archived', false)
-        .order('order_index', { ascending: true });
+        .neq('source', 'vault')
+        .gt('expires_at', now)
+        .order('created_at', { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ stories: data || [] });

@@ -564,6 +564,19 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await tgSend('Type a name or @nickname:', { chatId });
 
     } else if (action === 'tag_all') {
+        // Clear tagged_members on all active non-vault stories so they become truly public
+        const now = new Date().toISOString();
+        const { data: activeStories } = await supabaseAdmin
+            .from('stories')
+            .select('id')
+            .eq('archived', false)
+            .neq('source', 'vault')
+            .gt('expires_at', now);
+        if (activeStories && activeStories.length > 0) {
+            for (const s of activeStories) {
+                await supabaseAdmin.from('stories').update({ tagged_members: [] }).eq('id', s.id);
+            }
+        }
         await tgAnswer(callbackQueryId, 'Set to public');
         await tgSend('✓ Story is public — visible to all.', { chatId });
         // Push to everyone
