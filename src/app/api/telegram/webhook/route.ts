@@ -133,28 +133,33 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
-    // Fire push notification immediately — don't wait for tier selection
-    const ONESIGNAL_APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-    const ONESIGNAL_API_KEY = process.env.ONESIGNAL_REST_API_KEY || '';
-    try {
-        const pushRes = await fetch('https://api.onesignal.com/notifications', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Basic ${ONESIGNAL_API_KEY}` },
-            body: JSON.stringify({
-                app_id: ONESIGNAL_APP_ID,
-                target_channel: 'push',
-                included_segments: ['Subscribed Users'],
-                headings: { en: 'Queen Karin' },
-                contents: { en: '✨ New story available' },
-                url: 'https://throne.qkarin.com/profile',
-            }),
-        });
-        if (!pushRes.ok) {
-            const pushErr = await pushRes.text();
-            console.error('[story push] OneSignal error:', pushRes.status, pushErr);
-        }
-    } catch (e) {
-        console.error('[story push] fetch failed:', e);
+    // Fire push notification to all members — same pattern as kneeling notification
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    if (apiKey) {
+        try {
+            const { data: memberProfiles } = await supabaseAdmin
+                .from('profiles')
+                .select('member_id')
+                .not('member_id', 'is', null);
+            const emails = (memberProfiles || [])
+                .map((p: any) => (p.member_id || '').toLowerCase())
+                .filter(Boolean);
+            if (emails.length > 0) {
+                fetch('https://api.onesignal.com/notifications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                    body: JSON.stringify({
+                        app_id: appId,
+                        target_channel: 'push',
+                        include_aliases: { external_id: emails },
+                        headings: { en: 'Queen Karin' },
+                        contents: { en: '✨ New story available' },
+                        url: 'https://throne.qkarin.com/profile',
+                    }),
+                }).catch(() => {});
+            }
+        } catch (_) {}
     }
 
     // Store upload context so the tier callback can continue the flow
