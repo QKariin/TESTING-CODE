@@ -621,18 +621,6 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             await tgSend('✓ Story deleted.', { chatId });
         }
 
-    } else if (action === 'story_tribute') {
-        const state = await getBotState();
-        const { isAll, taggedMembers, latestStoryId } = state.data || {};
-        await tgAnswer(callbackQueryId);
-        if (value === 'yes') {
-            await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId });
-            await tgSend('How much? Reply with the coin amount (e.g. <b>500</b>)', { chatId });
-        } else {
-            await setBotState(null);
-            await sendTagMenu(chatId, false);
-        }
-
     } else if (action === 'skip') {
         await setBotState(null);
         await tgAnswer(callbackQueryId, 'Skipped.');
@@ -641,22 +629,46 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         const state = await getBotState();
         const { isAll, taggedMembers, latestStoryId } = state.data || {};
 
-        if (latestStoryId) {
-            await supabaseAdmin.from('stories').update({ tier: value }).eq('id', latestStoryId);
+        await tgAnswer(callbackQueryId, value === 'paid' ? 'Paid' : 'Free');
+
+        if (value === 'free') {
+            if (latestStoryId) {
+                await supabaseAdmin.from('stories').update({ tier: 'free', tribute_price: null }).eq('id', latestStoryId);
+            }
+            await setBotState(null);
+            await sendTagMenu(chatId, false);
+        } else {
+            // Paid — ask membership vs pay-per-view
+            if (latestStoryId) {
+                await supabaseAdmin.from('stories').update({ tier: 'paid' }).eq('id', latestStoryId);
+            }
+            await setBotState('awaiting_story_paid_type', { isAll, taggedMembers, latestStoryId });
+            await tgSend('How does access work?', {
+                chatId,
+                replyMarkup: {
+                    inline_keyboard: [[
+                        { text: '👑 Membership — paying members see it free', callback_data: 'story_paid_type:membership' },
+                    ], [
+                        { text: '💳 Pay-per-view — everyone pays a price', callback_data: 'story_paid_type:ppv' },
+                    ]],
+                },
+            });
         }
 
-        await tgAnswer(callbackQueryId, value === 'paid' ? 'Set to paid' : 'Set to free');
+    } else if (action === 'story_paid_type') {
+        const state = await getBotState();
+        const { isAll, taggedMembers, latestStoryId } = state.data || {};
+        await tgAnswer(callbackQueryId);
 
-        await setBotState('awaiting_story_tribute_yn', { isAll, taggedMembers, latestStoryId });
-        await tgSend('Add a tribute price to this story?', {
-            chatId,
-            replyMarkup: {
-                inline_keyboard: [[
-                    { text: '💰 Yes, set price', callback_data: 'story_tribute:yes' },
-                    { text: '➡️ Skip', callback_data: 'story_tribute:skip' },
-                ]],
-            },
-        });
+        if (value === 'membership') {
+            // No price needed — membership gate handled by hasTributed check
+            await setBotState(null);
+            await sendTagMenu(chatId, false);
+        } else {
+            // PPV — ask for price
+            await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId });
+            await tgSend('Enter the price (e.g. <b>9.99</b>):', { chatId });
+        }
     }
 }
 
