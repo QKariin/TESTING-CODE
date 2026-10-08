@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // GET /api/stories/admin — currently active stories
 // GET /api/stories/admin?all=true — ALL stories ever (expired, archived, vault) for the archive strip
