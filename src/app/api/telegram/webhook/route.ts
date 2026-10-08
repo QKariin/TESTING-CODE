@@ -133,35 +133,6 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         return;
     }
 
-    // Fire push notification to all members — same pattern as kneeling notification
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
-    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
-    if (apiKey) {
-        try {
-            const { data: memberProfiles } = await supabaseAdmin
-                .from('profiles')
-                .select('member_id')
-                .not('member_id', 'is', null);
-            const emails = (memberProfiles || [])
-                .map((p: any) => (p.member_id || '').toLowerCase())
-                .filter(Boolean);
-            if (emails.length > 0) {
-                fetch('https://api.onesignal.com/notifications', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
-                    body: JSON.stringify({
-                        app_id: appId,
-                        target_channel: 'push',
-                        include_aliases: { external_id: emails },
-                        headings: { en: 'Queen Karin' },
-                        contents: { en: '✨ New story available' },
-                        url: 'https://throne.qkarin.com/profile',
-                    }),
-                }).catch(() => {});
-            }
-        } catch (_) {}
-    }
-
     // Store upload context so the tier callback can continue the flow
     await setBotState('awaiting_story_tier', { isAll, taggedMembers });
 
@@ -174,6 +145,33 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
             ]],
         },
     });
+
+    // Push notification AFTER bot responds — await so Vercel doesn't kill it early
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
+    const apiKey = process.env.ONESIGNAL_REST_API_KEY;
+    if (apiKey) {
+        const { data: memberProfiles } = await supabaseAdmin
+            .from('profiles')
+            .select('member_id')
+            .not('member_id', 'is', null);
+        const emails = (memberProfiles || [])
+            .map((p: any) => (p.member_id || '').toLowerCase())
+            .filter(Boolean);
+        if (emails.length > 0) {
+            await fetch('https://api.onesignal.com/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
+                body: JSON.stringify({
+                    app_id: appId,
+                    target_channel: 'push',
+                    include_aliases: { external_id: emails },
+                    headings: { en: 'Queen Karin' },
+                    contents: { en: '✨ New story available' },
+                    url: 'https://throne.qkarin.com/profile',
+                }),
+            }).catch(() => {});
+        }
+    }
 }
 
 async function handleMessage(chatId: string, text: string) {
