@@ -146,7 +146,7 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         },
     });
 
-    // Push notification AFTER bot responds — await so Vercel doesn't kill it early
+    // Push notification — one per member, EXACTLY like kneeling notification (which works)
     const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || '761d91da-b098-44a7-8d98-75c1cce54dd0';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY;
     if (apiKey) {
@@ -157,20 +157,20 @@ async function handleVideoUpload(chatId: string, fileId: string, caption: string
         const emails = (memberProfiles || [])
             .map((p: any) => (p.member_id || '').toLowerCase())
             .filter(Boolean);
-        if (emails.length > 0) {
-            await fetch('https://api.onesignal.com/notifications', {
+        await Promise.all(emails.map(email =>
+            fetch('https://api.onesignal.com/notifications', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${apiKey}` },
                 body: JSON.stringify({
                     app_id: appId,
                     target_channel: 'push',
-                    include_aliases: { external_id: emails },
+                    include_aliases: { external_id: [email] },
                     headings: { en: 'Queen Karin' },
                     contents: { en: '✨ New story available' },
                     url: 'https://throne.qkarin.com/profile',
                 }),
-            }).catch(() => {});
-        }
+            }).catch(() => {})
+        ));
     }
 }
 
@@ -251,20 +251,14 @@ async function handleMessage(chatId: string, text: string) {
 
     // Context-based replies
     if (state.context === 'awaiting_story_cover_price') {
-        const { isAll, taggedMembers, latestStoryId } = state.data || {};
+        const { latestStoryId } = state.data || {};
         const price = parseInt(txt, 10);
         if (!isNaN(price) && price > 0 && latestStoryId) {
             await supabaseAdmin.from('stories').update({ tribute_price: price }).eq('id', latestStoryId);
-            await setBotState(null);
             await tgSend(`✓ Tribute set: <b>${price.toLocaleString()} coins</b>`, { chatId });
-        } else {
-            await setBotState(null);
-            await tgSend('No tribute attached.', { chatId });
         }
-        // Continue tag flow
-        if (!isAll && (!taggedMembers || taggedMembers.length === 0)) {
-            await sendTagMenu(chatId, false);
-        }
+        await setBotState(null);
+        await sendTagMenu(chatId, false);
         return;
     }
 
@@ -603,9 +597,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             await tgSend('How much? Reply with the coin amount (e.g. <b>500</b>)', { chatId });
         } else {
             await setBotState(null);
-            if (!isAll && (!taggedMembers || taggedMembers.length === 0)) {
-                await sendTagMenu(chatId, false);
-            }
+            await sendTagMenu(chatId, false);
         }
 
     } else if (action === 'skip') {
