@@ -266,13 +266,37 @@ async function handleMessage(chatId: string, text: string) {
     // Context-based replies
     if (state.context === 'awaiting_story_cover_price') {
         const { latestStoryId } = state.data || {};
-        const price = parseInt(txt, 10);
+        const price = parseFloat(txt);
         if (!isNaN(price) && price > 0 && latestStoryId) {
             await supabaseAdmin.from('stories').update({ tribute_price: price }).eq('id', latestStoryId);
-            await tgSend(`✓ Tribute set: <b>${price.toLocaleString()} coins</b>`, { chatId });
+            await tgSend(`✓ Price set: <b>€${price}</b>`, { chatId });
+        }
+        // Keep latestStoryId alive into tag menu
+        await setBotState('awaiting_tag_for_story', { latestStoryId });
+        await sendTagMenu(chatId, false);
+        return;
+    }
+
+    if (state.context === 'awaiting_tag_for_story') {
+        // Text search for member during upload flow
+        const { latestStoryId } = state.data || {};
+        const member = await findMemberInText(txt);
+        if (!member) {
+            await tgSend(`No member found matching "<b>${escapeHtml(txt)}</b>". Try again or use /skip.`, { chatId });
+            return;
+        }
+        if (latestStoryId) {
+            const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+            await supabaseAdmin.from('stories').update({
+                tagged_members: [member],
+                source: 'manual',
+                expires_at: expires,
+                archived: false,
+            }).eq('id', latestStoryId);
+            sendStoryPush([member]).catch(() => {});
         }
         await setBotState(null);
-        await sendTagMenu(chatId, false);
+        await tgSend(`✓ Story live for <b>${escapeHtml(member.split('@')[0])}</b> · 24h`, { chatId });
         return;
     }
 
@@ -553,6 +577,27 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     const [action, value] = data.split(':');
 
     if (action === 'tag_direct' && value) {
+        const state = await getBotState();
+        const latestStoryId = state.data?.latestStoryId;
+        const name = value.split('@')[0];
+
+        if (latestStoryId) {
+            // Upload flow — activate this specific story for the member
+            const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+            await supabaseAdmin.from('stories').update({
+                tagged_members: [value],
+                source: 'manual',
+                expires_at: expires,
+                archived: false,
+            }).eq('id', latestStoryId);
+            await setBotState(null);
+            await tgAnswer(callbackQueryId, `Live for ${name}`);
+            await tgSend(`✓ Story live for <b>${escapeHtml(name)}</b> · 24h`, { chatId });
+            sendStoryPush([value]).catch(() => {});
+            return;
+        }
+
+        // Manual /tag flow — tag all today's stories
         const today = new Date().toISOString().split('T')[0];
         const { data: stories } = await supabaseAdmin
             .from('stories')
@@ -569,19 +614,41 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
                 await supabaseAdmin.from('stories').update({ tagged_members: [...existing, value] }).eq('id', story.id);
             }
         }
-        const name = value.split('@')[0];
         await tgAnswer(callbackQueryId, `Tagged ${name}`);
         await tgSend(`✓ Tagged <b>${escapeHtml(name)}</b> in today's stories.`, { chatId });
-        // Push to this specific member only
         sendStoryPush([value]).catch(() => {});
 
     } else if (action === 'tag_search') {
-        await setBotState('awaiting_tag');
+        const state = await getBotState();
+        const latestStoryId = state.data?.latestStoryId;
+        // Preserve latestStoryId so text reply can activate the story
+        await setBotState(latestStoryId ? 'awaiting_tag_for_story' : 'awaiting_tag', { latestStoryId });
         await tgAnswer(callbackQueryId);
         await tgSend('Type a name or @nickname:', { chatId });
 
     } else if (action === 'tag_all') {
-        // Clear tagged_members on all active non-vault stories so they become truly public
+        const state = await getBotState();
+        const latestStoryId = state.data?.latestStoryId;
+
+        if (latestStoryId) {
+            // Upload flow — activate this story for everyone
+            const expires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+            await supabaseAdmin.from('stories').update({
+                tagged_members: [],
+                source: 'manual',
+                expires_at: expires,
+                archived: false,
+            }).eq('id', latestStoryId);
+            await setBotState(null);
+            await tgAnswer(callbackQueryId, 'Public · 24h');
+            await tgSend('✓ Story live for everyone · 24h', { chatId });
+            const { data: allProfiles } = await supabaseAdmin.from('profiles').select('member_id').not('member_id', 'is', null);
+            const allEmails = (allProfiles || []).map((p: any) => (p.member_id || '').toLowerCase()).filter(Boolean);
+            sendStoryPush(allEmails).catch(() => {});
+            return;
+        }
+
+        // Manual flow — make all current active stories public
         const now = new Date().toISOString();
         const { data: activeStories } = await supabaseAdmin
             .from('stories')
@@ -596,7 +663,6 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         }
         await tgAnswer(callbackQueryId, 'Set to public');
         await tgSend('✓ Story is public — visible to all.', { chatId });
-        // Push to everyone
         const { data: allProfiles } = await supabaseAdmin.from('profiles').select('member_id').not('member_id', 'is', null);
         const allEmails = (allProfiles || []).map((p: any) => (p.member_id || '').toLowerCase()).filter(Boolean);
         sendStoryPush(allEmails).catch(() => {});
@@ -635,7 +701,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             if (latestStoryId) {
                 await supabaseAdmin.from('stories').update({ tier: 'free', tribute_price: null }).eq('id', latestStoryId);
             }
-            await setBotState(null);
+            await setBotState('awaiting_tag_for_story', { latestStoryId });
             await sendTagMenu(chatId, false);
         } else {
             // Paid — ask membership vs pay-per-view
@@ -662,11 +728,11 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
 
         if (value === 'membership') {
             // No price needed — membership gate handled by hasTributed check
-            await setBotState(null);
+            await setBotState('awaiting_tag_for_story', { latestStoryId });
             await sendTagMenu(chatId, false);
         } else {
             // PPV — ask for price
-            await setBotState('awaiting_story_cover_price', { isAll, taggedMembers, latestStoryId });
+            await setBotState('awaiting_story_cover_price', { latestStoryId });
             await tgSend('Enter the price (e.g. <b>9.99</b>):', { chatId });
         }
     }
