@@ -26,7 +26,7 @@ export async function GET(req: Request) {
         .eq('archived', false)
         .neq('source', 'vault')
         .gt('expires_at', now)
-        .order('order_index', { ascending: true });
+        .order('created_at', { ascending: true });
 
     // Check if this member has tributed:
     // - score > 0 (merit from kneeling/tasks signals active engagement)
