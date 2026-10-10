@@ -235,7 +235,6 @@ async function startTaskReview(chatId: string) {
         .from('challenge_task_pool')
         .select('id, task_name, task_description, challenge_id')
         .eq('reviewed', false)
-        .order('created_at', { ascending: true })
         .limit(1)
         .maybeSingle();
 
