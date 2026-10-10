@@ -190,7 +190,7 @@ async function handleMediaUpload(chatId: string, fileId: string, fileUniqueId: s
 
 // ─── TASK REVIEW ─────────────────────────────────────────────────────────────
 // SQL to run once in Supabase:
-// ALTER TABLE challenge_task_pool
+// ALTER TABLE tasks_database
 //   ADD COLUMN IF NOT EXISTS kinks text[] DEFAULT '{}',
 //   ADD COLUMN IF NOT EXISTS limits text[] DEFAULT '{}',
 //   ADD COLUMN IF NOT EXISTS chastity_ok boolean DEFAULT true,
@@ -232,8 +232,8 @@ function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAct
 
 async function startTaskReview(chatId: string) {
     const { data: task, error: taskError } = await supabaseAdmin
-        .from('challenge_task_pool')
-        .select('id, task_name, task_description, challenge_id')
+        .from('tasks_database')
+        .select('*')
         .eq('reviewed', false)
         .limit(1)
         .maybeSingle();
@@ -244,23 +244,20 @@ async function startTaskReview(chatId: string) {
     }
 
     if (!task) {
-        // Debug: count total tasks
-        const { count } = await supabaseAdmin.from('challenge_task_pool').select('*', { count: 'exact', head: true });
-        await tgSend(`No unreviewed tasks found. Total tasks in pool: ${count ?? 0}`, { chatId });
+        await tgSend('✅ All tasks reviewed! Nothing left in queue.', { chatId });
         return;
     }
 
-    const { data: challenge } = await supabaseAdmin
-        .from('challenges').select('title').eq('id', task.challenge_id).maybeSingle();
+    // Use whatever name/description columns the table has
+    const taskName = task.Name || task.name || task.title || task.Task || '(unnamed)';
+    const taskDesc = task.Description || task.description || task.task_description || task.Instructions || task.instructions || '';
+    const taskCategory = task.Category || task.category || '';
 
-    const challengeName = challenge?.title || 'Unknown challenge';
-    const desc = task.task_description || '(no description yet)';
-
-    await setBotState('task_review_text', { taskId: task.id, selectedKinks: [], selectedLimits: [] });
+    await setBotState('task_review_text', { taskId: task.id || task.ID, selectedKinks: [], selectedLimits: [] });
 
     await tgSend(
-        `<b>TASK REVIEW</b> · <i>${escapeHtml(challengeName)}</i>\n\n` +
-        `<b>${escapeHtml(task.task_name)}</b>\n\n${escapeHtml(desc)}\n\n` +
+        `<b>TASK REVIEW</b>${taskCategory ? ` · <i>${escapeHtml(taskCategory)}</i>` : ''}\n\n` +
+        `<b>${escapeHtml(taskName)}</b>\n\n${escapeHtml(taskDesc || '(no description yet)')}\n\n` +
         `Is this text ok?`,
         {
             chatId,
@@ -338,7 +335,7 @@ async function sendApprovalStep(chatId: string, data: any) {
 }
 
 async function finalizeTask(chatId: string, taskId: string) {
-    await supabaseAdmin.from('challenge_task_pool').update({ reviewed: true }).eq('id', taskId);
+    await supabaseAdmin.from('tasks_database').update({ reviewed: true }).eq('id', taskId);
     await setBotState(null);
     const { count } = await supabaseAdmin
         .from('challenge_task_pool').select('*', { count: 'exact', head: true }).eq('reviewed', false);
@@ -372,7 +369,7 @@ async function handleTaskVideoUpload(chatId: string, fileId: string, isApproval:
 
     const { data: { publicUrl } } = supabaseAdmin.storage.from('media').getPublicUrl(storagePath);
     const field = isApproval ? 'approval_video_url' : 'video_url';
-    await supabaseAdmin.from('challenge_task_pool').update({ [field]: publicUrl }).eq('id', taskId);
+    await supabaseAdmin.from('tasks_database').update({ [field]: publicUrl }).eq('id', taskId);
 
     if (!isApproval) {
         await setBotState('task_review_video_tier', stateData);
@@ -552,7 +549,7 @@ async function handleMessage(chatId: string, text: string) {
 
     if (state.context === 'task_review_edit_text') {
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ task_description: txt }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ Description: txt }).eq('id', taskId);
         await tgSend('✅ Text updated.', { chatId });
         await sendKinkStep(chatId, state.data);
         return;
@@ -560,7 +557,7 @@ async function handleMessage(chatId: string, text: string) {
 
     if (state.context === 'task_review_items') {
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ required_items: txt }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ required_items: txt }).eq('id', taskId);
         await tgSend(`✅ Items: <i>${escapeHtml(txt)}</i>`, { chatId });
         await sendVideoStep(chatId, state.data);
         return;
@@ -1026,7 +1023,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_kink_done') {
         const state = await getBotState();
         const { taskId, selectedKinks = [] } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ kinks: selectedKinks }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ kinks: selectedKinks }).eq('id', taskId);
         await tgAnswer(callbackQueryId, `${selectedKinks.length} kinks saved`);
         await sendLimitStep(chatId, state.data);
 
@@ -1042,7 +1039,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_lim_done') {
         const state = await getBotState();
         const { taskId, selectedLimits = [] } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ limits: selectedLimits }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ limits: selectedLimits }).eq('id', taskId);
         await tgAnswer(callbackQueryId, `${selectedLimits.length} limits saved`);
         await sendChastityStep(chatId, state.data);
 
@@ -1050,14 +1047,14 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         const state = await getBotState();
         const { taskId } = state.data || {};
         const ok = value === 'yes';
-        await supabaseAdmin.from('challenge_task_pool').update({ chastity_ok: ok }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ chastity_ok: ok }).eq('id', taskId);
         await tgAnswer(callbackQueryId);
         await sendDifficultyStep(chatId, state.data);
 
     } else if (action === 'tr_diff') {
         const state = await getBotState();
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ difficulty: value }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ difficulty: value }).eq('id', taskId);
         await tgAnswer(callbackQueryId);
         await sendItemsStep(chatId, { ...state.data, difficulty: value });
 
@@ -1070,7 +1067,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_vtier') {
         const state = await getBotState();
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('challenge_task_pool').update({ video_tier: value }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ video_tier: value }).eq('id', taskId);
         await tgAnswer(callbackQueryId);
         await sendApprovalStep(chatId, state.data);
 
