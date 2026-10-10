@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { HIERARCHY_RULES, rankMeetsRequirement } from '@/lib/hierarchyRules';
 import { getCaller, isCEO, isOwnerOrCEO } from '@/lib/api-auth';
+import { canChat } from '@/lib/member-tier';
 
 export async function POST(req: Request) {
     const caller = await getCaller();
@@ -161,6 +162,8 @@ export async function POST(req: Request) {
                 .maybeSingle();
             isRegularLocked = !!activeSession;
         }
+
+        if (!isQueen && !canChat(profile)) return NextResponse.json({ success: false, error: 'Direct chat requires Devoted One (€55/mo) or above. Upgrade to speak.' }, { status: 403 });
 
         if (!isQueen && !isRegularLocked && type === 'photo' && !rankMeetsRequirement(userRank, 'Silverman')) return NextResponse.json({ success: false, error: `Photos unlock at Silverman rank. Keep climbing.` }, { status: 403 });
         if (!isQueen && !isRegularLocked && type === 'video' && !rankMeetsRequirement(userRank, 'Butler')) return NextResponse.json({ success: false, error: `Videos unlock at Butler rank. Keep climbing.` }, { status: 403 });

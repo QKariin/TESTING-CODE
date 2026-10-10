@@ -6,6 +6,7 @@ import { cacheDelete } from '@/lib/api-cache';
 import { discordRoutineSubmitted } from '@/lib/discord';
 import { getCaller, isOwnerOrCEO } from '@/lib/api-auth';
 import { resolveIdentifier } from '@/lib/lookup';
+import { canSubmitVideoProof } from '@/lib/member-tier';
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +94,17 @@ export async function POST(req: Request) {
                         }
                     }
                 }
+                // Gate: video proof requires Devoted One (€55/mo) or above
+                if (!payload.isRoutine) {
+                    const isVideoProof = (payload.proofType || '').startsWith('video/') || /\.(mp4|mov|webm)(\?|$)/i.test(payload.proofUrl || '');
+                    if (isVideoProof) {
+                        const memberProfile = await DbService.getProfile(memberId);
+                        if (!canSubmitVideoProof(memberProfile)) {
+                            return NextResponse.json({ success: false, error: 'Video proof requires Devoted One (€55/mo) or above. Photos only at Initiate tier.' }, { status: 403 });
+                        }
+                    }
+                }
+
                 result = await DbService.submitTask(memberId, payload.proofUrl, payload.proofType, payload.taskText, payload.isRoutine, payload.thumbnailUrl, payload.tz || 'UTC');
                 // Bust routine cache so next poll gets fresh uploadedToday status
                 if (payload.isRoutine) cacheDelete(`routine:`);

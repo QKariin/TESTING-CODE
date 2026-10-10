@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { createClient } from '@/utils/supabase/server';
 
-// Subscription tiers - must match the IDs used in page.tsx subscription cards
+// Subscription tiers — must match the IDs used in the pricing UI
+// initiate  €18.99/mo — photo proof, weekly review, kneeling + leaderboard, no chat
+// devotee   €55/mo    — video proof, 48h review, Queen's comments, chat, routine, challenges
+// property  €99/mo    — video tasks, open chat, personalized stories, everything
 const SUBSCRIPTION_TIERS: Record<string, { amountCents: number; name: string; label: string }> = {
-    basic:     { amountCents:  3300, name: 'BASIC - Initiate',    label: 'Monthly Initiate Subscription'    },
-    royal:     { amountCents:  7700, name: 'ROYAL - Patronage',   label: 'Monthly Royal Patronage'          },
-    ownership: { amountCents: 22200, name: 'OWNERSHIP - Absolute', label: 'Monthly Absolute Ownership'     },
+    initiate: { amountCents:  1899, name: 'INITIATE',  label: 'Initiate — Monthly Subscription'  },
+    devotee:  { amountCents:  5500, name: 'DEVOTEE',   label: 'Devoted One — Monthly Subscription' },
+    property: { amountCents:  9900, name: 'PROPERTY',  label: 'Her Property — Monthly Subscription' },
 };
 
 export async function POST(req: Request) {

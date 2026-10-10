@@ -314,7 +314,7 @@ export async function POST(req: Request) {
             // ====================================================
             if (session.mode === 'subscription' || metadata.type === "SUBSCRIPTION_55" || metadata.type === "SUBSCRIPTION") {
                 const subEmail = session.customer_details?.email || metadata.email;
-                const tierId = metadata.tierId || 'basic'; // basic | royal | ownership
+                const tierId = metadata.tierId || 'initiate'; // initiate | devotee | property
                 console.log(`[SUB] Processing Subscription [${tierId}] for: ${subEmail}`);
 
                 const { data: profile } = await supabaseAdmin
@@ -367,6 +367,29 @@ export async function POST(req: Request) {
         } catch (err: any) {
             console.error("[WEBHOOK] Handling Error:", err);
             return new NextResponse(`Webhook Handler Error: ${err.message}`, { status: 500 });
+        }
+    }
+
+    // Subscription cancelled / expired — revoke tier access
+    if (event.type === 'customer.subscription.deleted') {
+        const sub = event.data.object as any;
+        const subId = sub.id;
+        try {
+            const { data: profiles } = await supabaseAdmin
+                .from('profiles')
+                .select('ID, parameters')
+                .filter('parameters->>stripeSubscriptionId', 'eq', subId);
+
+            for (const profile of (profiles || [])) {
+                const params = profile.parameters || {};
+                params.subscriptionStatus = 'Cancelled';
+                params.subscriptionTier = null;
+                params.roles = (params.roles || []).filter((r: string) => !r.startsWith('subscriber_'));
+                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+                console.log(`[SUB] Subscription cancelled for profile ${profile.ID}`);
+            }
+        } catch (e: any) {
+            console.error('[SUB] Cancellation handler error:', e.message);
         }
     }
 

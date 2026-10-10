@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DbService } from '@/lib/supabase-service';
 import { supabaseAdmin } from '@/lib/supabase';
+import { canReceiveVideoTasks } from '@/lib/member-tier';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,9 +78,15 @@ export async function GET(req: NextRequest) {
         }
 
         // 3. Otherwise (expired or forced), pick a new random task
-        const { count, error } = await supabaseAdmin
-            .from('tasks_database')
-            .select('*', { count: 'exact', head: true });
+        // Members below 'property' tier cannot receive video tasks (tasks with video_url set)
+        const memberProfile = profile || await DbService.getProfile(memberEmail);
+        const allowVideoTasks = canReceiveVideoTasks(memberProfile);
+
+        let taskQuery = supabaseAdmin.from('tasks_database').select('*', { count: 'exact', head: true });
+        if (!allowVideoTasks) {
+            taskQuery = taskQuery.or('video_url.is.null,video_url.eq.');
+        }
+        const { count, error } = await taskQuery;
 
         if (error) {
             console.error("Supabase Error fetching tasks:", error);
@@ -91,10 +98,11 @@ export async function GET(req: NextRequest) {
         }
 
         const randomIndex = Math.floor(Math.random() * count);
-        const { data: tasks } = await supabaseAdmin
-            .from('tasks_database')
-            .select('*')
-            .range(randomIndex, randomIndex);
+        let taskSelectQuery = supabaseAdmin.from('tasks_database').select('*');
+        if (!allowVideoTasks) {
+            taskSelectQuery = taskSelectQuery.or('video_url.is.null,video_url.eq.');
+        }
+        const { data: tasks } = await taskSelectQuery.range(randomIndex, randomIndex);
 
         const randomTask = tasks?.[0];
 
