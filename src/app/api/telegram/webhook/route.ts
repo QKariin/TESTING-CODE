@@ -217,10 +217,16 @@ const TASK_KINK_CATEGORIES = [
 ];
 
 function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAction: string): any[][] {
-    const rows: any[][] = TASK_KINK_CATEGORIES.map(cat => {
-        const on = selected.includes(cat.key);
-        return [{ text: `${on ? '✅' : '☐'} ${cat.label}`, callback_data: `${toggleAction}:${cat.key}` }];
-    });
+    const rows: any[][] = [];
+    for (let i = 0; i < TASK_KINK_CATEGORIES.length; i += 2) {
+        const row: any[] = [];
+        for (let j = i; j < i + 2 && j < TASK_KINK_CATEGORIES.length; j++) {
+            const cat = TASK_KINK_CATEGORIES[j];
+            const on = selected.includes(cat.key);
+            row.push({ text: `${on ? '✅' : '☐'} ${cat.label}`, callback_data: `${toggleAction}:${cat.key}` });
+        }
+        rows.push(row);
+    }
     rows.push([{ text: `✅ Done (${selected.length} selected)`, callback_data: doneAction }]);
     return rows;
 }
