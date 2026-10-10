@@ -7,7 +7,7 @@
 //   'property'  — €99/mo:    video tasks, open chat, everything, personalized stories
 //   'owned'     — Ownership: application-based, full custom
 
-export type MemberTier = 'initiate' | 'devotee' | 'property' | 'owned' | 'legacy';
+export type MemberTier = 'initiate' | 'devotee' | 'property' | 'owned';
 
 // Features gated by tier
 const TIER_RANK: Record<MemberTier, number> = {
@@ -15,7 +15,6 @@ const TIER_RANK: Record<MemberTier, number> = {
     devotee:  2,
     property: 3,
     owned:    4,
-    legacy:   2, // existing members without a tier get devotee-level access
 };
 
 export function getMemberTier(profile: any): MemberTier {
@@ -31,13 +30,15 @@ export function getMemberTier(profile: any): MemberTier {
     if (raw === 'ownership') return 'property';
     if (raw === 'basic') return 'initiate';
 
-    // Members who paid entrance tribute but have no subscription tier:
-    // treat as legacy (devotee-level) so we don't break existing members
+    // Existing members with no explicit subscriptionTier = full access (property)
+    // The new tiers apply only to new sign-ups who pick a tier at checkout
     const paid = params.subscriptionStatus === 'Active'
         || (params.wishlist_spent || 0) > 0
-        || params.keyholder_tier;
+        || params.keyholder_tier
+        || (profile?.wallet || 0) > 0
+        || (profile?.score || 0) > 0;
 
-    return paid ? 'legacy' : 'initiate';
+    return paid ? 'property' : 'initiate';
 }
 
 export function tierAtLeast(profile: any, minimum: MemberTier): boolean {
