@@ -203,6 +203,7 @@ async function handleMessage(chatId: string, text: string) {
             `/status — pending items + today's activity\n` +
             `/stories — today's stories + who unlocked\n` +
             `/daily — morning video status\n` +
+            `/roadmap — prioritized dev to-do list\n` +
             `/skip — cancel pending action`,
             { chatId }
         );
@@ -250,6 +251,35 @@ async function handleMessage(chatId: string, text: string) {
         return;
     }
 
+    if (txt.startsWith('/roadmap')) {
+        await tgSend(
+            `<b>ROADMAP — PRIORITY LIST</b>\n\n` +
+            `<b>WEEKS 1–2 (foundation)</b>\n` +
+            `☐ Vault task submission — make it real (store, flag, reward)\n` +
+            `☐ Daily cron — morning routine check + kneeling reminder\n` +
+            `☐ Streak tracking — auto-reward at 7d / 30d\n` +
+            `☐ Auto-archive cron for expired stories\n\n` +
+            `<b>WEEKS 3–6 (complete half-built)</b>\n` +
+            `☐ Non-vault member daily task pool\n` +
+            `☐ Challenge task assignment end-to-end\n` +
+            `☐ Leaderboard weekly cron\n` +
+            `☐ Email: welcome + password reset + digest\n\n` +
+            `<b>MONTH 2–3 (self-running layer)</b>\n` +
+            `☐ Behavioral triggers (missed kneeling → flag, 7d silence → check-in)\n` +
+            `☐ Tier unlock automation\n` +
+            `☐ Gift / cover-story system (wishlist item → story unlock)\n` +
+            `☐ Story subscription tier vs PPV clean separation\n\n` +
+            `<b>MONTH 4–6 (intelligence)</b>\n` +
+            `☐ AI-assisted task personalization\n` +
+            `☐ Pattern analysis dashboard\n` +
+            `☐ Auto-response drafts in your voice\n` +
+            `☐ Referral system\n\n` +
+            `<i>Update with /done [item] · /roadmap to view</i>`,
+            { chatId }
+        );
+        return;
+    }
+
     if (txt.startsWith('/help')) {
         await tgSend(
             `<b>COMMANDS</b>\n\n` +
@@ -257,6 +287,7 @@ async function handleMessage(chatId: string, text: string) {
             `/stories — today's stories + who unlocked\n` +
             `/daily — morning video status\n` +
             `/tag [name] — tag member in today's stories\n` +
+            `/roadmap — prioritized dev to-do list\n` +
             `/skip — cancel pending action`,
             { chatId }
         );
