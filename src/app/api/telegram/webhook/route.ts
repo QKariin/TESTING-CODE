@@ -231,6 +231,28 @@ function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAct
 }
 
 async function startTaskReview(chatId: string) {
+    // First: peek at the raw columns so we know what we're working with
+    const { data: sample, error: sampleError } = await supabaseAdmin
+        .from('tasks_database')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+    if (sampleError) {
+        await tgSend(`❌ DB error: ${escapeHtml(sampleError.message)}`, { chatId });
+        return;
+    }
+    if (!sample) {
+        await tgSend('tasks_database is empty.', { chatId });
+        return;
+    }
+
+    // Show raw keys + first values so we can find the right column names
+    const keys = Object.keys(sample);
+    const preview = keys.map(k => `<b>${escapeHtml(k)}</b>: ${escapeHtml(String(sample[k]).slice(0, 60))}`).join('\n');
+    await tgSend(`<b>RAW COLUMNS:</b>\n${preview}`, { chatId });
+    return;
+
     const { data: task, error: taskError } = await supabaseAdmin
         .from('tasks_database')
         .select('*')
