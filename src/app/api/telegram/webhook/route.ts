@@ -333,7 +333,7 @@ async function sendApprovalStep(chatId: string, data: any) {
 }
 
 async function finalizeTask(chatId: string, taskId: string) {
-    await supabaseAdmin.from('tasks_database').update({ reviewed: true })\.eq('ID', taskId);
+    await supabaseAdmin.from('tasks_database').update({ reviewed: true }).eq('ID', taskId);
     await setBotState(null);
     const { count } = await supabaseAdmin
         .from('challenge_task_pool').select('*', { count: 'exact', head: true }).eq('reviewed', false);
@@ -555,7 +555,7 @@ async function handleMessage(chatId: string, text: string) {
 
     if (state.context === 'task_review_items') {
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ required_items: txt })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ required_items: txt }).eq('ID', taskId);
         await tgSend(`✅ Items: <i>${escapeHtml(txt)}</i>`, { chatId });
         await sendVideoStep(chatId, state.data);
         return;
@@ -1020,7 +1020,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_kink_done') {
         const state = await getBotState();
         const { taskId, selectedKinks = [] } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ kinks: selectedKinks })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ kinks: selectedKinks }).eq('ID', taskId);
         await tgAnswer(callbackQueryId, `${selectedKinks.length} kinks saved`);
         await sendLimitStep(chatId, state.data);
 
@@ -1036,7 +1036,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_lim_done') {
         const state = await getBotState();
         const { taskId, selectedLimits = [] } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ limits: selectedLimits })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ limits: selectedLimits }).eq('ID', taskId);
         await tgAnswer(callbackQueryId, `${selectedLimits.length} limits saved`);
         await sendChastityStep(chatId, state.data);
 
@@ -1044,14 +1044,14 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         const state = await getBotState();
         const { taskId } = state.data || {};
         const ok = value === 'yes';
-        await supabaseAdmin.from('tasks_database').update({ chastity_ok: ok })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ chastity_ok: ok }).eq('ID', taskId);
         await tgAnswer(callbackQueryId);
         await sendDifficultyStep(chatId, state.data);
 
     } else if (action === 'tr_diff') {
         const state = await getBotState();
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ difficulty: value })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ difficulty: value }).eq('ID', taskId);
         await tgAnswer(callbackQueryId);
         await sendItemsStep(chatId, { ...state.data, difficulty: value });
 
@@ -1064,7 +1064,7 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
     } else if (action === 'tr_vtier') {
         const state = await getBotState();
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ video_tier: value })\.eq('ID', taskId);
+        await supabaseAdmin.from('tasks_database').update({ video_tier: value }).eq('ID', taskId);
         await tgAnswer(callbackQueryId);
         await sendApprovalStep(chatId, state.data);
 
