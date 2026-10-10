@@ -231,15 +231,22 @@ function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAct
 }
 
 async function startTaskReview(chatId: string) {
-    const { data: task } = await supabaseAdmin
+    const { data: task, error: taskError } = await supabaseAdmin
         .from('challenge_task_pool')
         .select('id, task_name, task_description, challenge_id')
         .eq('reviewed', false)
         .limit(1)
         .maybeSingle();
 
+    if (taskError) {
+        await tgSend(`❌ DB error: ${escapeHtml(taskError.message)}`, { chatId });
+        return;
+    }
+
     if (!task) {
-        await tgSend('✅ All tasks reviewed! Nothing left in queue.', { chatId });
+        // Debug: count total tasks
+        const { count } = await supabaseAdmin.from('challenge_task_pool').select('*', { count: 'exact', head: true });
+        await tgSend(`No unreviewed tasks found. Total tasks in pool: ${count ?? 0}`, { chatId });
         return;
     }
 
