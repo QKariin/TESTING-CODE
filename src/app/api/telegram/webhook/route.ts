@@ -336,13 +336,8 @@ async function sendApprovalStep(chatId: string, data: any) {
 async function finalizeTask(chatId: string, taskId: string) {
     await supabaseAdmin.from('tasks_database').update({ reviewed: true }).eq('ID', taskId);
     await setBotState(null);
-    const { count } = await supabaseAdmin
-        .from('challenge_task_pool').select('*', { count: 'exact', head: true }).eq('reviewed', false);
-    await tgSend(
-        `✅ Task saved!\n\n` +
-        (count ? `<b>${count}</b> tasks left · /taskreview for next` : '🎉 All tasks reviewed!'),
-        { chatId }
-    );
+    await tgSend('✅ Saved! Loading next...', { chatId });
+    await startTaskReview(chatId);
 }
 
 async function handleTaskVideoUpload(chatId: string, fileId: string, isApproval: boolean, stateData: any) {
