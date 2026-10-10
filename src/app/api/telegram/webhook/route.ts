@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { tgSend, tgAnswer, QUEEN_CHAT_ID, escapeHtml } from '@/lib/telegram';
+import { tgSend, tgAnswer, tgEditMarkup, QUEEN_CHAT_ID, escapeHtml } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
 
@@ -188,6 +188,203 @@ async function handleMediaUpload(chatId: string, fileId: string, fileUniqueId: s
     });
 }
 
+// ─── TASK REVIEW ─────────────────────────────────────────────────────────────
+// SQL to run once in Supabase:
+// ALTER TABLE challenge_task_pool
+//   ADD COLUMN IF NOT EXISTS kinks text[] DEFAULT '{}',
+//   ADD COLUMN IF NOT EXISTS limits text[] DEFAULT '{}',
+//   ADD COLUMN IF NOT EXISTS chastity_ok boolean DEFAULT true,
+//   ADD COLUMN IF NOT EXISTS required_items text,
+//   ADD COLUMN IF NOT EXISTS video_url text,
+//   ADD COLUMN IF NOT EXISTS video_tier text DEFAULT 'free',
+//   ADD COLUMN IF NOT EXISTS approval_video_url text,
+//   ADD COLUMN IF NOT EXISTS reviewed boolean DEFAULT false;
+
+const TASK_KINK_CATEGORIES = [
+    { key: 'obedience',     label: 'Obedience & Service' },
+    { key: 'chastity',      label: 'Chastity' },
+    { key: 'orgasm',        label: 'Orgasm Control' },
+    { key: 'humiliation',   label: 'Humiliation' },
+    { key: 'punishment',    label: 'Punishment' },
+    { key: 'psychological', label: 'Psychological' },
+    { key: 'bondage',       label: 'Bondage' },
+    { key: 'worship',       label: 'Worship' },
+    { key: 'exposure',      label: 'Exposure' },
+    { key: 'findom',        label: 'Financial Dom' },
+    { key: 'roleplay',      label: 'Role Play' },
+    { key: 'extreme',       label: 'Extreme' },
+];
+
+function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAction: string): any[][] {
+    const rows: any[][] = [];
+    for (let i = 0; i < TASK_KINK_CATEGORIES.length; i += 2) {
+        const row: any[] = [];
+        for (let j = i; j < i + 2 && j < TASK_KINK_CATEGORIES.length; j++) {
+            const cat = TASK_KINK_CATEGORIES[j];
+            const on = selected.includes(cat.key);
+            row.push({ text: `${on ? '✅' : '☐'} ${cat.label}`, callback_data: `${toggleAction}:${cat.key}` });
+        }
+        rows.push(row);
+    }
+    rows.push([{ text: `✅ Done (${selected.length} selected)`, callback_data: doneAction }]);
+    return rows;
+}
+
+async function startTaskReview(chatId: string) {
+    const { data: task } = await supabaseAdmin
+        .from('challenge_task_pool')
+        .select('id, task_name, task_description, challenge_id')
+        .eq('reviewed', false)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+    if (!task) {
+        await tgSend('✅ All tasks reviewed! Nothing left in queue.', { chatId });
+        return;
+    }
+
+    const { data: challenge } = await supabaseAdmin
+        .from('challenges').select('title').eq('id', task.challenge_id).maybeSingle();
+
+    const challengeName = challenge?.title || 'Unknown challenge';
+    const desc = task.task_description || '(no description yet)';
+
+    await setBotState('task_review_text', { taskId: task.id, selectedKinks: [], selectedLimits: [] });
+
+    await tgSend(
+        `<b>TASK REVIEW</b> · <i>${escapeHtml(challengeName)}</i>\n\n` +
+        `<b>${escapeHtml(task.task_name)}</b>\n\n${escapeHtml(desc)}\n\n` +
+        `Is this text ok?`,
+        {
+            chatId,
+            replyMarkup: { inline_keyboard: [
+                [{ text: '✅ Text is good', callback_data: 'tr_confirm' }, { text: '✏️ Edit text', callback_data: 'tr_edit' }],
+                [{ text: '⏭ Skip this task', callback_data: 'tr_skip' }],
+            ]},
+        }
+    );
+}
+
+async function sendKinkStep(chatId: string, data: any) {
+    const res = await tgSend(
+        `<b>KINKS</b> — which categories does this task relate to?\n<i>Tap to select · tap again to deselect</i>`,
+        { chatId, replyMarkup: { inline_keyboard: buildCategoryKeyboard(data.selectedKinks || [], 'tr_kink', 'tr_kink_done') } }
+    );
+    const kinkMsgId = res?.result?.message_id || null;
+    await setBotState('task_review_kinks', { ...data, kinkMsgId });
+}
+
+async function sendLimitStep(chatId: string, data: any) {
+    const res = await tgSend(
+        `<b>LIMITS</b> — which categories does this task TOUCH?\n<i>Members with these as hard limits will be SKIPPED for this task</i>`,
+        { chatId, replyMarkup: { inline_keyboard: buildCategoryKeyboard(data.selectedLimits || [], 'tr_lim', 'tr_lim_done') } }
+    );
+    const limMsgId = res?.result?.message_id || null;
+    await setBotState('task_review_limits', { ...data, limMsgId });
+}
+
+async function sendChastityStep(chatId: string, data: any) {
+    await setBotState('task_review_chastity', data);
+    await tgSend(`<b>CHASTITY</b> — can this task be done while wearing a device?`, {
+        chatId,
+        replyMarkup: { inline_keyboard: [[
+            { text: '✅ Yes, chastity ok', callback_data: 'tr_chastity:yes' },
+            { text: '🔒 No, needs free access', callback_data: 'tr_chastity:no' },
+        ]]},
+    });
+}
+
+async function sendDifficultyStep(chatId: string, data: any) {
+    await setBotState('task_review_difficulty', data);
+    await tgSend(`<b>DIFFICULTY</b>`, {
+        chatId,
+        replyMarkup: { inline_keyboard: [[
+            { text: '🟢 Easy', callback_data: 'tr_diff:easy' },
+            { text: '🟡 Medium', callback_data: 'tr_diff:medium' },
+            { text: '🔴 Hardcore', callback_data: 'tr_diff:hard' },
+        ]]},
+    });
+}
+
+async function sendItemsStep(chatId: string, data: any) {
+    await setBotState('task_review_items', data);
+    await tgSend(
+        `<b>REQUIRED ITEMS</b>\n\nWhat do they need? (e.g. "rope, blindfold")\n\nType it or /skip`,
+        { chatId }
+    );
+}
+
+async function sendVideoStep(chatId: string, data: any) {
+    await setBotState('task_review_video', data);
+    await tgSend(`<b>INSTRUCTIONAL VIDEO</b>\n\nWant to attach a video for this task?\nSend a video or tap Skip.`, {
+        chatId,
+        replyMarkup: { inline_keyboard: [[{ text: '⏭ Skip', callback_data: 'tr_video:skip' }]] },
+    });
+}
+
+async function sendApprovalStep(chatId: string, data: any) {
+    await setBotState('task_review_approval', data);
+    await tgSend(`<b>APPROVAL VIDEO</b>\n\nWant to attach a video to send them when you <b>approve</b> their submission?\nSend a video or tap Skip.`, {
+        chatId,
+        replyMarkup: { inline_keyboard: [[{ text: '⏭ Skip', callback_data: 'tr_appr:skip' }]] },
+    });
+}
+
+async function finalizeTask(chatId: string, taskId: string) {
+    await supabaseAdmin.from('challenge_task_pool').update({ reviewed: true }).eq('id', taskId);
+    await setBotState(null);
+    const { count } = await supabaseAdmin
+        .from('challenge_task_pool').select('*', { count: 'exact', head: true }).eq('reviewed', false);
+    await tgSend(
+        `✅ Task saved!\n\n` +
+        (count ? `<b>${count}</b> tasks left · /taskreview for next` : '🎉 All tasks reviewed!'),
+        { chatId }
+    );
+}
+
+async function handleTaskVideoUpload(chatId: string, fileId: string, isApproval: boolean, stateData: any) {
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+    const { taskId } = stateData || {};
+    await tgSend('⏳ Uploading...', { chatId });
+
+    const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+    const fileData = await fileRes.json();
+    const filePath = fileData.result?.file_path;
+    if (!filePath) { await tgSend('❌ Could not get file from Telegram.', { chatId }); return; }
+
+    const mediaRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`);
+    if (!mediaRes.ok) { await tgSend('❌ Download failed.', { chatId }); return; }
+
+    const buf = await mediaRes.arrayBuffer();
+    const label = isApproval ? 'approval' : 'instruction';
+    const storagePath = `task_videos/${taskId}_${label}_${Date.now()}.mp4`;
+
+    const { error: uploadError } = await supabaseAdmin.storage
+        .from('media').upload(storagePath, buf, { contentType: 'video/mp4', upsert: true });
+    if (uploadError) { await tgSend(`❌ Upload failed: ${escapeHtml(uploadError.message)}`, { chatId }); return; }
+
+    const { data: { publicUrl } } = supabaseAdmin.storage.from('media').getPublicUrl(storagePath);
+    const field = isApproval ? 'approval_video_url' : 'video_url';
+    await supabaseAdmin.from('challenge_task_pool').update({ [field]: publicUrl }).eq('id', taskId);
+
+    if (!isApproval) {
+        await setBotState('task_review_video_tier', stateData);
+        await tgSend('✅ Video uploaded! Who can watch it?', {
+            chatId,
+            replyMarkup: { inline_keyboard: [[
+                { text: '🌐 All members', callback_data: 'tr_vtier:free' },
+                { text: '👑 Vault only', callback_data: 'tr_vtier:vault' },
+            ]]},
+        });
+    } else {
+        await tgSend('✅ Approval video saved.', { chatId });
+        await finalizeTask(chatId, taskId);
+    }
+}
+
+// ─── END TASK REVIEW ──────────────────────────────────────────────────────────
+
 async function handleMessage(chatId: string, text: string) {
     const state = await getBotState();
     const txt = (text || '').trim();
@@ -203,6 +400,7 @@ async function handleMessage(chatId: string, text: string) {
             `/status — pending items + today's activity\n` +
             `/stories — today's stories + who unlocked\n` +
             `/daily — morning video status\n` +
+            `/taskreview — review + enrich task pool\n` +
             `/roadmap — prioritized dev to-do list\n` +
             `/skip — cancel pending action`,
             { chatId }
@@ -245,7 +443,17 @@ async function handleMessage(chatId: string, text: string) {
         return;
     }
 
+    if (txt.startsWith('/taskreview')) {
+        await startTaskReview(chatId);
+        return;
+    }
+
     if (txt.startsWith('/skip')) {
+        // Context-aware skip for task review steps
+        if (state.context === 'task_review_items') {
+            await sendVideoStep(chatId, state.data);
+            return;
+        }
         await setBotState(null);
         await tgSend('Cancelled.', { chatId });
         return;
@@ -333,6 +541,22 @@ async function handleMessage(chatId: string, text: string) {
 
     if (state.context === 'awaiting_tag') {
         await handleTag(chatId, txt);
+        return;
+    }
+
+    if (state.context === 'task_review_edit_text') {
+        const { taskId } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ task_description: txt }).eq('id', taskId);
+        await tgSend('✅ Text updated.', { chatId });
+        await sendKinkStep(chatId, state.data);
+        return;
+    }
+
+    if (state.context === 'task_review_items') {
+        const { taskId } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ required_items: txt }).eq('id', taskId);
+        await tgSend(`✅ Items: <i>${escapeHtml(txt)}</i>`, { chatId });
+        await sendVideoStep(chatId, state.data);
         return;
     }
 
@@ -766,6 +990,90 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             await setBotState('awaiting_story_cover_price', { latestStoryId });
             await tgSend('Enter the price (e.g. <b>9.99</b>):', { chatId });
         }
+
+    // ── Task review callbacks ─────────────────────────────────────────────────
+    } else if (action === 'tr_confirm') {
+        const state = await getBotState();
+        await tgAnswer(callbackQueryId);
+        await sendKinkStep(chatId, state.data);
+
+    } else if (action === 'tr_edit') {
+        const state = await getBotState();
+        await setBotState('task_review_edit_text', state.data);
+        await tgAnswer(callbackQueryId);
+        await tgSend('Type the new task description:', { chatId });
+
+    } else if (action === 'tr_skip') {
+        await setBotState(null);
+        await tgAnswer(callbackQueryId);
+        await tgSend('Skipped. /taskreview for next task.', { chatId });
+
+    } else if (action === 'tr_kink') {
+        const state = await getBotState();
+        const { kinkMsgId } = state.data || {};
+        const sel: string[] = state.data?.selectedKinks || [];
+        const newSel = sel.includes(value) ? sel.filter((k: string) => k !== value) : [...sel, value];
+        await setBotState('task_review_kinks', { ...state.data, selectedKinks: newSel });
+        await tgAnswer(callbackQueryId);
+        if (kinkMsgId) await tgEditMarkup(chatId, kinkMsgId, { inline_keyboard: buildCategoryKeyboard(newSel, 'tr_kink', 'tr_kink_done') });
+
+    } else if (action === 'tr_kink_done') {
+        const state = await getBotState();
+        const { taskId, selectedKinks = [] } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ kinks: selectedKinks }).eq('id', taskId);
+        await tgAnswer(callbackQueryId, `${selectedKinks.length} kinks saved`);
+        await sendLimitStep(chatId, state.data);
+
+    } else if (action === 'tr_lim') {
+        const state = await getBotState();
+        const { limMsgId } = state.data || {};
+        const sel: string[] = state.data?.selectedLimits || [];
+        const newSel = sel.includes(value) ? sel.filter((k: string) => k !== value) : [...sel, value];
+        await setBotState('task_review_limits', { ...state.data, selectedLimits: newSel });
+        await tgAnswer(callbackQueryId);
+        if (limMsgId) await tgEditMarkup(chatId, limMsgId, { inline_keyboard: buildCategoryKeyboard(newSel, 'tr_lim', 'tr_lim_done') });
+
+    } else if (action === 'tr_lim_done') {
+        const state = await getBotState();
+        const { taskId, selectedLimits = [] } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ limits: selectedLimits }).eq('id', taskId);
+        await tgAnswer(callbackQueryId, `${selectedLimits.length} limits saved`);
+        await sendChastityStep(chatId, state.data);
+
+    } else if (action === 'tr_chastity') {
+        const state = await getBotState();
+        const { taskId } = state.data || {};
+        const ok = value === 'yes';
+        await supabaseAdmin.from('challenge_task_pool').update({ chastity_ok: ok }).eq('id', taskId);
+        await tgAnswer(callbackQueryId);
+        await sendDifficultyStep(chatId, state.data);
+
+    } else if (action === 'tr_diff') {
+        const state = await getBotState();
+        const { taskId } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ difficulty: value }).eq('id', taskId);
+        await tgAnswer(callbackQueryId);
+        await sendItemsStep(chatId, { ...state.data, difficulty: value });
+
+    } else if (action === 'tr_video') {
+        // Skip instructional video
+        const state = await getBotState();
+        await tgAnswer(callbackQueryId);
+        await sendApprovalStep(chatId, state.data);
+
+    } else if (action === 'tr_vtier') {
+        const state = await getBotState();
+        const { taskId } = state.data || {};
+        await supabaseAdmin.from('challenge_task_pool').update({ video_tier: value }).eq('id', taskId);
+        await tgAnswer(callbackQueryId);
+        await sendApprovalStep(chatId, state.data);
+
+    } else if (action === 'tr_appr') {
+        // Skip approval video
+        const state = await getBotState();
+        const { taskId } = state.data || {};
+        await tgAnswer(callbackQueryId);
+        await finalizeTask(chatId, taskId);
     }
 }
 
@@ -796,7 +1104,12 @@ export async function POST(req: Request) {
             const photoUniqueId = msg.photo?.[msg.photo.length - 1]?.file_unique_id;
             const fileUniqueId = videoUniqueId || photoUniqueId;
             if (fileId) {
-                await handleMediaUpload(chatId, fileId, fileUniqueId || fileId, msg.caption || null, !!photoFileId && !videoFileId);
+                const curState = await getBotState();
+                if (videoFileId && (curState.context === 'task_review_video' || curState.context === 'task_review_approval')) {
+                    await handleTaskVideoUpload(chatId, videoFileId, curState.context === 'task_review_approval', curState.data);
+                } else {
+                    await handleMediaUpload(chatId, fileId, fileUniqueId || fileId, msg.caption || null, !!photoFileId && !videoFileId);
+                }
             } else {
                 await handleMessage(chatId, msg.text || '');
             }

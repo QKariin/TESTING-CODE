@@ -47,3 +47,16 @@ export async function tgAnswer(callbackQueryId: string, text?: string): Promise<
         body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
     }).catch(() => {});
 }
+
+export async function tgEditMarkup(
+    chatId: string | number,
+    messageId: number,
+    replyMarkup: object,
+): Promise<void> {
+    if (!BOT_TOKEN) return;
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, message_id: messageId, reply_markup: replyMarkup }),
+    }).catch(() => {});
+}
