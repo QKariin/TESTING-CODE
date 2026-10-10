@@ -201,31 +201,26 @@ async function handleMediaUpload(chatId: string, fileId: string, fileUniqueId: s
 //   ADD COLUMN IF NOT EXISTS reviewed boolean DEFAULT false;
 
 const TASK_KINK_CATEGORIES = [
-    { key: 'obedience',     label: 'Obedience & Service' },
-    { key: 'chastity',      label: 'Chastity' },
-    { key: 'orgasm',        label: 'Orgasm Control' },
-    { key: 'humiliation',   label: 'Humiliation' },
-    { key: 'punishment',    label: 'Punishment' },
-    { key: 'psychological', label: 'Psychological' },
-    { key: 'bondage',       label: 'Bondage' },
-    { key: 'worship',       label: 'Worship' },
-    { key: 'exposure',      label: 'Exposure' },
-    { key: 'findom',        label: 'Financial Dom' },
-    { key: 'roleplay',      label: 'Role Play' },
-    { key: 'extreme',       label: 'Extreme' },
+    { key: 'obedience',       label: 'Obedience & Service' },
+    { key: 'chastity',        label: 'Chastity' },
+    { key: 'orgasm',          label: 'Orgasm Control' },
+    { key: 'humiliation',     label: 'Humiliation' },
+    { key: 'punishment',      label: 'Punishment' },
+    { key: 'psychological',   label: 'Psychological' },
+    { key: 'bondage',         label: 'Bondage' },
+    { key: 'worship',         label: 'Worship' },
+    { key: 'exposure',        label: 'Exposure' },
+    { key: 'findom',          label: 'Financial Dom' },
+    { key: 'roleplay',        label: 'Role Play' },
+    { key: 'sissification',   label: 'Sissification' },
+    { key: 'extreme',         label: 'Extreme' },
 ];
 
 function buildCategoryKeyboard(selected: string[], toggleAction: string, doneAction: string): any[][] {
-    const rows: any[][] = [];
-    for (let i = 0; i < TASK_KINK_CATEGORIES.length; i += 2) {
-        const row: any[] = [];
-        for (let j = i; j < i + 2 && j < TASK_KINK_CATEGORIES.length; j++) {
-            const cat = TASK_KINK_CATEGORIES[j];
-            const on = selected.includes(cat.key);
-            row.push({ text: `${on ? '✅' : '☐'} ${cat.label}`, callback_data: `${toggleAction}:${cat.key}` });
-        }
-        rows.push(row);
-    }
+    const rows: any[][] = TASK_KINK_CATEGORIES.map(cat => {
+        const on = selected.includes(cat.key);
+        return [{ text: `${on ? '✅' : '☐'} ${cat.label}`, callback_data: `${toggleAction}:${cat.key}` }];
+    });
     rows.push([{ text: `✅ Done (${selected.length} selected)`, callback_data: doneAction }]);
     return rows;
 }
