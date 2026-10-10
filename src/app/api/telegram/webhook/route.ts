@@ -1023,7 +1023,8 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         const { taskId, selectedKinks = [] } = state.data || {};
         await supabaseAdmin.from('tasks_database').update({ kinks: selectedKinks }).eq('ID', taskId);
         await tgAnswer(callbackQueryId, `${selectedKinks.length} kinks saved`);
-        await sendLimitStep(chatId, state.data);
+        // Pre-fill limits with same categories — user can adjust in next step
+        await sendLimitStep(chatId, { ...state.data, selectedLimits: [...selectedKinks] });
 
     } else if (action === 'tr_lim') {
         const state = await getBotState();
