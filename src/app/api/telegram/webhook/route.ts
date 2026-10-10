@@ -248,12 +248,11 @@ async function startTaskReview(chatId: string) {
         return;
     }
 
-    // Use whatever name/description columns the table has
-    const taskName = task.Name || task.name || task.title || task.Task || '(unnamed)';
-    const taskDesc = task.Description || task.description || task.task_description || task.Instructions || task.instructions || '';
-    const taskCategory = task.Category || task.category || '';
+    const taskName = task.Task || '(unnamed)';
+    const taskDesc = task.Description || '';
+    const taskCategory = task.Category || '';
 
-    await setBotState('task_review_text', { taskId: task.id || task.ID, selectedKinks: [], selectedLimits: [] });
+    await setBotState('task_review_text', { taskId: task.id, taskName, selectedKinks: [], selectedLimits: [] });
 
     await tgSend(
         `<b>TASK REVIEW</b>${taskCategory ? ` · <i>${escapeHtml(taskCategory)}</i>` : ''}\n\n` +
@@ -549,7 +548,7 @@ async function handleMessage(chatId: string, text: string) {
 
     if (state.context === 'task_review_edit_text') {
         const { taskId } = state.data || {};
-        await supabaseAdmin.from('tasks_database').update({ Description: txt }).eq('id', taskId);
+        await supabaseAdmin.from('tasks_database').update({ Description: txt, Task: state.data?.taskName }).eq('id', taskId);
         await tgSend('✅ Text updated.', { chatId });
         await sendKinkStep(chatId, state.data);
         return;
@@ -1007,9 +1006,8 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await tgSend('Type the new task description:', { chatId });
 
     } else if (action === 'tr_skip') {
-        await setBotState(null);
-        await tgAnswer(callbackQueryId);
-        await tgSend('Skipped. /taskreview for next task.', { chatId });
+        await tgAnswer(callbackQueryId, 'Skipped');
+        await startTaskReview(chatId);
 
     } else if (action === 'tr_kink') {
         const state = await getBotState();
