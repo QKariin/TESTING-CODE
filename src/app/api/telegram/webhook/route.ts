@@ -336,8 +336,13 @@ async function sendApprovalStep(chatId: string, data: any) {
 async function finalizeTask(chatId: string, taskId: string) {
     await supabaseAdmin.from('tasks_database').update({ reviewed: true }).eq('ID', taskId);
     await setBotState(null);
-    await tgSend('✅ Saved! Loading next...', { chatId });
-    await startTaskReview(chatId);
+    await tgSend('✅ Task saved!', {
+        chatId,
+        replyMarkup: { inline_keyboard: [[
+            { text: '▶️ Next task', callback_data: 'tr_next' },
+            { text: '✋ Stop for now', callback_data: 'tr_stop' },
+        ]]},
+    });
 }
 
 async function handleTaskVideoUpload(chatId: string, fileId: string, isApproval: boolean, stateData: any) {
@@ -1066,11 +1071,18 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         await sendApprovalStep(chatId, state.data);
 
     } else if (action === 'tr_appr') {
-        // Skip approval video
         const state = await getBotState();
         const { taskId } = state.data || {};
         await tgAnswer(callbackQueryId);
         await finalizeTask(chatId, taskId);
+
+    } else if (action === 'tr_next') {
+        await tgAnswer(callbackQueryId);
+        await startTaskReview(chatId);
+
+    } else if (action === 'tr_stop') {
+        await tgAnswer(callbackQueryId);
+        await tgSend('Done for now. /taskreview to continue anytime.', { chatId });
     }
 }
 
