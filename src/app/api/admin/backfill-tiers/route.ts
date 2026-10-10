@@ -18,11 +18,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Fetch all profiles that don't yet have a subscriptionTier set
+    // Fetch all profiles that don't yet have subscription_tier set
     const { data: profiles, error } = await supabaseAdmin
         .from('profiles')
-        .select('ID, wallet, score, parameters')
-        .or('parameters->>subscriptionTier.is.null,parameters->>subscriptionTier.eq.');
+        .select('ID, wallet, score')
+        .is('subscription_tier', null);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -33,12 +33,9 @@ export async function POST(req: Request) {
         const hasPaid = Number(profile.wallet || 0) > 0 || Number(profile.score || 0) > 0;
         if (!hasPaid) { skipped++; continue; }
 
-        const params = profile.parameters || {};
-        params.subscriptionTier = 'property';
-
         await supabaseAdmin
             .from('profiles')
-            .update({ parameters: params })
+            .update({ subscription_tier: 'property' })
             .eq('ID', profile.ID);
 
         stamped++;

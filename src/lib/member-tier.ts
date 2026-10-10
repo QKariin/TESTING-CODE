@@ -18,26 +18,22 @@ const TIER_RANK: Record<MemberTier, number> = {
 };
 
 export function getMemberTier(profile: any): MemberTier {
+    // Primary source: dedicated column
+    const col = profile?.subscription_tier as string | undefined;
+    if (col === 'property' || col === 'owned') return col as MemberTier;
+    if (col === 'devotee') return 'devotee';
+    if (col === 'initiate') return 'initiate';
+
+    // Fallback: legacy JSONB field (for rows not yet backfilled)
     const params = profile?.parameters || {};
     const raw = params.subscriptionTier as string | undefined;
-
     if (raw === 'property' || raw === 'owned') return raw as MemberTier;
-    if (raw === 'devotee') return 'devotee';
-    if (raw === 'initiate') return 'initiate';
-
-    // Legacy tiers from old stripe/subscribe route — map to nearest equivalent
-    if (raw === 'royal') return 'devotee';
+    if (raw === 'devotee' || raw === 'royal') return 'devotee';
+    if (raw === 'initiate' || raw === 'basic') return 'initiate';
     if (raw === 'ownership') return 'property';
-    if (raw === 'basic') return 'initiate';
 
-    // Existing members with no explicit subscriptionTier = full access (property)
-    // The new tiers apply only to new sign-ups who pick a tier at checkout
-    const paid = params.subscriptionStatus === 'Active'
-        || (params.wishlist_spent || 0) > 0
-        || params.keyholder_tier
-        || (profile?.wallet || 0) > 0
-        || (profile?.score || 0) > 0;
-
+    // No tier data at all — if they have wallet/score they paid, give full access
+    const paid = (profile?.wallet || 0) > 0 || (profile?.score || 0) > 0;
     return paid ? 'property' : 'initiate';
 }
 

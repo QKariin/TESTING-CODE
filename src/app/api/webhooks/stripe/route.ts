@@ -326,21 +326,19 @@ export async function POST(req: Request) {
                 if (profile) {
                     const params = profile.parameters || {};
                     params.subscriptionStatus = "Active";
-                    params.subscriptionTier = tierId;
                     params.subscriptionDate = new Date().toISOString();
                     params.stripeSubscriptionId = session.subscription;
 
                     params.roles = params.roles || [];
                     const roleKey = `subscriber_${tierId}`;
                     if (!params.roles.includes(roleKey)) {
-                        // Remove any previous subscription role before adding new one
                         params.roles = params.roles.filter((r: string) => !r.startsWith('subscriber_'));
                         params.roles.push(roleKey);
                     }
 
                     await supabaseAdmin
                         .from('profiles')
-                        .update({ parameters: params })
+                        .update({ parameters: params, subscription_tier: tierId })
                         .eq('ID', profile.ID);
 
                     console.log(`[SUB] Subscription [${tierId}] activated for existing user.`);
@@ -352,9 +350,9 @@ export async function POST(req: Request) {
                         name: "New Subscriber",
                         wallet: 0,
                         hierarchy: "Newbie",
+                        subscription_tier: tierId,
                         parameters: {
                             subscriptionStatus: "Active",
-                            subscriptionTier: tierId,
                             subscriptionDate: new Date().toISOString(),
                             stripeSubscriptionId: session.subscription,
                             roles: [`subscriber_${tierId}`]
@@ -383,9 +381,8 @@ export async function POST(req: Request) {
             for (const profile of (profiles || [])) {
                 const params = profile.parameters || {};
                 params.subscriptionStatus = 'Cancelled';
-                params.subscriptionTier = null;
                 params.roles = (params.roles || []).filter((r: string) => !r.startsWith('subscriber_'));
-                await supabaseAdmin.from('profiles').update({ parameters: params }).eq('ID', profile.ID);
+                await supabaseAdmin.from('profiles').update({ parameters: params, subscription_tier: null }).eq('ID', profile.ID);
                 console.log(`[SUB] Subscription cancelled for profile ${profile.ID}`);
             }
         } catch (e: any) {
