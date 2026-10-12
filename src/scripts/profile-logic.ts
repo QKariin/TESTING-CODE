@@ -6506,16 +6506,10 @@ let _vaultRealtimeChannel: any = null;
 
 export async function checkVaultLockStatus() {
     try {
-        // Use cached data from splash if available — avoids duplicate API call
-        const cached = (window as any)._vaultAwaitingVideo;
-        let data: any;
-        if (cached) {
-            delete (window as any)._vaultAwaitingVideo;
-            data = { active: true, status: 'awaiting_video', sessionId: cached.sessionId, lockDays: cached.lockDays };
-        } else {
-            const res = await fetch('/api/vault/apply');
-            data = await res.json();
-        }
+        // Always verify via API — cached splash data can be stale (e.g. proof submitted but profile not updated)
+        delete (window as any)._vaultAwaitingVideo;
+        const res = await fetch('/api/vault/apply');
+        const data = await res.json();
         if (data.locktoberInviteVideo) LOCKTOBER_INVITE_VIDEO_URL = data.locktoberInviteVideo;
         _updateVaultLockButton(data);
 

@@ -274,12 +274,18 @@ export async function GET(req: Request) {
 
         if (!session) return NextResponse.json({ active: false });
 
-        // If session is active but profile missing vault markers, fix the profile (not the session)
+        // Sync profile vault markers with actual session status (fixes stale vault_request)
         const profileParams = getProfile?.parameters || {};
-        if (session.status === 'active' && !profileParams.active_overlay && getProfile) {
+        const vrStatus = profileParams.vault_request?.status;
+        const needsSync = getProfile && (
+            (session.status === 'active' && (!profileParams.active_overlay || vrStatus !== 'active')) ||
+            (vrStatus && vrStatus !== session.status)
+        );
+        if (needsSync) {
             try {
-                const params = { ...profileParams, active_overlay: 'vault' };
-                if (!params.vault_request) params.vault_request = { sessionId: session.id, status: 'active' };
+                const params = { ...profileParams };
+                if (session.status === 'active') params.active_overlay = 'vault';
+                params.vault_request = { ...params.vault_request, sessionId: session.id, status: session.status };
                 await getAdmin().from('profiles').update({ parameters: params }).ilike('member_id', memberId);
             } catch (_) {}
         }

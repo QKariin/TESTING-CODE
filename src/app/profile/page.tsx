@@ -657,10 +657,7 @@ export default function ProfilePage() {
                             return; // stop loading — redirect in progress
                         }
                     }
-                    // awaiting_video — store for checkVaultLockStatus to pick up instantly
-                    if (_vaultReq?.status === 'awaiting_video' && _vaultReq?.sessionId) {
-                        (window as any)._vaultAwaitingVideo = { sessionId: _vaultReq.sessionId, lockDays: _vaultReq.lockDays || 7 };
-                    }
+                    // awaiting_video — let checkVaultLockStatus verify via API (don't cache stale status)
 
                     // Init deferred to after splash — see finish() in finally block
                 }
