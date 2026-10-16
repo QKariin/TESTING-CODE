@@ -190,7 +190,9 @@ export async function initDashboardChat(memberIdOrEmail: string) {
             if (rowMemberId !== activeId.toLowerCase() && rowMemberId !== activeUserEmail) return;
             appendChatMessage(msg);
             const senderEmail = (msg.sender_email || '').toLowerCase();
-            if (senderEmail !== (adminEmail || '').toLowerCase() && senderEmail !== (getAdminEmailFallback() || '').toLowerCase()) {
+            const meta = typeof msg.metadata === 'string' ? (() => { try { return JSON.parse(msg.metadata); } catch { return {}; } })() : (msg.metadata || {});
+            if (senderEmail !== (adminEmail || '').toLowerCase() && senderEmail !== (getAdminEmailFallback() || '').toLowerCase()
+                && senderEmail !== 'ai-assistant' && senderEmail !== 'system' && !meta.isAI && !isSystemMessage(msg)) {
                 triggerSound('msgSound');
             }
         })
@@ -282,7 +284,9 @@ async function pollNewMessages(memberId: string, gen: number) {
         newMsgs.forEach((m: any) => appendChatMessage(m));
         const incomingMsgs = newMsgs.filter((m: any) => {
             const s = (m.sender_email || '').toLowerCase();
-            return s !== (adminEmail || '').toLowerCase() && s !== (getAdminEmailFallback() || '').toLowerCase();
+            const meta = typeof m.metadata === 'string' ? (() => { try { return JSON.parse(m.metadata); } catch { return {}; } })() : (m.metadata || {});
+            return s !== (adminEmail || '').toLowerCase() && s !== (getAdminEmailFallback() || '').toLowerCase()
+                && s !== 'ai-assistant' && s !== 'system' && !meta.isAI && !isSystemMessage(m);
         });
         if (incomingMsgs.length > 0) triggerSound('msgSound');
     } catch {

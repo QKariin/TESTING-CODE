@@ -244,8 +244,10 @@ export default function VaultPage() {
             // Check localStorage: if already submitted today, never show gate
             const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz });
             if (localStorage.getItem('_ck_submitted') === todayStr) return false;
-            if (!_initCache.session?.active) return false;
-            const status = _initCache.session?.chastityCheck?.status;
+            // Check both cache and live data (live persists across SPA remounts)
+            const sessionData = _initCache.session ?? _liveVaultData;
+            if (!sessionData?.active) return false;
+            const status = sessionData?.chastityCheck?.status;
             return status !== 'approved' && status !== 'pending';
         } catch { return false; }
     });
@@ -1039,6 +1041,9 @@ export default function VaultPage() {
         } catch {}
         // Require active vault session — daysIn 0+ is fine (Day 1 needs morning check too)
         if (!vaultData?.session?.id) return;
+        // Check vaultData directly — chastityStatus state may lag behind the API data
+        const dbStatus = vaultData?.chastityCheck?.status;
+        if (dbStatus === 'approved' || dbStatus === 'pending') return;
         chastityGateAutoOpened.current = true;
         setShowChastityGate(true);
     }, [chastityWindow, vaultData, chastityStatus, isLocktober]);

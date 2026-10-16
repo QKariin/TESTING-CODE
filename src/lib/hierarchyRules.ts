@@ -3,6 +3,7 @@
 
 export interface SlaveRecord {
     hierarchy?: string;
+    avatar_url?: string;
     image_fld?: string;
     image?: string;
     profilePicture?: string;
@@ -213,7 +214,7 @@ function generateReport(item: SlaveRecord, currentRank: string): HierarchyReport
     // 1. Identity
     if (req.name || req.photo) {
         const SILHOUETTE = "ce3e5b_e06c7a2254d848a480eb98107c35e246";
-        const img = item.image_fld || item.image || item.profilePicture || "";
+        const img = item.avatar_url || item.image_fld || item.image || item.profilePicture || "";
         const hasPhoto = (img && img.length > 5 && !img.includes(SILHOUETTE));
         const nameStr = (item.title_fld || item.title || "").toUpperCase().trim();
         const hasName = (nameStr.length > 0 && nameStr !== "SLAVE" && nameStr !== "NEW SLAVE");
