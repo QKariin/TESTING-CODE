@@ -374,11 +374,13 @@ function LeadsInlinePanel() {
     };
 
     useEffect(() => {
-        fetchLeads();
-        // Auto-sync leads to OneSignal on load
-        fetch('/api/push/sync-leads', { method: 'POST' }).then(r => r.json()).then(d => {
-            if (d.synced > 0) setSyncMsg(`${d.synced} synced`);
-        }).catch(() => {});
+        // Auto-sync missed auth users → leads on load, then refresh
+        fetch('/api/leads', { method: 'PATCH' }).then(r => r.json()).then(d => {
+            if (d.synced > 0) setSyncMsg(`${d.synced} new`);
+            fetchLeads();
+        }).catch(() => fetchLeads());
+        // Also sync to OneSignal
+        fetch('/api/push/sync-leads', { method: 'POST' }).catch(() => {});
         // Refresh every 30s so new knockers appear without reloading
         const iv = setInterval(fetchLeads, 30000);
         return () => clearInterval(iv);
@@ -387,9 +389,18 @@ function LeadsInlinePanel() {
     const syncLeads = async () => {
         setSyncing(true); setSyncMsg('');
         try {
-            const res = await fetch('/api/push/sync-leads', { method: 'POST' });
-            const d = await res.json();
-            setSyncMsg(d.error ? 'Error' : `${d.synced}/${d.total} synced`);
+            // 1. Sync missed users from auth.users → leads table
+            const authRes = await fetch('/api/leads', { method: 'PATCH' });
+            const authData = await authRes.json();
+            const authMsg = authData.synced > 0 ? `${authData.synced} found` : '';
+
+            // 2. Push leads to OneSignal
+            const pushRes = await fetch('/api/push/sync-leads', { method: 'POST' });
+            const d = await pushRes.json();
+            const pushMsg = d.error ? 'push err' : `${d.synced} pushed`;
+
+            setSyncMsg([authMsg, pushMsg].filter(Boolean).join(' · '));
+            fetchLeads(); // Refresh the list
         } catch { setSyncMsg('Error'); }
         setSyncing(false);
     };
