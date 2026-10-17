@@ -75,20 +75,9 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true); setError(null);
         const supabase = createClient();
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) { setError(signInError.message); setLoading(false); return; }
-        // Run finalize to capture leads for new/bare users (same as OAuth flow)
-        try {
-            const res = await fetch('/api/auth/finalize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email.trim().toLowerCase(), userId: data.user?.id, provider: 'email' }),
-            });
-            const json = await res.json();
-            window.location.href = json.hasProfile ? '/profile' : '/tribute';
-        } catch {
-            window.location.href = '/profile';
-        }
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { setError(error.message); setLoading(false); }
+        else window.location.href = '/profile';
     };
 
     return (
