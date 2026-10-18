@@ -216,11 +216,19 @@ export function discordLeaderboardChampion(name: string, period: string, score: 
 }
 
 export function discordStreamLive() {
+    // Use actual stream thumbnail from Cloudflare with cache-bust so Discord shows a fresh frame
+    const CF_SUBDOMAIN = 'customer-d8ziir1df1lqjii2.cloudflarestream.com';
+    const CF_STREAM_ID = '9a3ae8586ec9914c65a5c3a752671fd6';
+    const cacheBust = Date.now();
+    // Composite OG image: stream thumbnail + branded LIVE overlay
+    const streamThumb = `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/thumbnails/thumbnail.jpg?height=720&time=0s&_t=${cacheBust}`;
+    const liveImage = `${BASE}/api/og/stream-live?thumb=${encodeURIComponent(streamThumb)}&_t=${cacheBust}`;
+
     return sendDiscordEmbed({
-        title: 'QUEEN KARIN IS LIVE',
-        description: `The Queen is streaming right now. Join and watch.\n\n[Join the stream](${APP_LINK}/profile)`,
-        color: 15548997, // red
-        image: { url: cardUrl('stream', 'QUEEN IS LIVE', 'The Queen is streaming right now', 'Join and watch') },
+        title: '🔴  QUEEN KARIN IS LIVE',
+        description: `**The Queen is live right now.**\n\n**[→ Watch the stream](${APP_LINK}/profile)**`,
+        color: 0xed4245, // Discord red
+        image: { url: liveImage },
     });
 }
 
