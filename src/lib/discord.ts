@@ -216,13 +216,8 @@ export function discordLeaderboardChampion(name: string, period: string, score: 
 }
 
 export function discordStreamLive() {
-    // Use actual stream thumbnail from Cloudflare with cache-bust so Discord shows a fresh frame
-    const CF_SUBDOMAIN = 'customer-d8ziir1df1lqjii2.cloudflarestream.com';
-    const CF_STREAM_ID = '9a3ae8586ec9914c65a5c3a752671fd6';
     const cacheBust = Date.now();
-    // Composite OG image: stream thumbnail + branded LIVE overlay
-    const streamThumb = `https://${CF_SUBDOMAIN}/${CF_STREAM_ID}/thumbnails/thumbnail.jpg?height=720&time=0s&_t=${cacheBust}`;
-    const liveImage = `${BASE}/api/og/stream-live?thumb=${encodeURIComponent(streamThumb)}&_t=${cacheBust}`;
+    const liveImage = `${BASE}/api/og/stream-live?_t=${cacheBust}`;
 
     return sendDiscordEmbed({
         title: '🔴  QUEEN KARIN IS LIVE',
