@@ -1767,8 +1767,16 @@ export default function DashboardPage() {
                         const isSelectedVault = isVault && vaultSelected === s.id;
                         const isPriceEditing = storyPriceEdit?.id === s.id;
                         const isPaid = s.tier === 'paid' && s.tribute_price;
+                        const deleteStory = async (e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            if (!confirm('Delete this story?')) return;
+                            await fetch(`/api/stories/admin?id=${s.id}`, { method: 'DELETE' });
+                            setStoriesMgmtData(prev => prev.filter((x: any) => x.id !== s.id));
+                            setAllTimeStoriesData(prev => prev.filter((x: any) => x.id !== s.id));
+                            if (vaultSelected === s.id) setVaultSelected(null);
+                        };
                         return (
-                            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: storiesAssigning ? 0.4 : 1, position: 'relative' }}>
+                            <div className="story-thumb-wrap" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: storiesAssigning ? 0.4 : 1, position: 'relative' }}>
                                 <div
                                     draggable
                                     onDragStart={() => isVault ? onVaultDragStart(s.id) : onTodayDragStart(s.id)}
@@ -1783,12 +1791,15 @@ export default function DashboardPage() {
                                         background: '#000',
                                         boxShadow: isSelectedVault ? '0 0 14px rgba(197,160,89,0.4)' : 'none',
                                         transition: 'all 0.15s',
+                                        position: 'relative',
                                     }}
                                 >
                                     {s.media_type === 'video'
                                         ? <video src={s.media_url + '#t=0.1'} muted playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
                                         : <img src={s.media_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                                     }
+                                    {/* Delete X — visible on hover */}
+                                    <button onClick={deleteStory} className="story-delete-x" style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(224,48,48,0.85)', border: 'none', color: '#fff', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.15s', lineHeight: 1, padding: 0 }}>✕</button>
                                 </div>
                                 {/* Caption label */}
                                 <div style={{ fontFamily: "'Rajdhani', sans-serif", fontSize: '0.28rem', color: isSelectedVault ? '#c5a059' : 'rgba(255,255,255,0.2)', letterSpacing: '1px', maxWidth: 76, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -6123,3 +6123,8 @@ h3,
     padding: 20px 22px;
     border-top: 1px solid rgba(197,160,89,0.04);
 }
+
+/* Story thumbnail delete button — show on hover */
+.story-thumb-wrap:hover .story-delete-x {
+    opacity: 1 !important;
+}

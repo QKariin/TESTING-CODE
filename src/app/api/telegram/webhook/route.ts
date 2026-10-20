@@ -456,6 +456,21 @@ async function handleMessage(chatId: string, text: string) {
             await sendVideoStep(chatId, state.data);
             return;
         }
+        // Publish any pending TikTok drafts as public
+        const today = new Date().toISOString().split('T')[0];
+        const { data: pendingTiktok } = await supabaseAdmin
+            .from('stories')
+            .select('id')
+            .eq('source', 'tiktok')
+            .eq('archived', true)
+            .eq('date', today);
+        if (pendingTiktok && pendingTiktok.length > 0) {
+            const ids = pendingTiktok.map((s: any) => s.id);
+            await supabaseAdmin.from('stories').update({ archived: false }).in('id', ids);
+            await setBotState(null);
+            await tgSend(`${ids.length} ${ids.length === 1 ? 'story' : 'stories'} published as public.`, { chatId });
+            return;
+        }
         await setBotState(null);
         await tgSend('Cancelled.', { chatId });
         return;
@@ -806,9 +821,10 @@ async function handleTag(chatId: string, name: string) {
     const email = (target.member_id || '').toLowerCase();
     const displayName = target.name || email.split('@')[0];
 
+    // Get today's stories (including archived drafts from TikTok agent)
     const { data: stories } = await supabaseAdmin
         .from('stories')
-        .select('id, tagged_members')
+        .select('id, tagged_members, archived')
         .eq('date', today);
 
     if (!stories || stories.length === 0) {
@@ -818,14 +834,22 @@ async function handleTag(chatId: string, name: string) {
 
     for (const story of stories) {
         const existing: string[] = Array.isArray(story.tagged_members) ? story.tagged_members : [];
+        const update: Record<string, any> = {};
         if (!existing.includes(email)) {
-            await supabaseAdmin.from('stories').update({ tagged_members: [...existing, email] }).eq('id', story.id);
+            update.tagged_members = [...existing, email];
+        }
+        // Publish drafts (archived TikTok stories) when tagging
+        if (story.archived) {
+            update.archived = false;
+        }
+        if (Object.keys(update).length > 0) {
+            await supabaseAdmin.from('stories').update(update).eq('id', story.id);
         }
     }
 
     await setBotState(null);
     await tgSend(
-        `✓ Tagged <b>${escapeHtml(displayName)}</b> in today's ${stories.length} ${stories.length === 1 ? 'story' : 'stories'}.`,
+        `✓ Tagged <b>${escapeHtml(displayName)}</b> in ${stories.length} ${stories.length === 1 ? 'story' : 'stories'} — now live.`,
         { chatId }
     );
 }
@@ -854,11 +878,11 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
             return;
         }
 
-        // Manual /tag flow — tag all today's stories
+        // Manual /tag flow — tag all today's stories (including archived drafts)
         const today = new Date().toISOString().split('T')[0];
         const { data: stories } = await supabaseAdmin
             .from('stories')
-            .select('id, tagged_members')
+            .select('id, tagged_members, archived')
             .eq('date', today);
 
         if (!stories || stories.length === 0) {
@@ -867,8 +891,13 @@ async function handleCallbackQuery(callbackQueryId: string, data: string, chatId
         }
         for (const story of stories) {
             const existing: string[] = Array.isArray(story.tagged_members) ? story.tagged_members : [];
+            const update: Record<string, any> = {};
             if (!existing.map(e => e.toLowerCase()).includes(value.toLowerCase())) {
-                await supabaseAdmin.from('stories').update({ tagged_members: [...existing, value] }).eq('id', story.id);
+                update.tagged_members = [...existing, value];
+            }
+            if (story.archived) update.archived = false;
+            if (Object.keys(update).length > 0) {
+                await supabaseAdmin.from('stories').update(update).eq('id', story.id);
             }
         }
         await tgAnswer(callbackQueryId, `Tagged ${name}`);

@@ -197,6 +197,7 @@ jobs:
               public_url = f'{SUPABASE_URL}/storage/v1/object/public/media/{storage_path}'
 
               # Save to stories table
+              # Insert as DRAFT (archived=true) — Queen decides who it's for via Telegram before it goes live
               ins = requests.post(
                   f'{SUPABASE_URL}/rest/v1/stories',
                   headers={**headers, 'Prefer': 'return=minimal'},
@@ -210,7 +211,7 @@ jobs:
                       'source_id': vid_id,
                       'tagged_members': tagged_members,
                       'expires_at': expires_at,
-                      'archived': False,
+                      'archived': True,
                   },
                   timeout=10
               )
@@ -225,15 +226,12 @@ jobs:
 
           # Telegram summary
           if uploaded > 0:
-              msg = f'<b>{uploaded} new {"story" if uploaded == 1 else "stories"} live!</b>\nDate: {today} · expires in 24h\n\n'
+              msg = f'<b>{uploaded} new {"video" if uploaded == 1 else "videos"} ready</b> (NOT live yet)\nDate: {today}\n\n'
               if tagged_summary:
-                  msg += f'Auto-tagged: <b>{", ".join(tagged_summary)}</b>\n'
-                  untagged = uploaded - len(tagged_summary)
-                  if untagged > 0:
-                      msg += f'{untagged} public (no name found in description)\n'
-                  msg += '\nTag more? /tag [name] · /stories for status'
-              else:
-                  msg += 'No names detected in descriptions — all public.\nTag someone? /tag [name] or /skip'
+                  msg += f'Auto-detected: <b>{", ".join(tagged_summary)}</b>\n'
+              msg += '<b>Who are these for?</b>\n'
+              msg += '/tag [name] — assign to a member\n'
+              msg += '/skip — publish all as public'
               tg(msg)
           else:
               tg(f'TikTok: found {len(new_videos)} new videos but all uploads failed. Check Actions log.')
