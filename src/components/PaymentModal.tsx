@@ -93,10 +93,6 @@ export default function PaymentModal({
             const data = await res.json();
             if (data.success) {
                 setInlineAddress({ ...data, currency: 'BTC' });
-                // If hosted payment URL, open it immediately
-                if (data.paymentUrl && !data.address) {
-                    window.open(data.paymentUrl, '_blank');
-                }
                 if (pollRef.current) clearInterval(pollRef.current);
                 let polls = 0;
                 pollRef.current = setInterval(async () => {
@@ -193,34 +189,6 @@ export default function PaymentModal({
                 return;
             }
 
-            // If API returns a hosted payment URL, open it and poll for completion
-            if (data.paymentUrl) {
-                window.open(data.paymentUrl, '_blank');
-                setCryptoData({ ...data, currency: ticker });
-                setScreen('qr');
-
-                if (pollRef.current) clearInterval(pollRef.current);
-                let polls = 0;
-                pollRef.current = setInterval(async () => {
-                    polls++;
-                    if (polls > 120) { if (pollRef.current) clearInterval(pollRef.current); return; }
-                    try {
-                        const r = await fetch(cryptoStatusApiPath, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...cryptoStatusBody, orderId: data.orderId }),
-                        });
-                        const d = await r.json();
-                        if (d.paid) {
-                            if (pollRef.current) clearInterval(pollRef.current);
-                            setConfirmed(true);
-                            setTimeout(() => onSuccess?.(), 2500);
-                        }
-                    } catch {}
-                }, 5000);
-                return;
-            }
-
             setCryptoData({ ...data, currency: ticker });
             setScreen('qr');
 
@@ -313,13 +281,46 @@ export default function PaymentModal({
     );
 
     /* ── QR OVERLAY ── */
-    if (screen === 'qr' && cryptoData) return (
+    if (screen === 'qr' && cryptoData) {
+        // Embedded PassimPay payment page (no redirect away from site)
+        if (!cryptoData.address && cryptoData.paymentUrl) return (
+            <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={BG} />
+                <div style={OVERLAY} />
+                <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+                <div style={{ position: 'relative', width: '100%', maxWidth: 460, height: '92vh', display: 'flex', flexDirection: 'column', padding: '0 12px' }}>
+                    {/* Header bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 4px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {confirmed ? (
+                                <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700 }}>{confirmMessage}</span>
+                            ) : (<>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
+                                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', letterSpacing: 3, fontWeight: 600 }}>WAITING FOR PAYMENT</span>
+                            </>)}
+                        </div>
+                        <button onClick={() => { setCryptoData(null); if (pollRef.current) clearInterval(pollRef.current); setScreen('method'); }}
+                            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', letterSpacing: 3, padding: '8px 16px', cursor: 'pointer' }}>CANCEL</button>
+                    </div>
+                    {/* Embedded payment page */}
+                    <div style={{ flex: 1, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <iframe
+                            src={cryptoData.paymentUrl}
+                            style={{ width: '100%', height: '100%', border: 'none', borderRadius: 16 }}
+                            allow="clipboard-write"
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Direct wallet address (QR + copy)
+        return (
         <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'scroll', scrollbarWidth: 'none', padding: '28px 24px 48px' }}>
             <div style={BG} />
             <div style={OVERLAY} />
             <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
             <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 420 }}>
-            {/* AMOUNT — first, biggest, unmissable */}
             <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 6, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>SEND EXACTLY</div>
             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(1.5rem,5vw,2.2rem)', color: '#fff', fontWeight: 900, lineHeight: 1, marginBottom: 6, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -328,9 +329,6 @@ export default function PaymentModal({
                 <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>€{Number(cryptoData.amountEur).toFixed(2)}</span>
             </div>
             <div style={{ height: 1, width: 60, background: 'rgba(255,255,255,0.08)', margin: '16px 0 24px' }} />
-
-            {/* QR or payment link */}
-            {cryptoData.address ? (<>
             <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(cryptoData.address)}`}
                 alt="QR"
@@ -343,14 +341,6 @@ export default function PaymentModal({
                     {copied ? '✓ COPIED' : 'COPY ADDRESS'}
                 </button>
             </div>
-            </>) : cryptoData.paymentUrl ? (
-            <div style={{ width: '100%', maxWidth: 400 }}>
-                <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginBottom: 20, lineHeight: 1.7 }}>Payment page opened in a new tab.<br/>Complete the payment there.</div>
-                <button onClick={() => window.open(cryptoData.paymentUrl, '_blank')} style={{ width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer' }}>
-                    OPEN PAYMENT PAGE
-                </button>
-            </div>
-            ) : null}
             {confirmed ? (
                 <div style={{ marginTop: 32, fontFamily: 'Rajdhani,sans-serif', fontSize: '1rem', color: '#66bb6a', letterSpacing: 3, fontWeight: 700 }}>{confirmMessage}</div>
             ) : (
@@ -364,7 +354,8 @@ export default function PaymentModal({
                 style={{ marginTop: 24, width: '100%', maxWidth: 400, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
         </div>
-    );
+        );
+    }
 
     /* ── CRYPTO PICKER ── */
     if (screen === 'crypto-picker') return (
@@ -490,9 +481,9 @@ export default function PaymentModal({
                                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                                             </button>
                                             </>) : inlineAddress.paymentUrl ? (
-                                            <button onClick={() => window.open(inlineAddress.paymentUrl, '_blank')} style={{ width: '100%', padding: '15px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 8, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                                                OPEN PAYMENT PAGE
-                                            </button>
+                                            <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
+                                                <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
+                                            </div>
                                             ) : null}
                                         </>
                                     )}
@@ -531,9 +522,9 @@ export default function PaymentModal({
                                         {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                                     </button>
                                     </>) : inlineAddress.paymentUrl ? (
-                                    <button onClick={() => window.open(inlineAddress.paymentUrl, '_blank')} style={{ width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                                        OPEN PAYMENT PAGE
-                                    </button>
+                                    <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
+                                        <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
+                                    </div>
                                     ) : null}
                                     {confirmed ? (
                                         <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
@@ -609,9 +600,9 @@ export default function PaymentModal({
                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                             </button>
                             </>) : inlineAddress.paymentUrl ? (
-                            <button onClick={() => window.open(inlineAddress.paymentUrl, '_blank')} style={{ width: '100%', padding: '18px', background: 'rgba(197,160,89,0.08)', border: '1px solid rgba(197,160,89,0.3)', borderRadius: 10, color: '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
-                                OPEN PAYMENT PAGE
-                            </button>
+                            <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
+                                <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
+                            </div>
                             ) : null}
                             {confirmed ? (
                                 <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
