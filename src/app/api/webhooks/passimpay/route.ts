@@ -226,18 +226,34 @@ export async function POST(req: Request) {
 
             case 'keyholder': {
                 const tierId = pendingMeta?.tierId || 'weekly';
+                const days = pendingMeta?.days || { weekly: 7, monthly: 30, quarterly: 90, locktober: 31 }[tierId] || 7;
+                const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
                 await supabaseAdmin.from('profiles').update({
                     parameters: {
                         ...params,
                         keyholder_tier: tierId,
                         keyholder_order: orderId,
+                        keyholder_started: new Date().toISOString(),
+                        keyholder_expires: expiresAt,
                         pendingKeyholderPay: null,
+                        purchaseHistory: [
+                            ...(params.purchaseHistory || []),
+                            {
+                                type: 'KEYHOLDER_CRYPTO',
+                                tierId,
+                                days,
+                                timestamp: new Date().toISOString(),
+                                memberId,
+                                name: profile.name || memberId,
+                                sessionId: orderId,
+                            },
+                        ],
                     },
                 }).eq('ID', profile.ID);
-                console.log('[passimpay webhook] keyholder paid for:', memberId, 'tier:', tierId);
+                console.log('[passimpay webhook] keyholder paid for:', memberId, 'tier:', tierId, 'expires:', expiresAt);
                 pushTitle = 'New Keyholder Sub (Crypto)';
-                pushMessage = `${profile.name || memberId} surrendered their key — ${tierId} paid with PassimPay`;
+                pushMessage = `${profile.name || memberId} surrendered their key — ${tierId} (${days}d) paid with PassimPay`;
                 break;
             }
 
