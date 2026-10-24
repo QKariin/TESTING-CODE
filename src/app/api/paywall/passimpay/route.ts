@@ -5,13 +5,13 @@ import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
-function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
+function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string, extra?: Record<string, string>) {
     const qs = new URLSearchParams(params).toString();
     const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
     return fetch(`https://api.passimpay.io${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ ...params, hash }).toString(),
+        body: new URLSearchParams({ ...params, ...extra, hash }).toString(),
     });
 }
 
@@ -58,8 +58,7 @@ export async function POST(req: Request) {
             platform_id: platformId,
             order_id: orderId,
             amount: amountUsd.toFixed(2),
-            client_ip: clientIp,
-        }, apiKey);
+        }, apiKey, { client_ip: clientIp });
         const orderData = await orderRes.json();
         console.log('[passimpay] createorder:', orderData);
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
