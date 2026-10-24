@@ -394,10 +394,10 @@ export default function LoctoberClient() {
                 amountEur={PRICE}
                 label="LOCKTOBER PROGRAM"
                 cardBody={{ memberId: userEmail || '', amount: PRICE }}
-                cryptoApiPath="/api/keyholder/passimpay"
-                cryptoStatusApiPath="/api/keyholder/passimpay-status"
-                cryptoPayBody={{ tierId: 'loctober' }}
-                cryptoStatusBody={{ tierId: 'loctober' }}
+                cryptoApiPath="/api/keyholder/crypto"
+                cryptoStatusApiPath="/api/crypto/status"
+                cryptoPayBody={{ tierId: 'locktober' }}
+                cryptoStatusBody={{ tierId: 'locktober' }}
                 confirmMessage="PAYMENT CONFIRMED. SEE YOU OCTOBER 1ST."
                 throneUrl="https://throne.com/q_karin/item/29a73075-8316-4e73-b1c0-615d1d73a37c"
                 patreonUrl="https://www.patreon.com/QKarin/posts/locktoberfest-169936709?source=storefront"

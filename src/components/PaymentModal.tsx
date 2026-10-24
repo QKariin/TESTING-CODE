@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 
 const CRYPTO_OPTIONS = [
-    { id: 70, label: 'USDT', sub: 'TRC20 · Stablecoin · Recommended', color: '#26a17b', icon: '₮', ticker: 'USDT' },
-    { id: 10, label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿', ticker: 'BTC' },
-    { id: 20, label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ', ticker: 'ETH' },
-    { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł', ticker: 'LTC' },
+    { id: 70, label: 'USDT', sub: 'TRC20 · Stablecoin · Recommended', color: '#26a17b', icon: '₮', ticker: 'USDT', cryptapiTicker: 'trc20/usdt' },
+    { id: 10, label: 'BITCOIN', sub: 'BTC · ~10 min', color: '#f7931a', icon: '₿', ticker: 'BTC', cryptapiTicker: 'btc' },
+    { id: 20, label: 'ETHEREUM', sub: 'ETH · ~2 min', color: '#627eea', icon: 'Ξ', ticker: 'ETH', cryptapiTicker: 'eth' },
+    { id: 60, label: 'LITECOIN', sub: 'LTC · ~2 min', color: '#bfbbbb', icon: 'Ł', ticker: 'LTC', cryptapiTicker: 'ltc' },
 ];
 
 const TICKER_COLORS: Record<string, string> = {
@@ -88,24 +88,21 @@ export default function PaymentModal({
             const res = await fetch(cryptoApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...cryptoPayBody, currencyId: 10 }),
+                body: JSON.stringify({ ...cryptoPayBody, ticker: 'btc' }),
             });
             const data = await res.json();
             if (data.success) {
-                setInlineAddress({ ...data, currency: 'BTC' });
+                const orderId = data.orderId || data.order_id;
+                setInlineAddress({ ...data, orderId, currency: 'BTC' });
                 if (pollRef.current) clearInterval(pollRef.current);
                 let polls = 0;
                 pollRef.current = setInterval(async () => {
                     polls++;
                     if (polls > 120) { if (pollRef.current) clearInterval(pollRef.current); return; }
                     try {
-                        const r = await fetch(cryptoStatusApiPath, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...cryptoStatusBody, orderId: data.orderId }),
-                        });
+                        const r = await fetch(`/api/crypto/status?order_id=${encodeURIComponent(orderId)}`);
                         const d = await r.json();
-                        if (d.paid) {
+                        if (d.status === 'completed' || d.paid) {
                             if (pollRef.current) clearInterval(pollRef.current);
                             setConfirmed(true);
                             setTimeout(() => onSuccess?.(), 2500);
@@ -176,11 +173,14 @@ export default function PaymentModal({
     const handleCryptoPick = async (currencyId: number, ticker: string) => {
         setScreen('loading');
         setCryptoError('');
+        // Map display ticker to CryptAPI ticker
+        const opt = CRYPTO_OPTIONS.find(o => o.id === currencyId);
+        const cryptapiTicker = opt?.cryptapiTicker || 'trc20/usdt';
         try {
             const res = await fetch(cryptoApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...cryptoPayBody, currencyId }),
+                body: JSON.stringify({ ...cryptoPayBody, ticker: cryptapiTicker }),
             });
             const data = await res.json();
             if (!data.success) {
@@ -188,7 +188,11 @@ export default function PaymentModal({
                 setScreen('crypto-picker');
                 return;
             }
-            setCryptoData({ ...data, currency: ticker });
+            // Normalize CryptAPI response fields
+            const orderId = data.orderId || data.order_id;
+            const cryptoAmount = data.cryptoAmount || data.amount;
+            const amountEur = data.amountEur || data.amount_eur;
+            setCryptoData({ ...data, orderId, cryptoAmount, amountEur, currency: ticker });
             setScreen('qr');
 
             if (pollRef.current) clearInterval(pollRef.current);
@@ -197,13 +201,9 @@ export default function PaymentModal({
                 polls++;
                 if (polls > 120) { if (pollRef.current) clearInterval(pollRef.current); return; }
                 try {
-                    const r = await fetch(cryptoStatusApiPath, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...cryptoStatusBody, orderId: data.orderId }),
-                    });
+                    const r = await fetch(`/api/crypto/status?order_id=${encodeURIComponent(orderId)}`);
                     const d = await r.json();
-                    if (d.paid) {
+                    if (d.status === 'completed' || d.paid) {
                         if (pollRef.current) clearInterval(pollRef.current);
                         setConfirmed(true);
                         setTimeout(() => onSuccess?.(), 2500);

@@ -19,8 +19,8 @@ export default function TestPayment() {
                     amountEur={49}
                     label="SPECIAL TRIBUTE"
                     cardBody={{ memberId: 'test@test.com', amount: 49 }}
-                    cryptoApiPath="/api/paywall/passimpay"
-                    cryptoStatusApiPath="/api/paywall/passimpay-status"
+                    cryptoApiPath="/api/paywall/crypto"
+                    cryptoStatusApiPath="/api/crypto/status"
                     cryptoPayBody={{ memberId: 'test@test.com', amount: 49 }}
                     cryptoStatusBody={{ memberId: 'test@test.com' }}
                     confirmMessage="✓ PAYMENT CONFIRMED — UNLOCKING..."
