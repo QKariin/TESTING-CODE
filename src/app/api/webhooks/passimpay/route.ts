@@ -226,7 +226,8 @@ export async function POST(req: Request) {
 
             case 'keyholder': {
                 const tierId = pendingMeta?.tierId || 'weekly';
-                const days = pendingMeta?.days || { weekly: 7, monthly: 30, quarterly: 90, locktober: 31 }[tierId] || 7;
+                const tierDays: Record<string, number> = { weekly: 7, monthly: 30, quarterly: 90, locktober: 31 };
+                const days = pendingMeta?.days || tierDays[tierId as string] || 7;
                 const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
                 await supabaseAdmin.from('profiles').update({
