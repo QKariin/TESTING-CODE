@@ -2937,8 +2937,8 @@ export default function ProfilePage() {
                 amountEur={coinPayment.eur}
                 label="BOOST WALLET"
                 cardBody={{ memberId: coinPayment.memberId, amount: coinPayment.eur }}
-                cryptoApiPath="/api/crypto/create"
-                cryptoStatusApiPath="/api/crypto/status"
+                cryptoApiPath="/api/coins/passimpay"
+                cryptoStatusApiPath="/api/coins/passimpay-status"
                 cryptoPayBody={{ coins: coinPayment.coins }}
                 cryptoStatusBody={{ memberId: coinPayment.memberId, coins: coinPayment.coins }}
                 confirmMessage="✓ PAYMENT CONFIRMED — CREDITING COINS..."

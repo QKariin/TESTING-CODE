@@ -242,8 +242,8 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                 amountEur={paywallAmount}
                 label="SPECIAL TRIBUTE"
                 cardBody={{ memberId: email, amount: paywallAmount }}
-                cryptoApiPath="/api/paywall/crypto"
-                cryptoStatusApiPath="/api/crypto/status"
+                cryptoApiPath="/api/paywall/passimpay"
+                cryptoStatusApiPath="/api/paywall/passimpay-status"
                 cryptoPayBody={{ memberId: email, amount: paywallAmount }}
                 cryptoStatusBody={{ memberId: email }}
                 confirmMessage="✓ PAYMENT CONFIRMED — UNLOCKING..."

@@ -1317,8 +1317,8 @@ export default function TributePage() {
                 amountEur={selectedTier.price}
                 label="ENTRANCE TRIBUTE"
                 cardBody={{ memberId: userEmail || '', amount: selectedTier.price }}
-                cryptoApiPath="/api/tribute/crypto"
-                cryptoStatusApiPath="/api/crypto/status"
+                cryptoApiPath="/api/tribute/passimpay"
+                cryptoStatusApiPath="/api/tribute/passimpay-status"
                 cryptoPayBody={{ memberId: userEmail || '', amount: selectedTier.price, tierId: selectedTier.id }}
                 cryptoStatusBody={{ tierId: selectedTier.id }}
                 confirmMessage="✓ PAYMENT CONFIRMED — ENTERING..."
