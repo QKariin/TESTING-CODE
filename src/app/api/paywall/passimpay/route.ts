@@ -5,19 +5,18 @@ import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
-function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string, extra?: Record<string, string>) {
+function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
     const qs = new URLSearchParams(params).toString();
     const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
     return fetch(`https://api.passimpay.io${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ ...params, ...extra, hash }).toString(),
+        body: new URLSearchParams({ ...params, hash }).toString(),
     });
 }
 
 export async function POST(req: Request) {
     try {
-        const clientIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim();
         const { memberId, amount, currencyId } = await req.json();
         if (!memberId || !amount || !currencyId) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
 
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
             platform_id: platformId,
             order_id: orderId,
             amount: amountUsd.toFixed(2),
-        }, apiKey, { client_ip: clientIp });
+        }, apiKey);
         const orderData = await orderRes.json();
         console.log('[passimpay] createorder:', orderData);
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });

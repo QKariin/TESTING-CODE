@@ -10,19 +10,18 @@ const CRYPTO_ID_MAP: Record<string, string> = {
     '70': 'tether', '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
 };
 
-function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string, extra?: Record<string, string>) {
+function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
     const qs = new URLSearchParams(params).toString();
     const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
     return fetch(`https://api.passimpay.io${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ ...params, ...extra, hash }).toString(),
+        body: new URLSearchParams({ ...params, hash }).toString(),
     });
 }
 
 export async function POST(req: Request) {
     try {
-        const clientIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim();
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         const userId = user?.id || null;
@@ -65,7 +64,7 @@ export async function POST(req: Request) {
             platform_id: platformId,
             order_id: orderId,
             amount: amountUsd.toFixed(2),
-        }, apiKey, { client_ip: clientIp });
+        }, apiKey);
         const orderData = await orderRes.json();
         console.error('[tribute/passimpay] createorder response:', JSON.stringify(orderData));
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
