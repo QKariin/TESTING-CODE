@@ -5,13 +5,14 @@ import { findProfile } from '@/lib/lookup';
 
 export const dynamic = 'force-dynamic';
 
-function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
-    const qs = new URLSearchParams(params).toString();
-    const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
+function ppRequest(endpoint: string, body: Record<string, any>, apiKey: string, platformId: string) {
+    const jsonBody = JSON.stringify(body).replace(/\//g, '\\/');
+    const signatureContract = `${platformId};${jsonBody};${apiKey}`;
+    const signature = createHmac('sha256', apiKey).update(signatureContract).digest('hex');
     return fetch(`https://api.passimpay.io${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ ...params, hash }).toString(),
+        headers: { 'Content-Type': 'application/json', 'x-signature': signature },
+        body: jsonBody,
     });
 }
 
@@ -53,16 +54,24 @@ export async function POST(req: Request) {
         } catch {}
 
         // Create order (amount in USD — PassimPay platform currency)
-        const orderRes = await ppRequest('/createorder', {
-            platform_id: platformId,
-            order_id: orderId,
+        const orderRes = await ppRequest('/v2/createorder', {
+            platformId: Number(platformId),
+            orderId,
             amount: amountUsd.toFixed(2),
-        }, apiKey);
+        }, apiKey, platformId);
         const orderData = await orderRes.json();
-        console.log('[passimpay] createorder:', orderData);
+        console.log('[passimpay] createorder:', JSON.stringify(orderData));
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        const paymentUrl = orderData.url;
+        // Get wallet address for chosen currency
+        const walletRes = await ppRequest('/v2/address', {
+            platformId: Number(platformId),
+            paymentId: Number(currencyId),
+            orderId,
+        }, apiKey, platformId);
+        const walletData = await walletRes.json();
+        console.log('[passimpay] address:', JSON.stringify(walletData));
+        if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet address returned' }, { status: 500 });
 
         // Store orderId so webhook can find this member
         const profile = await findProfile(memberId, 'ID, parameters');
@@ -73,7 +82,7 @@ export async function POST(req: Request) {
         }
 
         try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: null, amount: Number(amount), currency_id: String(currencyId), payment_type: 'paywall' }); } catch {}
-        return NextResponse.json({ success: true, paymentUrl, orderId, cryptoAmount, amountEur: Number(amount) });
+        return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: Number(amount) });
     } catch (err: any) {
         console.error('[passimpay] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

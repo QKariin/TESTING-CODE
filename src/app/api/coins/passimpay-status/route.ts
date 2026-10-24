@@ -14,14 +14,15 @@ export async function POST(req: Request) {
         const platformId = (process.env.PASSIMPAY_PLATFORM_ID || '').trim();
         if (!apiKey || !platformId) return NextResponse.json({ error: 'Missing env vars' }, { status: 500 });
 
-        // Check PassimPay order status
-        const params = { platform_id: platformId, order_id: orderId };
-        const qs = new URLSearchParams(params).toString();
-        const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
-        const res = await fetch('https://api.passimpay.io/orderstatus', {
+        // Check PassimPay order status (v2 API)
+        const body = { platformId: Number(platformId), orderId };
+        const jsonBody = JSON.stringify(body).replace(/\//g, '\\/');
+        const signatureContract = `${platformId};${jsonBody};${apiKey}`;
+        const signature = createHmac('sha256', apiKey).update(signatureContract).digest('hex');
+        const res = await fetch('https://api.passimpay.io/v2/orderstatus', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ ...params, hash }).toString(),
+            headers: { 'Content-Type': 'application/json', 'x-signature': signature },
+            body: jsonBody,
         });
         const data = await res.json();
         const paid = data.result === 1 && data.status === 'paid';

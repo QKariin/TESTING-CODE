@@ -17,13 +17,14 @@ const CRYPTO_ID_MAP: Record<string, string> = {
     '70': 'tether', '10': 'bitcoin', '20': 'ethereum', '60': 'litecoin',
 };
 
-function ppRequest(endpoint: string, params: Record<string, string>, apiKey: string) {
-    const qs = new URLSearchParams(params).toString();
-    const hash = createHmac('sha256', apiKey).update(qs).digest('hex');
+function ppRequest(endpoint: string, body: Record<string, any>, apiKey: string, platformId: string) {
+    const jsonBody = JSON.stringify(body).replace(/\//g, '\\/');
+    const signatureContract = `${platformId};${jsonBody};${apiKey}`;
+    const signature = createHmac('sha256', apiKey).update(signatureContract).digest('hex');
     return fetch(`https://api.passimpay.io${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ ...params, hash }).toString(),
+        headers: { 'Content-Type': 'application/json', 'x-signature': signature },
+        body: jsonBody,
     });
 }
 
@@ -70,16 +71,24 @@ export async function POST(req: Request) {
         } catch {}
 
         // Create order (amount in USD — PassimPay platform currency)
-        const orderRes = await ppRequest('/createorder', {
-            platform_id: platformId,
-            order_id: orderId,
+        const orderRes = await ppRequest('/v2/createorder', {
+            platformId: Number(platformId),
+            orderId,
             amount: amountUsd.toFixed(2),
-        }, apiKey);
+        }, apiKey, platformId);
         const orderData = await orderRes.json();
-        console.error('[keyholder/passimpay] createorder response:', JSON.stringify(orderData));
+        console.log('[keyholder/passimpay] createorder:', JSON.stringify(orderData));
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        const paymentUrl = orderData.url;
+        // Get wallet address
+        const walletRes = await ppRequest('/v2/address', {
+            platformId: Number(platformId),
+            paymentId: Number(currencyId),
+            orderId,
+        }, apiKey, platformId);
+        const walletData = await walletRes.json();
+        console.log('[keyholder/passimpay] address:', JSON.stringify(walletData));
+        if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet returned' }, { status: 500 });
 
         // Store pending order metadata in profile if exists
         try {
@@ -92,7 +101,7 @@ export async function POST(req: Request) {
         } catch {}
 
         try { await supabaseAdmin.from('payment_logs').insert({ member_id: identifier || null, order_id: orderId, tier_id: tierId || null, amount: amountEur, currency_id: String(currencyId), payment_type: 'keyholder' }); } catch {}
-        return NextResponse.json({ success: true, paymentUrl, orderId, cryptoAmount, amountEur, tierId, days });
+        return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur, tierId, days });
     } catch (err: any) {
         console.error('[keyholder/passimpay] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

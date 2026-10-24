@@ -188,7 +188,6 @@ export default function PaymentModal({
                 setScreen('crypto-picker');
                 return;
             }
-
             setCryptoData({ ...data, currency: ticker });
             setScreen('qr');
 
@@ -281,46 +280,13 @@ export default function PaymentModal({
     );
 
     /* ── QR OVERLAY ── */
-    if (screen === 'qr' && cryptoData) {
-        // Embedded PassimPay payment page (no redirect away from site)
-        if (!cryptoData.address && cryptoData.paymentUrl) return (
-            <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={BG} />
-                <div style={OVERLAY} />
-                <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
-                <div style={{ position: 'relative', width: '100%', maxWidth: 460, height: '92vh', display: 'flex', flexDirection: 'column', padding: '0 12px' }}>
-                    {/* Header bar */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 4px', flexShrink: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {confirmed ? (
-                                <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700 }}>{confirmMessage}</span>
-                            ) : (<>
-                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c5a059', display: 'inline-block', animation: '_pmPulse 1.5s infinite' }} />
-                                <span style={{ fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', letterSpacing: 3, fontWeight: 600 }}>WAITING FOR PAYMENT</span>
-                            </>)}
-                        </div>
-                        <button onClick={() => { setCryptoData(null); if (pollRef.current) clearInterval(pollRef.current); setScreen('method'); }}
-                            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.5)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', letterSpacing: 3, padding: '8px 16px', cursor: 'pointer' }}>CANCEL</button>
-                    </div>
-                    {/* Embedded payment page */}
-                    <div style={{ flex: 1, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <iframe
-                            src={cryptoData.paymentUrl}
-                            style={{ width: '100%', height: '100%', border: 'none', borderRadius: 16 }}
-                            allow="clipboard-write"
-                        />
-                    </div>
-                </div>
-            </div>
-        );
-
-        // Direct wallet address (QR + copy)
-        return (
+    if (screen === 'qr' && cryptoData) return (
         <div style={{ ...BASE, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'scroll', scrollbarWidth: 'none', padding: '28px 24px 48px' }}>
             <div style={BG} />
             <div style={OVERLAY} />
             <style>{`@keyframes _pmPulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
             <div style={{ ...CARD, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 420 }}>
+            {/* AMOUNT — first, biggest, unmissable */}
             <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: 6, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>SEND EXACTLY</div>
             <div style={{ fontFamily: 'Orbitron,sans-serif', fontSize: 'clamp(1.5rem,5vw,2.2rem)', color: '#fff', fontWeight: 900, lineHeight: 1, marginBottom: 6, textAlign: 'center' }}>{cryptoData.cryptoAmount}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -329,6 +295,8 @@ export default function PaymentModal({
                 <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.1rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>€{Number(cryptoData.amountEur).toFixed(2)}</span>
             </div>
             <div style={{ height: 1, width: 60, background: 'rgba(255,255,255,0.08)', margin: '16px 0 24px' }} />
+
+            {/* QR — after the amount */}
             <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(cryptoData.address)}`}
                 alt="QR"
@@ -354,8 +322,7 @@ export default function PaymentModal({
                 style={{ marginTop: 24, width: '100%', maxWidth: 400, padding: '16px', background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'rgba(255,255,255,0.55)', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.75rem', letterSpacing: 4, cursor: 'pointer' }}>CANCEL</button>
             </div>
         </div>
-        );
-    }
+    );
 
     /* ── CRYPTO PICKER ── */
     if (screen === 'crypto-picker') return (
@@ -475,16 +442,10 @@ export default function PaymentModal({
                                     )}
                                     {inlineAddress && !inlineLoading && (
                                         <>
-                                            {inlineAddress.address ? (<>
                                             <div style={{ fontFamily: 'monospace', fontSize: '0.6rem', color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', wordBreak: 'break-all', textAlign: 'center', lineHeight: 1.7, marginBottom: 8, textTransform: 'none' }}>{inlineAddress.address}</div>
                                             <button onClick={copyInlineAddress} style={{ width: '100%', padding: '13px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
                                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                                             </button>
-                                            </>) : inlineAddress.paymentUrl ? (
-                                            <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
-                                                <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
-                                            </div>
-                                            ) : null}
                                         </>
                                     )}
                                 </div>
@@ -513,7 +474,6 @@ export default function PaymentModal({
                                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
                                         <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
                                     </div>
-                                    {inlineAddress.address ? (<>
                                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
                                     </div>
@@ -521,11 +481,6 @@ export default function PaymentModal({
                                     <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
                                         {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                                     </button>
-                                    </>) : inlineAddress.paymentUrl ? (
-                                    <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
-                                        <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
-                                    </div>
-                                    ) : null}
                                     {confirmed ? (
                                         <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
                                     ) : (
@@ -591,7 +546,6 @@ export default function PaymentModal({
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: '#f7931a', letterSpacing: 4, fontWeight: 700, marginTop: 4 }}>BTC</div>
                                 <div style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '1.6rem', color: 'rgba(255,255,255,0.85)', fontWeight: 700, marginTop: 6 }}>€{Number(amountEur).toFixed(2)}</div>
                             </div>
-                            {inlineAddress.address ? (<>
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
                                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inlineAddress.address)}`} alt="QR" style={{ width: 180, height: 180, background: '#fff', borderRadius: 10, padding: 8 }} />
                             </div>
@@ -599,11 +553,6 @@ export default function PaymentModal({
                             <button onClick={copyInlineAddress} style={{ width: '100%', padding: '14px', background: inlineCopied ? 'rgba(76,175,80,0.08)' : 'rgba(197,160,89,0.07)', border: `1px solid ${inlineCopied ? 'rgba(76,175,80,0.35)' : 'rgba(197,160,89,0.25)'}`, borderRadius: 8, color: inlineCopied ? '#66bb6a' : '#c5a059', fontFamily: 'Orbitron,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: 4, cursor: 'pointer', marginBottom: 10 }}>
                                 {inlineCopied ? '✓ COPIED' : 'COPY ADDRESS'}
                             </button>
-                            </>) : inlineAddress.paymentUrl ? (
-                            <div style={{ width: '100%', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 10 }}>
-                                <iframe src={inlineAddress.paymentUrl} style={{ width: '100%', height: 420, border: 'none' }} allow="clipboard-write" />
-                            </div>
-                            ) : null}
                             {confirmed ? (
                                 <div style={{ textAlign: 'center', fontFamily: 'Rajdhani,sans-serif', fontSize: '0.9rem', color: '#66bb6a', letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>{confirmMessage}</div>
                             ) : (
