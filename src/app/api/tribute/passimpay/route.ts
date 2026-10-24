@@ -66,6 +66,7 @@ export async function POST(req: Request) {
             amount: amountUsd.toFixed(2),
         }, apiKey);
         const orderData = await orderRes.json();
+        console.error('[tribute/passimpay] createorder response:', JSON.stringify(orderData));
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
         // Step 3: Get wallet address
