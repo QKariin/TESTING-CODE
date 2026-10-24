@@ -18,11 +18,10 @@ export async function POST(req: Request) {
         const signature = req.headers.get('x-signature') || '';
         const apiKey = process.env.PASSIMPAY_API_KEY!;
 
-        // Verify webhook signature
+        // Verify webhook signature (v2: platformId;rawBody;apiKey)
         const platformId = process.env.PASSIMPAY_PLATFORM_ID!;
         const payload = JSON.parse(bodyText);
-        const sortedBodyStr = JSON.stringify(Object.fromEntries(Object.keys(payload).sort().map((k: string) => [k, payload[k]])));
-        const expected = createHmac('sha256', apiKey).update(`${platformId};${sortedBodyStr};${apiKey}`).digest('hex');
+        const expected = createHmac('sha256', apiKey).update(`${platformId};${bodyText};${apiKey}`).digest('hex');
         if (signature && signature !== expected) {
             console.warn('[passimpay webhook] invalid sig, got:', signature, 'expected:', expected);
             return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
