@@ -22,6 +22,7 @@ function ppRequest(endpoint: string, params: Record<string, string>, apiKey: str
 
 export async function POST(req: Request) {
     try {
+        const clientIp = (req.headers.get('x-forwarded-for') || '127.0.0.1').split(',')[0].trim();
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
         const userId = user?.id || null;
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
             platform_id: platformId,
             order_id: orderId,
             amount: amountUsd.toFixed(2),
+            client_ip: clientIp,
         }, apiKey);
         const orderData = await orderRes.json();
         console.error('[tribute/passimpay] createorder response:', JSON.stringify(orderData));
