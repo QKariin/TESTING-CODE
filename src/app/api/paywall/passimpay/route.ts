@@ -62,15 +62,7 @@ export async function POST(req: Request) {
         console.log('[passimpay] createorder:', orderData);
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        // Step 3: Get wallet address for chosen currency
-        const walletRes = await ppRequest('/getpaymentwallet', {
-            payment_id: String(currencyId),
-            platform_id: platformId,
-            order_id: orderId,
-        }, apiKey);
-        const walletData = await walletRes.json();
-        console.log('[passimpay] getwallet:', walletData);
-        if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet address returned' }, { status: 500 });
+        const paymentUrl = orderData.url;
 
         // Store orderId so webhook can find this member
         const profile = await findProfile(memberId, 'ID, parameters');
@@ -81,7 +73,7 @@ export async function POST(req: Request) {
         }
 
         try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: null, amount: Number(amount), currency_id: String(currencyId), payment_type: 'paywall' }); } catch {}
-        return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: Number(amount) });
+        return NextResponse.json({ success: true, paymentUrl, orderId, cryptoAmount, amountEur: Number(amount) });
     } catch (err: any) {
         console.error('[passimpay] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });

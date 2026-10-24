@@ -69,14 +69,7 @@ export async function POST(req: Request) {
         console.error('[tribute/passimpay] createorder response:', JSON.stringify(orderData));
         if (orderData.result !== 1) return NextResponse.json({ error: orderData.message || 'Create order failed' }, { status: 500 });
 
-        // Step 3: Get wallet address
-        const walletRes = await ppRequest('/getpaymentwallet', {
-            payment_id: String(currencyId),
-            platform_id: platformId,
-            order_id: orderId,
-        }, apiKey);
-        const walletData = await walletRes.json();
-        if (!walletData.address) return NextResponse.json({ error: walletData.message || 'No wallet returned' }, { status: 500 });
+        const paymentUrl = orderData.url;
 
         // Store pending order in profile if exists (for webhook matching)
         if (memberId) {
@@ -91,7 +84,7 @@ export async function POST(req: Request) {
         }
 
         try { await supabaseAdmin.from('payment_logs').insert({ member_id: memberId || null, order_id: orderId, tier_id: tierId || null, amount, currency_id: String(currencyId), payment_type: 'tribute' }); } catch {}
-        return NextResponse.json({ success: true, address: walletData.address, orderId, cryptoAmount, amountEur: amount });
+        return NextResponse.json({ success: true, paymentUrl, orderId, cryptoAmount, amountEur: amount });
     } catch (err: any) {
         console.error('[tribute/passimpay] error:', err);
         return NextResponse.json({ error: err.message }, { status: 500 });
